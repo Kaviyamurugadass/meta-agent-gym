@@ -1,0 +1,67 @@
+# Logging configuration for the OpenEnv R2 Kit.
+#
+# Codifies the [START]/[STEP]/[END] markers required by hackathon evaluation
+# (per Round 1 requirements doc). Load via:
+#
+#   import logging.config, yaml
+#   logging.config.dictConfig(yaml.safe_load(open("training/logging.yaml")))
+#
+# Usage from environment code:
+#   logger.info("reset complete", extra={"hackathon_tag": "START"})
+#   logger.info("step taken",     extra={"hackathon_tag": "STEP"})
+#   logger.info("episode end",    extra={"hackathon_tag": "END"})
+
+version: 1
+disable_existing_loggers: false
+
+filters:
+  default_hackathon_tag:
+    (): training.log_filters.DefaultHackathonTagFilter
+
+formatters:
+  hackathon:
+    # Structured format: [TAG] timestamp - module - level - message
+    format: "[%(hackathon_tag)s] %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+  simple:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  json:
+    format: '{"ts": "%(asctime)s", "tag": "%(hackathon_tag)s", "level": "%(levelname)s", "logger": "%(name)s", "msg": "%(message)s"}'
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: hackathon
+    filters: [default_hackathon_tag]
+    stream: ext://sys.stdout
+  episode_file:
+    class: logging.FileHandler
+    level: DEBUG
+    formatter: hackathon
+    filters: [default_hackathon_tag]
+    filename: logs/episode.log
+    mode: a
+    encoding: utf-8
+  jsonl_file:
+    class: logging.FileHandler
+    level: INFO
+    formatter: json
+    filters: [default_hackathon_tag]
+    filename: logs/episode.jsonl
+    mode: a
+    encoding: utf-8
+
+loggers:
+  server:
+    level: INFO
+    handlers: [console, episode_file, jsonl_file]
+    propagate: false
+  training:
+    level: INFO
+    handlers: [console, episode_file]
+    propagate: false
+
+root:
+  level: WARNING
+  handlers: [console]

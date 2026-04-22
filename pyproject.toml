@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "openenv-r2-kit"
+version = "0.1.0"
+description = "OpenEnv Round 2 template — domain-agnostic starter kit for fast theme specialization"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = [
+    "openenv-core==0.2.1",
+    "pydantic>=2.0",
+    "numpy",
+    "fastapi",
+    "uvicorn[standard]",
+    "httpx",
+    "websockets",
+]
+
+[project.optional-dependencies]
+train = [
+    "trl>=0.29",
+    "transformers>=5.3",
+    "accelerate",
+    "datasets",
+    "torch",
+    "matplotlib",
+]
+
+unsloth = [
+    "unsloth",
+    "unsloth_zoo",
+]
+
+dev = [
+    "pytest>=8.0",
+    "pytest-cov",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+]
+
+demo = [
+    "jupyter",
+    "ipykernel",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["server"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]
