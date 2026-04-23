@@ -198,24 +198,22 @@ class Observation(_OpenEnvObservation):
     POMDP-friendly by default: exposes summaries, not ground truth.
     Hidden state lives in `State` below.
 
-    Inherits from openenv.core.Observation:
-        done: bool    (inherited, default False)
-        reward: float (inherited, default None — we set 0.0)
-        metadata: dict (inherited)
-
     META-AGENT EXTENSIONS:
         - current_spec: Partial view of agent being built
         - investigation_result: Result from CHECK_SCORE/INSPECT_EXAMPLE
         - available_skills: Skills the agent can choose from
     """
 
+    # Declared explicitly (not inherited) so behavior is identical whether
+    # openenv-core is installed or we fell back to BaseModel. Some openenv-core
+    # versions don't expose `done` on the base Observation.
+    done: bool = False
+    reward: float = 0.0
+
     # Task context
     task_id: str
     step: int
     max_steps: int
-
-    # Override inherited reward to default 0.0 (not None)
-    reward: float = 0.0
 
     # META-AGENT: Current agent spec state (partial observability)
     current_spec: dict[str, Any] = Field(
