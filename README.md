@@ -78,9 +78,9 @@ meta-agent-gym is an environment where the agent faces increasingly difficult de
 The agent operates in a POMDP where the hidden state is "what makes a good agent?" It can only observe partial feedback (reward breakdown, violations) and must infer the ground truth through investigation commands.
 
 - **POMDP structure**: Hidden state = optimal spec for the task; observable = current spec + feedback + reward breakdown
-- **Investigation tools**: `check_score` reveals the current breakdown; `inspect_example` shows a reference agent for the domain
-- **Multi-step reasoning**: 7-step generation process — each decision (name, skills, model, prompt) affects the others
-- **Anti-hacking**: Penalties prevent format-only exploits (empty specs: -5.0, over-engineering: -0.5, regression: -0.15)
+- **Investigation tools**: `check_score` reveals the current breakdown; `inspect` provides detailed observation for POMDP-style information gathering
+- **Multi-step reasoning**: 7-step generation process — each decision (name, description, skills, model, prompt) affects the others
+- **Anti-hacking**: Penalties prevent format-only exploits (empty specs: -5.0, over-engineering: -0.5, repetitive: -0.3, regression: -0.15)
 
 ### Partner Sub-Theme: RLVR — Verifiable Rewards
 
@@ -166,6 +166,7 @@ The reward function has multiple independent components for clean GRPO signal:
 | `model_appropriateness` | Judge | 0.15 | Correct model tier for task complexity |
 | `best_practices` | Judge | 0.10 | Domain-specific best practices followed |
 | `efficiency` | Judge | 0.10 | No over-engineering or redundant skills |
+| `progress` | Bonus | — | Reward for advancing spec completeness per step |
 
 **Anti-hacking penalties:**
 
@@ -173,6 +174,7 @@ The reward function has multiple independent components for clean GRPO signal:
 |---------|-------|------|
 | Empty spec | -5.0 | Prompt < 50 chars or missing fields |
 | Over-engineered | -0.5 | > 10 skills or opus when sonnet suffices |
+| Repetitive | -0.3 | Repeating the same action consecutively |
 | Regression | -0.15 | Breaking a previously-passing check |
 
 This produces clear separation: complete, well-designed specs score 6-8+, incomplete or hacked specs score near 0 or negative.
@@ -259,6 +261,7 @@ with Env("http://localhost:8000") as env:
     print(obs.summary)  # "Step 0/7"
 
     obs = env.step(Action(command=ActionCommand.SET_NAME, args={"name": "price-scraper"}))
+    obs = env.step(Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Scrapes product prices from e-commerce pages"}))
     obs = env.step(Action(command=ActionCommand.ADD_SKILL, args={"skill": "web-scraping"}))
     obs = env.step(Action(command=ActionCommand.ADD_SKILL, args={"skill": "html-parser"}))
     obs = env.step(Action(command=ActionCommand.WRITE_PROMPT, args={
@@ -363,7 +366,13 @@ meta-agent-gym/
 │   ├── test_smoke.py            # Basic functionality
 │   ├── test_reward_quality.py   # Reward component validation
 │   ├── test_observation_quality.py  # Decision-relevant signal checks
-│   └── test_verifiers.py        # Hard verifier tests
+│   ├── test_verifiers.py        # Hard verifier tests
+│   ├── test_agent_spec.py       # AgentSpec schema tests
+│   ├── test_meta_agent_env.py   # Environment integration tests
+│   ├── test_meta_agent_reward.py # Reward system tests
+│   ├── test_skills.py           # Skill registry tests
+│   ├── test_smoke_meta_agent.py # Meta-agent smoke tests
+│   └── test_training.py         # Training pipeline tests
 ├── static/
 │   └── index.html               # Interactive dashboard UI
 ├── openenv.yaml                 # OpenEnv v0.2.1 configuration

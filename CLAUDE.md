@@ -66,6 +66,7 @@ Phase 4: 5+ skills → Expert tasks → >5% success
 Anti-hacking penalties:
 - `empty_spec`: -5.0
 - `over_engineered`: -0.5
+- `repetitive`: -0.3
 - `regression`: -0.15
 
 ---
