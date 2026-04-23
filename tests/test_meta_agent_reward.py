@@ -19,6 +19,8 @@ def reward_config():
             "best_practices": 0.10,
             "efficiency": 0.10,
         },
+        gate_components=["yaml_valid", "has_required_fields", "prompt_length_ok"],
+        gate_threshold=0.99,
     )
 
 

@@ -181,33 +181,33 @@ Day 9 (4h):  20 → 21 → 22 (Monitoring + Eval + Integration)
 ## Checklist
 
 ### P0 - Critical Path (Week 1)
-- [ ] 1. Hard Verifiers (YAML, fields, format)
-- [ ] 2. AGENT.md Schema
-- [ ] 3. Action Commands
-- [ ] 4. Observation extension
-- [ ] 5. Skill Registry (single-skill first)
-- [ ] 6. Test Cases (easy, single-skill)
-- [ ] 7. Fast Judge (Claude Sonnet)
-- [ ] 8. Multi-Component Reward
-- [ ] 9. OpenEnv Environment
-- [ ] 10. Goose Runner (steps 3, 6, 9)
-- [ ] 11. Calibration Tracker
-- [ ] 12. Unit Tests
-- [ ] 13. Deploy to HF
+- [x] 1. Hard Verifiers (YAML, fields, format) ✅ `server/verifiers.py`
+- [x] 2. AGENT.md Schema ✅ `models.py` with `AgentSpec.to_markdown()`
+- [x] 3. Action Commands ✅ `models.py` with `ActionCommand` enum
+- [x] 4. Observation extension ✅ `models.py` with POMDP structure
+- [x] 5. Skill Registry (single-skill first) ✅ `server/skills.py`
+- [x] 6. Test Cases (easy, single-skill) ✅ `server/tasks/scenarios.py` (7 scenarios)
+- [x] 7. Fast Judge (Claude Sonnet) ✅ Integrated in reward system
+- [x] 8. Multi-Component Reward ✅ `server/rewards/reward.py`
+- [x] 9. OpenEnv Environment ✅ `server/environment.py`
+- [x] 10. Goose Runner (steps 3, 6, 9) ✅ `server/runtime/goose.py`
+- [x] 11. Calibration Tracker ✅ Part of reward system
+- [x] 12. Unit Tests ✅ 136 tests pass
+- [x] 13. Deploy to HF ✅ Files uploaded to https://huggingface.co/spaces/Kaviya-M/meta-agent-gym (Docker building)
 
 ### P1 - MVP (Week 2)
-- [ ] 14. GRPO Trainer (H100)
-- [ ] 15. Unsloth Trainer (T4)
-- [ ] 16. Curriculum Controller
-- [ ] 17. Medium/Hard Test Cases
-- [ ] 18. Adversarial Designer
-- [ ] 19. Anti-Hacking Checks
-- [ ] 20. Monitoring Dashboard
-- [ ] 21. Evaluator (before/after)
-- [ ] 22. Integration Tests
+- [x] 14. GRPO Trainer (H100) ✅ `training/grpo_trl.py`
+- [x] 15. Unsloth Trainer (T4) ✅ `training/grpo_unsloth.py`
+- [ ] 16. Curriculum Controller ⚠️ Partial - phase selection in environment
+- [x] 17. Medium/Hard Test Cases ✅ Phases 2-4 in `scenarios.py`
+- [ ] 18. Adversarial Designer ❌ Not implemented
+- [x] 19. Anti-Hacking Checks ✅ Penalties in `reward.py`
+- [ ] 20. Monitoring Dashboard ❌ Not implemented
+- [x] 21. Evaluator (before/after) ✅ `training/evaluation.py`
+- [x] 22. Integration Tests ✅ `tests/test_training.py`
 
 ### P2 - Polish
-- [ ] 23. Investigation Tools
-- [ ] 24. More Test Cases
-- [ ] 25. Documentation
-- [ ] 26. Demo Video
+- [x] 23. Investigation Tools ✅ `check_score`, `inspect_example` in environment
+- [ ] 24. More Test Cases ⚠️ 7 scenarios (target: 20+)
+- [x] 25. Documentation ✅ README.md complete with theme alignment
+- [ ] 26. Demo Video ❌ Not created

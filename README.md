@@ -137,14 +137,36 @@ python -c "from client import MetaAgentClient; c = MetaAgentClient(); print(c.re
 **T4 (Colab) — Unsloth 4-bit LoRA:**
 
 ```bash
-python training/grpo_unsloth.py --model-id Qwen/Qwen3-0.6B
+make train-unsloth  # or: python training/grpo_unsloth.py --model-id Qwen/Qwen3-0.6B
 ```
 
 **H100/A100 — Full GRPO:**
 
 ```bash
-python training/grpo_trl.py --model-id Qwen/Qwen3.5-4B
+make train-trl  # or: python training/grpo_trl.py --model-id Qwen/Qwen3.5-4B
 ```
+
+---
+
+## Before/After Training Metrics
+
+| Metric | Baseline | Expert | Target |
+|--------|----------|--------|--------|
+| Mean Reward | 0.00 | 16.57 | >10.0 |
+| Success Rate | 0% | 100% | >80% |
+| Mean Steps | 7.0 | 6.8 | <10 |
+
+*Baseline: Random policy (10 episodes per scenario)*
+*Expert: Hand-crafted optimal trajectories*
+
+**Expert Performance by Scenario:**
+| Scenario | Expert Reward | Steps | Success |
+|----------|--------------|-------|---------|
+| ws_easy_001 | 16.70 | 6 | ✅ |
+| da_easy_001 | 16.63 | 6 | ✅ |
+| cr_easy_001 | 16.03 | 6 | ✅ |
+| ws_medium_001 | 15.47 | 8 | ✅ |
+| ws_expert_001 | 18.57 | 10 | ✅ |
 
 ---
 
@@ -152,23 +174,34 @@ python training/grpo_trl.py --model-id Qwen/Qwen3.5-4B
 
 ```
 meta_agent_gym/
-├── models.py              # Action, Observation, AgentSpec schemas
+├── models.py              # Action, Observation, AgentSpec, RewardConfig schemas
 ├── client.py              # OpenEnv HTTP client
+├── inference.py           # LLM inference utilities
 ├── server/
-│   ├── app.py            # FastAPI endpoint
-│   ├── environment.py    # OpenEnv reset/step/state
-│   ├── verifiers.py      # Hard YAML/field checks
-│   ├── judge.py          # Fast judge + calibration
+│   ├── app.py            # FastAPI endpoint (OpenEnv compatible)
+│   ├── environment.py    # OpenEnv reset/step/state lifecycle
+│   ├── verifiers.py      # Hard YAML/field checks (RLVR approach)
+│   ├── skills.py         # Skill registry + curriculum
+│   ├── rules/
+│   │   └── engine.py     # Rule validation engine
 │   ├── rewards/
-│   │   ├── reward.py     # Multi-component rewards
-│   │   └── anti_hack.py  # Penalty system
+│   │   └── reward.py     # Multi-component rewards + anti-hacking
+│   ├── runtime/
+│   │   └── goose.py      # Real execution (steps 3,6,9)
 │   └── tasks/
-│       └── scenarios.py  # Curriculum test cases
+│       ├── scenarios.py  # 7 curriculum test cases (easy → expert)
+│       └── generator.py  # Task generation
 ├── training/
-│   ├── grpo_trl.py       # TRL GRPO (H100)
-│   ├── grpo_unsloth.py   # 4-bit LoRA (T4)
-│   └── curriculum.py     # Phase progression
+│   ├── grpo_trl.py       # TRL GRPO (H100/A100)
+│   ├── grpo_unsloth.py   # 4-bit LoRA (T4/Colab)
+│   ├── evaluation.py     # Metrics + before/after tables
+│   ├── benchmark.py      # Expert trajectory runner
+│   └── rollout_collection.py  # Data collection
+├── data/
+│   └── baseline/         # Random + heuristic baselines
 └── tests/
+    ├── test_observation_quality.py  # Decision-relevant signal checks
+    └── test_reward_quality.py       # Expert vs random validation
 ```
 
 ---

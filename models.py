@@ -412,7 +412,7 @@ class RewardConfig(BaseModel):
     # HYBRID-only: which components are hard gates
     # META-AGENT: Hard verifiers are gates — they must pass
     gate_components: list[str] = Field(
-        default_factory=lambda: ["yaml_valid"]  # META-AGENT: Only gate on format, not completeness
+        default_factory=lambda: ["yaml_valid", "has_required_fields", "prompt_length_ok"]  # META-AGENT: Gate on format + completeness
     )
     gate_threshold: float = 0.99  # below this → gate fails → reward = 0
 

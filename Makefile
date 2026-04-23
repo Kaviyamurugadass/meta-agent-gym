@@ -95,13 +95,21 @@ eval:
 	uv run python training/evaluation.py
 
 baseline:
-	bash scripts/baseline_rollout.sh
+	uv run python training/rollout_collection.py --policy random --episodes 10 --output-dir data/baseline/random
+	uv run python training/rollout_collection.py --policy heuristic --episodes 10 --output-dir data/baseline/heuristic
+	@echo "==> Baseline collection complete. Trajectories in data/baseline/"
 
 deploy:
-	bash scripts/deploy.sh
+	uv run python -m openenv.cli push --repo-id Kaviya-M/meta-agent-gym
 
 smoke:
-	bash scripts/smoke_test.sh
+	@echo "==> Running smoke test on $(URL)..."
+	@-curl -s $(URL)/health >nul 2>&1 && echo "[1/5] GET /health       OK" || echo "[1/5] GET /health       FAIL"
+	@-curl -s $(URL)/schema >nul 2>&1 && echo "[2/5] GET /schema       OK" || echo "[2/5] GET /schema       FAIL"
+	@-curl -s -X POST $(URL)/reset -H "Content-Type: application/json" -d "{\"task_id\":\"test\"}" >nul 2>&1 && echo "[3/5] POST /reset       OK" || echo "[3/5] POST /reset       FAIL"
+	@-curl -s -X POST $(URL)/step -H "Content-Type: application/json" -d "{\"action\":{\"command\":\"noop"}}" >nul 2>&1 && echo "[4/5] POST /step        OK" || echo "[4/5] POST /step        FAIL"
+	@-curl -s $(URL)/state >nul 2>&1 && echo "[5/5] GET /state        OK" || echo "[5/5] GET /state        FAIL"
+	@echo "==> Smoke test complete."
 
 clean:
 	rm -rf .pytest_cache .mypy_cache .ruff_cache
