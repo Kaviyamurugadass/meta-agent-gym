@@ -40,15 +40,62 @@ def heuristic_policy(
     observation_dict: dict,
     rng: random.Random,  # noqa: ARG001
 ) -> Action:
-    """Simple rule-based policy — DOMAIN: override with domain knowledge.
+    """Competent rule-based baseline that actually builds a valid agent spec.
 
-    Default heuristic: SUBMIT only when at step >= max_steps - 1, else NOOP.
-    A serviceable lower bound that respects the step budget.
+    Fills each required field once (name, description, skill, prompt, model) then
+    submits. Purpose: prove the environment is reachable with >0 reward so GRPO
+    has learning signal to bootstrap from. Not optimal — judge-scored components
+    (description_quality, workflow_clarity, etc.) will be mediocre.
     """
     step = observation_dict.get("step", 0)
-    max_steps = observation_dict.get("max_steps", 10)
+    max_steps = observation_dict.get("max_steps", 7)
+    task_id = observation_dict.get("task_id", "task")
+    available_skills = observation_dict.get("available_skills") or []
+    current_spec = observation_dict.get("current_spec") or {}
+
+    # Submit on the final step regardless
     if step >= max_steps - 1:
         return Action(command=ActionCommand.SUBMIT, confidence=0.7)
+
+    # Fill missing required fields in priority order
+    if not current_spec.get("name"):
+        return Action(
+            command=ActionCommand.SET_NAME,
+            args={"name": task_id.replace("_", "-")},
+            confidence=0.6,
+        )
+    if not current_spec.get("description"):
+        return Action(
+            command=ActionCommand.SET_DESCRIPTION,
+            args={"description": f"Agent that handles {task_id} tasks end-to-end."},
+            confidence=0.6,
+        )
+    if not current_spec.get("skills") and available_skills:
+        return Action(
+            command=ActionCommand.ADD_SKILL,
+            args={"skill": available_skills[0]},
+            confidence=0.6,
+        )
+    prompt = current_spec.get("system_prompt", "")
+    if len(prompt) < 50:
+        return Action(
+            command=ActionCommand.WRITE_PROMPT,
+            args={
+                "prompt": (
+                    "You are a specialist agent. Read the task carefully, plan the "
+                    "steps, execute each one, then verify the result before submitting."
+                ),
+                "mode": "replace",
+            },
+            confidence=0.6,
+        )
+    if not current_spec.get("model"):
+        return Action(
+            command=ActionCommand.SET_MODEL,
+            args={"model": "sonnet"},
+            confidence=0.6,
+        )
+    # All required fields filled — coast until the final SUBMIT step
     return Action(command=ActionCommand.NOOP, confidence=0.5)
 
 
