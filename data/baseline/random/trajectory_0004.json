@@ -1,5 +1,5 @@
 {
-  "task_id": "cr_easy_001",
+  "task_id": "da_easy_001",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "noop",
+        "command": "set_model",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,10 +17,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 1,
         "max_steps": 7,
-        "current_spec": {},
+        "current_spec": {
+          "model": "sonnet"
+        },
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -43,16 +45,18 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 1/7, noop",
+        "summary": "Step 1/7, spec(1 fields)",
         "latest_output": {
-          "noop": true
+          "spec_keys": [
+            "model"
+          ]
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -107,7 +111,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "check_score",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -117,123 +121,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 2,
         "max_steps": 7,
-        "current_spec": {},
-        "investigation_result": {
-          "current_score": 0.0,
-          "breakdown": {
-            "yaml_valid": 1.0,
-            "has_required_fields": 0.0,
-            "prompt_length_ok": 0.0,
-            "model_valid": 1.0,
-            "skills_format_ok": 1.0,
-            "gated": 1.0,
-            "gate_failed": 1.0,
-            "total": 0.0
-          }
+        "current_spec": {
+          "model": "sonnet"
         },
-        "available_skills": [
-          "web-scraping",
-          "http-client",
-          "html-parser",
-          "json-parser",
-          "csv-handler",
-          "data-transformer",
-          "data-validator",
-          "data-aggregator",
-          "code-reviewer",
-          "code-fixer",
-          "test-generator",
-          "file-reader",
-          "file-writer",
-          "log-analyzer",
-          "pattern-matcher",
-          "report-generator",
-          "notifier"
-        ],
-        "score": 0.0,
-        "feedback": [],
-        "summary": "Step 2/7, checked",
-        "latest_output": {
-          "score_check": 0.0
-        },
-        "history": [
-          {
-            "step": 1,
-            "action": {
-              "metadata": {},
-              "command": "noop",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "check_score",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          }
-        ],
-        "reward_breakdown": {
-          "yaml_valid": 1.0,
-          "has_required_fields": 0.0,
-          "prompt_length_ok": 0.0,
-          "model_valid": 1.0,
-          "skills_format_ok": 1.0,
-          "gated": 1.0,
-          "gate_failed": 1.0,
-          "total": 0.0
-        },
-        "rule_violations": [],
-        "budget_remaining": null,
-        "time_remaining": null,
-        "truncated": false
-      },
-      "reward": 0.0,
-      "done": false,
-      "reward_breakdown": {
-        "yaml_valid": 1.0,
-        "has_required_fields": 0.0,
-        "prompt_length_ok": 0.0,
-        "model_valid": 1.0,
-        "skills_format_ok": 1.0,
-        "gated": 1.0,
-        "gate_failed": 1.0,
-        "total": 0.0
-      },
-      "latent_snapshot": null
-    },
-    {
-      "step": 3,
-      "action": {
-        "metadata": {},
-        "command": "add_tools",
-        "args": {},
-        "invoked_subagent": null,
-        "justification": null,
-        "confidence": 0.5
-      },
-      "observation": {
-        "done": false,
-        "reward": 0.0,
-        "metadata": {},
-        "task_id": "cr_easy_001",
-        "step": 3,
-        "max_steps": 7,
-        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -256,16 +149,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 3/7, spec(0 fields)",
+        "summary": "Step 2/7, noop",
         "latest_output": {
-          "spec_keys": []
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -278,7 +171,126 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "check_score",
+              "command": "noop",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 3,
+      "action": {
+        "metadata": {},
+        "command": "inspect",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.5
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "metadata": {},
+        "task_id": "da_easy_001",
+        "step": 3,
+        "max_steps": 7,
+        "current_spec": {
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 3/7, inspected data",
+        "latest_output": {
+          "domain": "data",
+          "difficulty": "easy",
+          "required_skills": [
+            "csv-handler"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "metadata": {},
+              "command": "set_model",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "metadata": {},
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -291,7 +303,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -346,7 +358,7 @@
       "step": 4,
       "action": {
         "metadata": {},
-        "command": "set_description",
+        "command": "set_name",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -356,11 +368,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 4,
         "max_steps": 7,
         "current_spec": {
-          "description": ""
+          "model": "sonnet",
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -384,10 +397,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(1 fields)",
+        "summary": "Step 4/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "description"
+            "model",
+            "name"
           ]
         },
         "history": [
@@ -395,7 +409,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -408,7 +422,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "check_score",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -421,7 +435,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -434,7 +448,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -489,7 +503,7 @@
       "step": 5,
       "action": {
         "metadata": {},
-        "command": "set_model",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -499,12 +513,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 5,
         "max_steps": 7,
         "current_spec": {
-          "description": "",
-          "model": "sonnet"
+          "model": "sonnet",
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -528,19 +542,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 5/7, spec(2 fields)",
+        "summary": "Step 5/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "description",
-            "model"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -553,7 +564,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "check_score",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -566,7 +577,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -579,7 +590,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -592,7 +603,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -647,7 +658,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -657,13 +668,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "description": "",
           "model": "sonnet",
-          "system_prompt": ""
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -687,20 +697,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 6/7, spec(3 fields)",
+        "summary": "Step 6/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "description",
-            "model",
-            "system_prompt"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "check_score",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -713,7 +719,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -726,7 +732,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -739,7 +745,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -752,7 +758,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -807,7 +813,7 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "set_model",
+        "command": "add_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -817,13 +823,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "da_easy_001",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "description": "",
           "model": "sonnet",
-          "system_prompt": ""
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -847,12 +852,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 7/7, spec(3 fields)",
+        "summary": "Step 7/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "description",
             "model",
-            "system_prompt"
+            "name"
           ]
         },
         "history": [
@@ -860,7 +864,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -873,7 +877,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -886,7 +890,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -899,7 +903,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -912,7 +916,7 @@
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,

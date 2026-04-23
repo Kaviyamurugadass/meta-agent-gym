@@ -1,5 +1,5 @@
 {
-  "task_id": "fi_easy_001",
+  "task_id": "cr_easy_001",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "submit",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,7 +17,7 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 1,
         "max_steps": 7,
         "current_spec": {},
@@ -42,33 +42,24 @@
           "notifier"
         ],
         "score": 0.0,
-        "feedback": [
-          "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
-        ],
-        "summary": "Step 1/7, spec(0 fields)",
+        "feedback": [],
+        "summary": "Step 1/7, noop",
         "latest_output": {
-          "spec_keys": []
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           }
         ],
         "reward_breakdown": {
@@ -87,14 +78,7 @@
           "gate_failed": 1.0,
           "total": 0.0
         },
-        "rule_violations": [
-          {
-            "severity": "hard",
-            "category": "prerequisite",
-            "message": "Cannot submit: missing name, description, system_prompt (too short).",
-            "penalty": null
-          }
-        ],
+        "rule_violations": [],
         "budget_remaining": null,
         "time_remaining": null,
         "truncated": false
@@ -123,7 +107,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "set_memory",
+        "command": "set_name",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -133,11 +117,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 2,
         "max_steps": 7,
         "current_spec": {
-          "memory": null
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -164,7 +148,7 @@
         "summary": "Step 2/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "memory"
+            "name"
           ]
         },
         "history": [
@@ -172,27 +156,20 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -247,7 +224,7 @@
       "step": 3,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "inspect",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -257,12 +234,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 3,
         "max_steps": 7,
         "current_spec": {
-          "memory": null,
-          "max_turns": null
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -286,11 +262,12 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 3/7, spec(2 fields)",
+        "summary": "Step 3/7, inspected code",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns"
+          "domain": "code",
+          "difficulty": "easy",
+          "required_skills": [
+            "code-reviewer"
           ]
         },
         "history": [
@@ -298,27 +275,20 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -331,7 +301,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -396,12 +366,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 4,
         "max_steps": 7,
         "current_spec": {
-          "memory": null,
-          "max_turns": null,
+          "name": "",
           "description": ""
         },
         "investigation_result": null,
@@ -426,11 +395,10 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(3 fields)",
+        "summary": "Step 4/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "memory",
-            "max_turns",
+            "name",
             "description"
           ]
         },
@@ -439,27 +407,20 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -472,7 +433,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -540,7 +501,7 @@
       "step": 5,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "add_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -550,14 +511,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 5,
         "max_steps": 7,
         "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
+          "name": "",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -581,13 +540,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 5/7, spec(4 fields)",
+        "summary": "Step 5/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
+            "name",
+            "description"
           ]
         },
         "history": [
@@ -595,27 +552,20 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -628,7 +578,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -654,7 +604,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -709,7 +659,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "set_description",
+        "command": "inspect_example",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -719,16 +669,18 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
+          "name": "",
+          "description": ""
         },
-        "investigation_result": null,
+        "investigation_result": {
+          "domain": "code",
+          "example_template": "You are a code review specialist.\n\nBest practices:\n- Focus on code quality\n- Check for security issues\n- Verify error handling\n- Assess performance\n\nReview checklist:\n- Code is clear and readable\n- Proper error handling\n- No security vulnerabilities\n- Good test coverage\n",
+          "hint": "Focus on code-specific skills and best practices"
+        },
         "available_skills": [
           "web-scraping",
           "http-client",
@@ -750,21 +702,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 6/7, spec(4 fields)",
+        "summary": "Step 6/7, inspected",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
-          ]
+          "example_inspected": "code"
         },
         "history": [
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -777,7 +724,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -803,7 +750,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -816,7 +763,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -832,12 +779,6 @@
           "prompt_length_ok": 0.0,
           "model_valid": 1.0,
           "skills_format_ok": 1.0,
-          "skill_selection": 0.0,
-          "description_quality": 0.0,
-          "workflow_clarity": 0.0,
-          "model_appropriateness": 0.8,
-          "best_practices": 0.0,
-          "efficiency": 1.0,
           "gated": 1.0,
           "gate_failed": 1.0,
           "total": 0.0
@@ -855,12 +796,6 @@
         "prompt_length_ok": 0.0,
         "model_valid": 1.0,
         "skills_format_ok": 1.0,
-        "skill_selection": 0.0,
-        "description_quality": 0.0,
-        "workflow_clarity": 0.0,
-        "model_appropriateness": 0.8,
-        "best_practices": 0.0,
-        "efficiency": 1.0,
         "gated": 1.0,
         "gate_failed": 1.0,
         "total": 0.0
@@ -871,7 +806,7 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "add_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -881,14 +816,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "cr_easy_001",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
+          "name": "",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -912,13 +845,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 7/7, spec(4 fields)",
+        "summary": "Step 7/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
+            "name",
+            "description"
           ]
         },
         "history": [
@@ -926,7 +857,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -952,7 +883,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -965,7 +896,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -978,7 +909,7 @@
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,

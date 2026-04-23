@@ -1,5 +1,5 @@
 {
-  "task_id": "fi_easy_001",
+  "task_id": "ws_easy_001",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "submit",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,7 +17,7 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 1,
         "max_steps": 7,
         "current_spec": {},
@@ -42,33 +42,24 @@
           "notifier"
         ],
         "score": 0.0,
-        "feedback": [
-          "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
-        ],
-        "summary": "Step 1/7, spec(0 fields)",
+        "feedback": [],
+        "summary": "Step 1/7, noop",
         "latest_output": {
-          "spec_keys": []
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           }
         ],
         "reward_breakdown": {
@@ -87,14 +78,7 @@
           "gate_failed": 1.0,
           "total": 0.0
         },
-        "rule_violations": [
-          {
-            "severity": "hard",
-            "category": "prerequisite",
-            "message": "Cannot submit: missing name, description, system_prompt (too short).",
-            "penalty": null
-          }
-        ],
+        "rule_violations": [],
         "budget_remaining": null,
         "time_remaining": null,
         "truncated": false
@@ -123,7 +107,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "set_memory",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -133,12 +117,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 2,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -161,38 +143,29 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 2/7, spec(1 fields)",
+        "summary": "Step 2/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "memory"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -247,7 +220,7 @@
       "step": 3,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -257,13 +230,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 3,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null,
-          "max_turns": null
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -286,39 +256,29 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 3/7, spec(2 fields)",
+        "summary": "Step 3/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -331,7 +291,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -386,7 +346,7 @@
       "step": 4,
       "action": {
         "metadata": {},
-        "command": "set_description",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -396,14 +356,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 4,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": ""
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -426,40 +382,29 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(3 fields)",
+        "summary": "Step 4/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns",
-            "description"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -472,7 +417,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -485,7 +430,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -540,7 +485,7 @@
       "step": 5,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -550,15 +495,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 5,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -581,41 +521,29 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 5/7, spec(4 fields)",
+        "summary": "Step 5/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -628,7 +556,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -641,7 +569,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -654,7 +582,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -709,7 +637,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "set_description",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -719,15 +647,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 6,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -750,21 +673,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 6/7, spec(4 fields)",
+        "summary": "Step 6/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_memory",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -777,7 +695,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -790,7 +708,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -803,7 +721,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -816,7 +734,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -871,25 +789,20 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "submit",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
-        "confidence": 0.5
+        "confidence": 0.7
       },
       "observation": {
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "fi_easy_001",
+        "task_id": "ws_easy_001",
         "step": 7,
         "max_steps": 7,
-        "current_spec": {
-          "memory": null,
-          "max_turns": null,
-          "description": "",
-          "system_prompt": ""
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -911,22 +824,19 @@
           "notifier"
         ],
         "score": 0.0,
-        "feedback": [],
-        "summary": "Step 7/7, spec(4 fields)",
+        "feedback": [
+          "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
+        ],
+        "summary": "Step 7/7, spec(0 fields)",
         "latest_output": {
-          "spec_keys": [
-            "memory",
-            "max_turns",
-            "description",
-            "system_prompt"
-          ]
+          "spec_keys": []
         },
         "history": [
           {
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -939,7 +849,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -952,7 +862,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -965,7 +875,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_description",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -978,14 +888,21 @@
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "submit",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
-              "confidence": 0.5
+              "confidence": 0.7
             },
             "reward": 0.0,
-            "violations": []
+            "violations": [
+              {
+                "severity": "hard",
+                "category": "prerequisite",
+                "message": "Cannot submit: missing name, description, system_prompt (too short).",
+                "penalty": null
+              }
+            ]
           }
         ],
         "reward_breakdown": {
@@ -1004,7 +921,14 @@
           "gate_failed": 1.0,
           "total": 0.0
         },
-        "rule_violations": [],
+        "rule_violations": [
+          {
+            "severity": "hard",
+            "category": "prerequisite",
+            "message": "Cannot submit: missing name, description, system_prompt (too short).",
+            "penalty": null
+          }
+        ],
         "budget_remaining": null,
         "time_remaining": null,
         "truncated": true
@@ -1033,6 +957,6 @@
   "total_reward": 0.0,
   "success": false,
   "metadata": {
-    "policy": "random"
+    "policy": "heuristic"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "task_id": "ws_easy_001",
+  "task_id": "ou_easy_001",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "set_name",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,11 +17,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "ou_easy_001",
         "step": 1,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -48,7 +48,7 @@
         "summary": "Step 1/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns"
+            "name"
           ]
         },
         "history": [
@@ -56,7 +56,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -111,251 +111,6 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "add_tools",
-        "args": {},
-        "invoked_subagent": null,
-        "justification": null,
-        "confidence": 0.5
-      },
-      "observation": {
-        "done": false,
-        "reward": 0.0,
-        "metadata": {},
-        "task_id": "ws_easy_001",
-        "step": 2,
-        "max_steps": 7,
-        "current_spec": {
-          "max_turns": null
-        },
-        "investigation_result": null,
-        "available_skills": [
-          "web-scraping",
-          "http-client",
-          "html-parser",
-          "json-parser",
-          "csv-handler",
-          "data-transformer",
-          "data-validator",
-          "data-aggregator",
-          "code-reviewer",
-          "code-fixer",
-          "test-generator",
-          "file-reader",
-          "file-writer",
-          "log-analyzer",
-          "pattern-matcher",
-          "report-generator",
-          "notifier"
-        ],
-        "score": 0.0,
-        "feedback": [],
-        "summary": "Step 2/7, spec(1 fields)",
-        "latest_output": {
-          "spec_keys": [
-            "max_turns"
-          ]
-        },
-        "history": [
-          {
-            "step": 1,
-            "action": {
-              "metadata": {},
-              "command": "set_max_turns",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          }
-        ],
-        "reward_breakdown": {
-          "yaml_valid": 1.0,
-          "has_required_fields": 0.0,
-          "prompt_length_ok": 0.0,
-          "model_valid": 1.0,
-          "skills_format_ok": 1.0,
-          "skill_selection": 0.0,
-          "description_quality": 0.0,
-          "workflow_clarity": 0.0,
-          "model_appropriateness": 0.8,
-          "best_practices": 0.0,
-          "efficiency": 1.0,
-          "gated": 1.0,
-          "gate_failed": 1.0,
-          "total": 0.0
-        },
-        "rule_violations": [],
-        "budget_remaining": null,
-        "time_remaining": null,
-        "truncated": false
-      },
-      "reward": 0.0,
-      "done": false,
-      "reward_breakdown": {
-        "yaml_valid": 1.0,
-        "has_required_fields": 0.0,
-        "prompt_length_ok": 0.0,
-        "model_valid": 1.0,
-        "skills_format_ok": 1.0,
-        "skill_selection": 0.0,
-        "description_quality": 0.0,
-        "workflow_clarity": 0.0,
-        "model_appropriateness": 0.8,
-        "best_practices": 0.0,
-        "efficiency": 1.0,
-        "gated": 1.0,
-        "gate_failed": 1.0,
-        "total": 0.0
-      },
-      "latent_snapshot": null
-    },
-    {
-      "step": 3,
-      "action": {
-        "metadata": {},
-        "command": "check_score",
-        "args": {},
-        "invoked_subagent": null,
-        "justification": null,
-        "confidence": 0.5
-      },
-      "observation": {
-        "done": false,
-        "reward": 0.0,
-        "metadata": {},
-        "task_id": "ws_easy_001",
-        "step": 3,
-        "max_steps": 7,
-        "current_spec": {
-          "max_turns": null
-        },
-        "investigation_result": {
-          "current_score": 0.0,
-          "breakdown": {
-            "yaml_valid": 1.0,
-            "has_required_fields": 0.0,
-            "prompt_length_ok": 0.0,
-            "model_valid": 1.0,
-            "skills_format_ok": 1.0,
-            "gated": 1.0,
-            "gate_failed": 1.0,
-            "total": 0.0
-          }
-        },
-        "available_skills": [
-          "web-scraping",
-          "http-client",
-          "html-parser",
-          "json-parser",
-          "csv-handler",
-          "data-transformer",
-          "data-validator",
-          "data-aggregator",
-          "code-reviewer",
-          "code-fixer",
-          "test-generator",
-          "file-reader",
-          "file-writer",
-          "log-analyzer",
-          "pattern-matcher",
-          "report-generator",
-          "notifier"
-        ],
-        "score": 0.0,
-        "feedback": [],
-        "summary": "Step 3/7, checked",
-        "latest_output": {
-          "score_check": 0.0
-        },
-        "history": [
-          {
-            "step": 1,
-            "action": {
-              "metadata": {},
-              "command": "set_max_turns",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 3,
-            "action": {
-              "metadata": {},
-              "command": "check_score",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          }
-        ],
-        "reward_breakdown": {
-          "yaml_valid": 1.0,
-          "has_required_fields": 0.0,
-          "prompt_length_ok": 0.0,
-          "model_valid": 1.0,
-          "skills_format_ok": 1.0,
-          "gated": 1.0,
-          "gate_failed": 1.0,
-          "total": 0.0
-        },
-        "rule_violations": [],
-        "budget_remaining": null,
-        "time_remaining": null,
-        "truncated": false
-      },
-      "reward": 0.0,
-      "done": false,
-      "reward_breakdown": {
-        "yaml_valid": 1.0,
-        "has_required_fields": 0.0,
-        "prompt_length_ok": 0.0,
-        "model_valid": 1.0,
-        "skills_format_ok": 1.0,
-        "gated": 1.0,
-        "gate_failed": 1.0,
-        "total": 0.0
-      },
-      "latent_snapshot": null
-    },
-    {
-      "step": 4,
-      "action": {
-        "metadata": {},
         "command": "submit",
         "args": {},
         "invoked_subagent": null,
@@ -366,11 +121,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
-        "step": 4,
+        "task_id": "ou_easy_001",
+        "step": 2,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -396,10 +151,10 @@
         "feedback": [
           "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
         ],
-        "summary": "Step 4/7, spec(1 fields)",
+        "summary": "Step 2/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns"
+            "name"
           ]
         },
         "history": [
@@ -407,7 +162,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -418,32 +173,6 @@
           },
           {
             "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 3,
-            "action": {
-              "metadata": {},
-              "command": "check_score",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 4,
             "action": {
               "metadata": {},
               "command": "submit",
@@ -512,10 +241,10 @@
       "latent_snapshot": null
     },
     {
-      "step": 5,
+      "step": 3,
       "action": {
         "metadata": {},
-        "command": "remove_skill",
+        "command": "set_model",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -525,11 +254,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
-        "step": 5,
+        "task_id": "ou_easy_001",
+        "step": 3,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null
+          "name": "",
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -553,10 +283,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 5/7, spec(1 fields)",
+        "summary": "Step 3/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns"
+            "name",
+            "model"
           ]
         },
         "history": [
@@ -564,7 +295,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -575,32 +306,6 @@
           },
           {
             "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 3,
-            "action": {
-              "metadata": {},
-              "command": "check_score",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 4,
             "action": {
               "metadata": {},
               "command": "submit",
@@ -618,6 +323,323 @@
                 "penalty": null
               }
             ]
+          },
+          {
+            "step": 3,
+            "action": {
+              "metadata": {},
+              "command": "set_model",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 4,
+      "action": {
+        "metadata": {},
+        "command": "remove_skill",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.5
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "metadata": {},
+        "task_id": "ou_easy_001",
+        "step": 4,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "",
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 4/7, spec(2 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "model"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "metadata": {},
+              "command": "set_name",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "metadata": {},
+              "command": "submit",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": [
+              {
+                "severity": "hard",
+                "category": "prerequisite",
+                "message": "Cannot submit: missing name, description, system_prompt (too short).",
+                "penalty": null
+              }
+            ]
+          },
+          {
+            "step": 3,
+            "action": {
+              "metadata": {},
+              "command": "set_model",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "metadata": {},
+              "command": "remove_skill",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 5,
+      "action": {
+        "metadata": {},
+        "command": "remove_skill",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.5
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "metadata": {},
+        "task_id": "ou_easy_001",
+        "step": 5,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "",
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 5/7, spec(2 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "model"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "metadata": {},
+              "command": "set_name",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "metadata": {},
+              "command": "submit",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": [
+              {
+                "severity": "hard",
+                "category": "prerequisite",
+                "message": "Cannot submit: missing name, description, system_prompt (too short).",
+                "penalty": null
+              }
+            ]
+          },
+          {
+            "step": 3,
+            "action": {
+              "metadata": {},
+              "command": "set_model",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "metadata": {},
+              "command": "remove_skill",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
           },
           {
             "step": 5,
@@ -678,7 +700,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "set_name",
+        "command": "add_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -688,12 +710,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "ou_easy_001",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "name": ""
+          "name": "",
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -720,39 +742,13 @@
         "summary": "Step 6/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns",
-            "name"
+            "name",
+            "model"
           ]
         },
         "history": [
           {
             "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 3,
-            "action": {
-              "metadata": {},
-              "command": "check_score",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 4,
             "action": {
               "metadata": {},
               "command": "submit",
@@ -772,6 +768,32 @@
             ]
           },
           {
+            "step": 3,
+            "action": {
+              "metadata": {},
+              "command": "set_model",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "metadata": {},
+              "command": "remove_skill",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
             "step": 5,
             "action": {
               "metadata": {},
@@ -788,7 +810,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_name",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -843,7 +865,7 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "inspect_example",
+        "command": "submit",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -853,18 +875,14 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "ou_easy_001",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "name": ""
+          "name": "",
+          "model": "sonnet"
         },
-        "investigation_result": {
-          "domain": "web",
-          "example_template": "You are a web scraping specialist.\n\nBest practices:\n- Always check robots.txt\n- Implement rate limiting\n- Handle errors gracefully\n- Validate extracted data\n- Store results in structured format\n\nWhen scraping:\n1. Identify target structure\n2. Select appropriate extraction method\n3. Handle pagination\n4. Store results\n",
-          "hint": "Focus on web-specific skills and best practices"
-        },
+        "investigation_result": null,
         "available_skills": [
           "web-scraping",
           "http-client",
@@ -885,17 +903,22 @@
           "notifier"
         ],
         "score": 0.0,
-        "feedback": [],
-        "summary": "Step 7/7, inspected",
+        "feedback": [
+          "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
+        ],
+        "summary": "Step 7/7, spec(2 fields)",
         "latest_output": {
-          "example_inspected": "web"
+          "spec_keys": [
+            "name",
+            "model"
+          ]
         },
         "history": [
           {
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "check_score",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -908,21 +931,14 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 5,
@@ -941,7 +957,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_name",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -954,14 +970,21 @@
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "inspect_example",
+              "command": "submit",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": []
+            "violations": [
+              {
+                "severity": "hard",
+                "category": "prerequisite",
+                "message": "Cannot submit: missing name, description, system_prompt (too short).",
+                "penalty": null
+              }
+            ]
           }
         ],
         "reward_breakdown": {
@@ -970,11 +993,24 @@
           "prompt_length_ok": 0.0,
           "model_valid": 1.0,
           "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
           "gated": 1.0,
           "gate_failed": 1.0,
           "total": 0.0
         },
-        "rule_violations": [],
+        "rule_violations": [
+          {
+            "severity": "hard",
+            "category": "prerequisite",
+            "message": "Cannot submit: missing name, description, system_prompt (too short).",
+            "penalty": null
+          }
+        ],
         "budget_remaining": null,
         "time_remaining": null,
         "truncated": true
@@ -987,6 +1023,12 @@
         "prompt_length_ok": 0.0,
         "model_valid": 1.0,
         "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
         "gated": 1.0,
         "gate_failed": 1.0,
         "total": 0.0

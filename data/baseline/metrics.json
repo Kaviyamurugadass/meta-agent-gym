@@ -1,0 +1,42 @@
+[
+  {
+    "label": "random",
+    "online": {
+      "n": 20,
+      "mean_reward": 0.0,
+      "median_reward": 0.0,
+      "std_reward": 0.0,
+      "max_reward": 0.0,
+      "min_reward": 0.0,
+      "mean_length": 7,
+      "success_rate": 0.0
+    },
+    "behavior": {
+      "action_diversity": 0.1,
+      "mean_confidence": 0.5,
+      "mean_violations_per_step": 0.08571428571428572,
+      "total_steps": 140,
+      "unique_actions": 14
+    }
+  },
+  {
+    "label": "heuristic",
+    "online": {
+      "n": 20,
+      "mean_reward": 0.0,
+      "median_reward": 0.0,
+      "std_reward": 0.0,
+      "max_reward": 0.0,
+      "min_reward": 0.0,
+      "mean_length": 7,
+      "success_rate": 0.0
+    },
+    "behavior": {
+      "action_diversity": 0.014285714285714285,
+      "mean_confidence": 0.5285714285714286,
+      "mean_violations_per_step": 0.14285714285714285,
+      "total_steps": 140,
+      "unique_actions": 2
+    }
+  }
+]

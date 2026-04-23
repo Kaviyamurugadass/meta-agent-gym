@@ -1,5 +1,5 @@
 {
-  "task_id": "ws_easy_001",
+  "task_id": "fi_easy_002",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "add_tools",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,12 +17,10 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 1,
         "max_steps": 7,
-        "current_spec": {
-          "system_prompt": ""
-        },
+        "current_spec": {},
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -45,18 +43,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 1/7, spec(1 fields)",
+        "summary": "Step 1/7, spec(0 fields)",
         "latest_output": {
-          "spec_keys": [
-            "system_prompt"
-          ]
+          "spec_keys": []
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -111,7 +107,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "set_max_turns",
+        "command": "set_model",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -121,12 +117,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 2,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -150,11 +145,10 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 2/7, spec(2 fields)",
+        "summary": "Step 2/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
-            "max_turns"
+            "model"
           ]
         },
         "history": [
@@ -162,7 +156,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -175,7 +169,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -230,7 +224,7 @@
       "step": 3,
       "action": {
         "metadata": {},
-        "command": "remove_skill",
+        "command": "add_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -240,12 +234,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 3,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -269,11 +262,10 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 3/7, spec(2 fields)",
+        "summary": "Step 3/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
-            "max_turns"
+            "model"
           ]
         },
         "history": [
@@ -281,7 +273,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -294,7 +286,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -307,7 +299,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "remove_skill",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -362,7 +354,7 @@
       "step": 4,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "remove_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -372,12 +364,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 4,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -401,11 +392,10 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(2 fields)",
+        "summary": "Step 4/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
-            "max_turns"
+            "model"
           ]
         },
         "history": [
@@ -413,7 +403,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -426,7 +416,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -439,7 +429,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "remove_skill",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -452,7 +442,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -507,7 +497,7 @@
       "step": 5,
       "action": {
         "metadata": {},
-        "command": "add_tools",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -517,12 +507,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 5,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -546,19 +535,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 5/7, spec(2 fields)",
+        "summary": "Step 5/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "system_prompt",
-            "max_turns"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -571,7 +557,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -584,7 +570,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "remove_skill",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -597,7 +583,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -610,7 +596,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -665,7 +651,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "submit",
+        "command": "add_tools",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -675,12 +661,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -703,14 +688,11 @@
           "notifier"
         ],
         "score": 0.0,
-        "feedback": [
-          "prerequisite: Cannot submit: missing name, description, system_prompt (too short)."
-        ],
-        "summary": "Step 6/7, spec(2 fields)",
+        "feedback": [],
+        "summary": "Step 6/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
-            "max_turns"
+            "model"
           ]
         },
         "history": [
@@ -718,7 +700,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -731,7 +713,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "remove_skill",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -744,7 +726,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -757,7 +739,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -770,21 +752,14 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           }
         ],
         "reward_breakdown": {
@@ -803,14 +778,7 @@
           "gate_failed": 1.0,
           "total": 0.0
         },
-        "rule_violations": [
-          {
-            "severity": "hard",
-            "category": "prerequisite",
-            "message": "Cannot submit: missing name, description, system_prompt (too short).",
-            "penalty": null
-          }
-        ],
+        "rule_violations": [],
         "budget_remaining": null,
         "time_remaining": null,
         "truncated": false
@@ -839,7 +807,7 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "add_tools",
+        "command": "set_description",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -849,12 +817,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_002",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "max_turns": null
+          "model": "sonnet",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -881,8 +849,8 @@
         "summary": "Step 7/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
-            "max_turns"
+            "model",
+            "description"
           ]
         },
         "history": [
@@ -890,7 +858,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "remove_skill",
+              "command": "add_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -903,7 +871,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -916,7 +884,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -929,27 +897,20 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "submit",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
               "confidence": 0.5
             },
             "reward": 0.0,
-            "violations": [
-              {
-                "severity": "hard",
-                "category": "prerequisite",
-                "message": "Cannot submit: missing name, description, system_prompt (too short).",
-                "penalty": null
-              }
-            ]
+            "violations": []
           },
           {
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,

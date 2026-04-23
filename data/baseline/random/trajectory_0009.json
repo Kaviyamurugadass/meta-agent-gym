@@ -1,5 +1,5 @@
 {
-  "task_id": "ws_easy_001",
+  "task_id": "fi_easy_001",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "set_name",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,11 +17,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 1,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": ""
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -48,7 +48,7 @@
         "summary": "Step 1/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt"
+            "name"
           ]
         },
         "history": [
@@ -56,7 +56,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -111,7 +111,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "add_skill",
+        "command": "inspect_example",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -121,13 +121,17 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 2,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": ""
+          "name": ""
         },
-        "investigation_result": null,
+        "investigation_result": {
+          "domain": "files",
+          "example_template": "No template available",
+          "hint": "Focus on files-specific skills and best practices"
+        },
         "available_skills": [
           "web-scraping",
           "http-client",
@@ -149,18 +153,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 2/7, spec(1 fields)",
+        "summary": "Step 2/7, inspected",
         "latest_output": {
-          "spec_keys": [
-            "system_prompt"
-          ]
+          "example_inspected": "files"
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -173,7 +175,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -189,12 +191,6 @@
           "prompt_length_ok": 0.0,
           "model_valid": 1.0,
           "skills_format_ok": 1.0,
-          "skill_selection": 0.0,
-          "description_quality": 0.0,
-          "workflow_clarity": 0.0,
-          "model_appropriateness": 0.8,
-          "best_practices": 0.0,
-          "efficiency": 1.0,
           "gated": 1.0,
           "gate_failed": 1.0,
           "total": 0.0
@@ -212,12 +208,6 @@
         "prompt_length_ok": 0.0,
         "model_valid": 1.0,
         "skills_format_ok": 1.0,
-        "skill_selection": 0.0,
-        "description_quality": 0.0,
-        "workflow_clarity": 0.0,
-        "model_appropriateness": 0.8,
-        "best_practices": 0.0,
-        "efficiency": 1.0,
         "gated": 1.0,
         "gate_failed": 1.0,
         "total": 0.0
@@ -228,7 +218,7 @@
       "step": 3,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "remove_skill",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -238,11 +228,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 3,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": ""
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -269,7 +259,7 @@
         "summary": "Step 3/7, spec(1 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt"
+            "name"
           ]
         },
         "history": [
@@ -277,7 +267,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -290,7 +280,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -303,7 +293,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -358,7 +348,7 @@
       "step": 4,
       "action": {
         "metadata": {},
-        "command": "set_model",
+        "command": "noop",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -368,12 +358,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 4,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
-          "model": "sonnet"
+          "name": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -397,19 +386,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(2 fields)",
+        "summary": "Step 4/7, noop",
         "latest_output": {
-          "spec_keys": [
-            "system_prompt",
-            "model"
-          ]
+          "noop": true
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -422,7 +408,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -435,7 +421,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -448,7 +434,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -503,7 +489,7 @@
       "step": 5,
       "action": {
         "metadata": {},
-        "command": "add_tools",
+        "command": "set_model",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -513,11 +499,11 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 5,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
+          "name": "",
           "model": "sonnet"
         },
         "investigation_result": null,
@@ -545,7 +531,7 @@
         "summary": "Step 5/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
+            "name",
             "model"
           ]
         },
@@ -554,7 +540,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "set_name",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -567,7 +553,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -580,7 +566,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -593,7 +579,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -606,7 +592,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -661,7 +647,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "set_name",
+        "command": "set_description",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -671,13 +657,13 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
+          "name": "",
           "model": "sonnet",
-          "name": ""
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -704,9 +690,9 @@
         "summary": "Step 6/7, spec(3 fields)",
         "latest_output": {
           "spec_keys": [
-            "system_prompt",
+            "name",
             "model",
-            "name"
+            "description"
           ]
         },
         "history": [
@@ -714,7 +700,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "inspect_example",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -727,7 +713,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -740,7 +726,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -753,7 +739,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -766,7 +752,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_name",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -831,13 +817,13 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "ws_easy_001",
+        "task_id": "fi_easy_001",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "system_prompt": "",
+          "name": "",
           "model": "sonnet",
-          "name": ""
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -861,12 +847,12 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 7/7, inspected web",
+        "summary": "Step 7/7, inspected files",
         "latest_output": {
-          "domain": "web",
+          "domain": "files",
           "difficulty": "easy",
           "required_skills": [
-            "web-scraping"
+            "file-reader"
           ]
         },
         "history": [
@@ -874,7 +860,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "remove_skill",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -887,7 +873,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "set_model",
+              "command": "noop",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -900,7 +886,7 @@
             "step": 5,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -913,7 +899,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "set_name",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,

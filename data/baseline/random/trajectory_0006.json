@@ -1,5 +1,5 @@
 {
-  "task_id": "cr_easy_001",
+  "task_id": "fi_easy_002",
   "scenario_name": null,
   "difficulty": "easy",
   "steps": [
@@ -7,7 +7,7 @@
       "step": 1,
       "action": {
         "metadata": {},
-        "command": "add_tools",
+        "command": "write_prompt",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -17,10 +17,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 1,
         "max_steps": 7,
-        "current_spec": {},
+        "current_spec": {
+          "system_prompt": ""
+        },
         "investigation_result": null,
         "available_skills": [
           "web-scraping",
@@ -43,16 +45,18 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 1/7, spec(0 fields)",
+        "summary": "Step 1/7, spec(1 fields)",
         "latest_output": {
-          "spec_keys": []
+          "spec_keys": [
+            "system_prompt"
+          ]
         },
         "history": [
           {
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "write_prompt",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -107,7 +111,7 @@
       "step": 2,
       "action": {
         "metadata": {},
-        "command": "inspect_example",
+        "command": "set_description",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -117,116 +121,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 2,
         "max_steps": 7,
-        "current_spec": {},
-        "investigation_result": {
-          "domain": "code",
-          "example_template": "You are a code review specialist.\n\nBest practices:\n- Focus on code quality\n- Check for security issues\n- Verify error handling\n- Assess performance\n\nReview checklist:\n- Code is clear and readable\n- Proper error handling\n- No security vulnerabilities\n- Good test coverage\n",
-          "hint": "Focus on code-specific skills and best practices"
-        },
-        "available_skills": [
-          "web-scraping",
-          "http-client",
-          "html-parser",
-          "json-parser",
-          "csv-handler",
-          "data-transformer",
-          "data-validator",
-          "data-aggregator",
-          "code-reviewer",
-          "code-fixer",
-          "test-generator",
-          "file-reader",
-          "file-writer",
-          "log-analyzer",
-          "pattern-matcher",
-          "report-generator",
-          "notifier"
-        ],
-        "score": 0.0,
-        "feedback": [],
-        "summary": "Step 2/7, inspected",
-        "latest_output": {
-          "example_inspected": "code"
-        },
-        "history": [
-          {
-            "step": 1,
-            "action": {
-              "metadata": {},
-              "command": "add_tools",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          },
-          {
-            "step": 2,
-            "action": {
-              "metadata": {},
-              "command": "inspect_example",
-              "args": {},
-              "invoked_subagent": null,
-              "justification": null,
-              "confidence": 0.5
-            },
-            "reward": 0.0,
-            "violations": []
-          }
-        ],
-        "reward_breakdown": {
-          "yaml_valid": 1.0,
-          "has_required_fields": 0.0,
-          "prompt_length_ok": 0.0,
-          "model_valid": 1.0,
-          "skills_format_ok": 1.0,
-          "gated": 1.0,
-          "gate_failed": 1.0,
-          "total": 0.0
-        },
-        "rule_violations": [],
-        "budget_remaining": null,
-        "time_remaining": null,
-        "truncated": false
-      },
-      "reward": 0.0,
-      "done": false,
-      "reward_breakdown": {
-        "yaml_valid": 1.0,
-        "has_required_fields": 0.0,
-        "prompt_length_ok": 0.0,
-        "model_valid": 1.0,
-        "skills_format_ok": 1.0,
-        "gated": 1.0,
-        "gate_failed": 1.0,
-        "total": 0.0
-      },
-      "latent_snapshot": null
-    },
-    {
-      "step": 3,
-      "action": {
-        "metadata": {},
-        "command": "set_max_turns",
-        "args": {},
-        "invoked_subagent": null,
-        "justification": null,
-        "confidence": 0.5
-      },
-      "observation": {
-        "done": false,
-        "reward": 0.0,
-        "metadata": {},
-        "task_id": "cr_easy_001",
-        "step": 3,
-        "max_steps": 7,
         "current_spec": {
-          "max_turns": null
+          "system_prompt": "",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -250,10 +150,11 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 3/7, spec(1 fields)",
+        "summary": "Step 2/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns"
+            "system_prompt",
+            "description"
           ]
         },
         "history": [
@@ -261,7 +162,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "write_prompt",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -274,7 +175,126 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "inspect_example",
+              "command": "set_description",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 3,
+      "action": {
+        "metadata": {},
+        "command": "add_tools",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.5
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "metadata": {},
+        "task_id": "fi_easy_002",
+        "step": 3,
+        "max_steps": 7,
+        "current_spec": {
+          "system_prompt": "",
+          "description": ""
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 3/7, spec(2 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "system_prompt",
+            "description"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "metadata": {},
+              "command": "write_prompt",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "metadata": {},
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -287,7 +307,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -342,7 +362,7 @@
       "step": 4,
       "action": {
         "metadata": {},
-        "command": "write_prompt",
+        "command": "inspect",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -352,12 +372,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 4,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "system_prompt": ""
+          "system_prompt": "",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -381,11 +401,12 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 4/7, spec(2 fields)",
+        "summary": "Step 4/7, inspected files",
         "latest_output": {
-          "spec_keys": [
-            "max_turns",
-            "system_prompt"
+          "domain": "files",
+          "difficulty": "easy",
+          "required_skills": [
+            "file-writer"
           ]
         },
         "history": [
@@ -393,7 +414,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "write_prompt",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -406,7 +427,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "inspect_example",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -419,7 +440,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -432,7 +453,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -497,12 +518,12 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 5,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "system_prompt": ""
+          "system_prompt": "",
+          "description": ""
         },
         "investigation_result": null,
         "available_skills": [
@@ -529,8 +550,8 @@
         "summary": "Step 5/7, spec(2 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns",
-            "system_prompt"
+            "system_prompt",
+            "description"
           ]
         },
         "history": [
@@ -538,7 +559,7 @@
             "step": 1,
             "action": {
               "metadata": {},
-              "command": "add_tools",
+              "command": "write_prompt",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -551,7 +572,7 @@
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "inspect_example",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -564,7 +585,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -577,7 +598,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -645,7 +666,7 @@
       "step": 6,
       "action": {
         "metadata": {},
-        "command": "noop",
+        "command": "check_score",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -655,14 +676,26 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 6,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "system_prompt": ""
+          "system_prompt": "",
+          "description": ""
         },
-        "investigation_result": null,
+        "investigation_result": {
+          "current_score": 0.0,
+          "breakdown": {
+            "yaml_valid": 1.0,
+            "has_required_fields": 0.0,
+            "prompt_length_ok": 0.0,
+            "model_valid": 1.0,
+            "skills_format_ok": 1.0,
+            "gated": 1.0,
+            "gate_failed": 1.0,
+            "total": 0.0
+          }
+        },
         "available_skills": [
           "web-scraping",
           "http-client",
@@ -684,16 +717,16 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 6/7, noop",
+        "summary": "Step 6/7, checked",
         "latest_output": {
-          "noop": true
+          "score_check": 0.0
         },
         "history": [
           {
             "step": 2,
             "action": {
               "metadata": {},
-              "command": "inspect_example",
+              "command": "set_description",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -706,7 +739,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -719,7 +752,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -745,7 +778,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "check_score",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -761,12 +794,6 @@
           "prompt_length_ok": 0.0,
           "model_valid": 1.0,
           "skills_format_ok": 1.0,
-          "skill_selection": 0.0,
-          "description_quality": 0.0,
-          "workflow_clarity": 0.0,
-          "model_appropriateness": 0.8,
-          "best_practices": 0.0,
-          "efficiency": 1.0,
           "gated": 1.0,
           "gate_failed": 1.0,
           "total": 0.0
@@ -784,12 +811,6 @@
         "prompt_length_ok": 0.0,
         "model_valid": 1.0,
         "skills_format_ok": 1.0,
-        "skill_selection": 0.0,
-        "description_quality": 0.0,
-        "workflow_clarity": 0.0,
-        "model_appropriateness": 0.8,
-        "best_practices": 0.0,
-        "efficiency": 1.0,
         "gated": 1.0,
         "gate_failed": 1.0,
         "total": 0.0
@@ -800,7 +821,7 @@
       "step": 7,
       "action": {
         "metadata": {},
-        "command": "add_skill",
+        "command": "set_model",
         "args": {},
         "invoked_subagent": null,
         "justification": null,
@@ -810,12 +831,13 @@
         "done": false,
         "reward": 0.0,
         "metadata": {},
-        "task_id": "cr_easy_001",
+        "task_id": "fi_easy_002",
         "step": 7,
         "max_steps": 7,
         "current_spec": {
-          "max_turns": null,
-          "system_prompt": ""
+          "system_prompt": "",
+          "description": "",
+          "model": "sonnet"
         },
         "investigation_result": null,
         "available_skills": [
@@ -839,11 +861,12 @@
         ],
         "score": 0.0,
         "feedback": [],
-        "summary": "Step 7/7, spec(2 fields)",
+        "summary": "Step 7/7, spec(3 fields)",
         "latest_output": {
           "spec_keys": [
-            "max_turns",
-            "system_prompt"
+            "system_prompt",
+            "description",
+            "model"
           ]
         },
         "history": [
@@ -851,7 +874,7 @@
             "step": 3,
             "action": {
               "metadata": {},
-              "command": "set_max_turns",
+              "command": "add_tools",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -864,7 +887,7 @@
             "step": 4,
             "action": {
               "metadata": {},
-              "command": "write_prompt",
+              "command": "inspect",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -890,7 +913,7 @@
             "step": 6,
             "action": {
               "metadata": {},
-              "command": "noop",
+              "command": "check_score",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
@@ -903,7 +926,7 @@
             "step": 7,
             "action": {
               "metadata": {},
-              "command": "add_skill",
+              "command": "set_model",
               "args": {},
               "invoked_subagent": null,
               "justification": null,
