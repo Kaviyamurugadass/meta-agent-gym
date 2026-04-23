@@ -179,6 +179,22 @@ body{overflow:hidden}
             </div>
         </div>
 
+        <!-- Generate with Trained Model -->
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">Generate with Trained Model</span>
+                <span class="badge" id="genStatusBadge" style="background:rgba(251,191,36,0.1);color:var(--yellow)">Checking...</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Task description</label>
+                <textarea class="form-textarea" id="genTaskDesc" rows="3" placeholder="Build an agent that scrapes product prices from e-commerce pages"></textarea>
+            </div>
+            <div class="btn-row" style="margin-top:4px">
+                <button class="btn btn-primary" id="btnGenerate" disabled>Generate Agent</button>
+            </div>
+            <div id="genStatusMsg" style="margin-top:10px;font-size:0.75rem;color:var(--muted);display:none"></div>
+        </div>
+
         <!-- Agent Builder (Accordion) -->
         <div class="card" style="padding:12px">
             <div class="card-head" style="margin-bottom:8px;padding:0 8px">
@@ -391,8 +407,69 @@ let ws=null,wsOk=false,pending=null,spec={},active=false,step=0,maxStep=7;
     $("btnStart").disabled=false;
     $("btnStart").onclick=startEp;
     $("btnReset").onclick=resetEp;
+    $("btnGenerate").onclick=generateWithModel;
     fetch("/health").then(r=>{setConn(r.ok)}).catch(()=>setConn(false));
+    checkGenerateStatus();
 })();
+
+// ─── Trained-model Generation ───
+async function checkGenerateStatus(){
+    const badge=$("genStatusBadge"),btn=$("btnGenerate"),msg=$("genStatusMsg");
+    try{
+        const r=await fetch("/generate/status");
+        const d=await r.json();
+        if(d.available&&d.adapter_available&&d.deps_available){
+            badge.textContent="Ready";
+            badge.style.background="rgba(52,211,153,0.1)";
+            badge.style.color="var(--green)";
+            btn.disabled=false;
+            msg.style.display="none";
+        }else{
+            badge.textContent="Not Deployed";
+            badge.style.background="rgba(248,113,113,0.1)";
+            badge.style.color="var(--red)";
+            btn.disabled=true;
+            const reason=!d.deps_available?"inference deps missing":"no adapter uploaded";
+            msg.style.display="block";
+            msg.textContent="Available once trained onsite ("+reason+"). Adapter path: "+(d.adapter_path||"training/grpo-unsloth-output/");
+        }
+    }catch(e){
+        badge.textContent="Error";
+        badge.style.background="rgba(248,113,113,0.1)";
+        badge.style.color="var(--red)";
+        btn.disabled=true;
+    }
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function generateWithModel(){
+    const task=$("genTaskDesc").value.trim();
+    if(!task){alert("Enter a task description first");return}
+    const btn=$("btnGenerate");btn.disabled=true;btn.textContent="Generating...";
+    try{
+        // Auto-start episode if not active
+        if(!active){
+            const sel=$("taskSelect");
+            if(!sel.value){alert("Pick a scenario first so the env has a task ID");btn.disabled=false;btn.textContent="Generate Agent";return}
+            await startEp();
+            if(!active){throw new Error("Could not start episode")}
+        }
+        // Call the trained model
+        const r=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_description:task})});
+        const d=await r.json();
+        if(d.status!=="ok"){
+            alert((d.message||"Generate failed")+"\n\nStatus: "+d.status);
+            return;
+        }
+        // Replay actions via existing /step pipeline so reward scoring works the same
+        btn.textContent="Replaying "+d.actions.length+" actions...";
+        for(const a of d.actions){
+            if(!active)break; // stop if episode ended early
+            await exec(a.command,a.args);
+            await sleep(500);
+        }
+    }catch(e){alert("Generate failed: "+e.message)}
+    finally{btn.disabled=false;btn.textContent="Generate Agent"}
+}
 
 function setConn(ok){wsOk=ok;$("connDot").className="conn-dot"+(ok?"":" off");$("connText").textContent=ok?"Connected":"Offline"}
 

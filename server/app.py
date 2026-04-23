@@ -123,6 +123,77 @@ async def health() -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Trained-model inference endpoint — powers the dashboard's "Generate with
+# Trained Model" button. Works once a LoRA adapter is pushed to
+# training/grpo-unsloth-output/ (done onsite with HF credits).
+# ---------------------------------------------------------------------------
+
+
+@app.get("/generate/status")
+async def generate_status() -> dict[str, Any]:
+    """Report whether the trained model is deployed and ready to serve."""
+    try:
+        from server.inference_service import get_service
+        return {"available": True, **get_service().status}
+    except Exception as e:
+        return {"available": False, "error": f"{type(e).__name__}: {e}"}
+
+
+@app.post("/generate")
+async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Generate an agent spec from a task description using the trained LoRA.
+
+    Request body:
+        {"task_description": "Build an agent that scrapes product prices"}
+
+    Response shapes:
+        {"status": "ok", "spec": {...}, "actions": [{"command": "...", "args": {...}}, ...]}
+        {"status": "no_adapter", "message": "...", "adapter_path": "..."}
+        {"status": "deps_missing", "message": "..."}
+        {"status": "error", "message": "..."}
+
+    The `actions` list is designed for replay via the existing /step pipeline
+    so the UI can animate a trained-model-driven episode using the same reward
+    surface as human-driven play.
+    """
+    task = (body or {}).get("task_description", "").strip()
+    if not task:
+        return {"status": "error", "message": "task_description is required"}
+
+    try:
+        from server.inference_service import get_service, spec_to_actions
+    except ImportError as e:
+        return {"status": "deps_missing", "message": f"Failed to import inference module: {e}"}
+
+    svc = get_service()
+    if not svc.deps_available:
+        return {
+            "status": "deps_missing",
+            "message": (
+                "Inference deps not installed on this Space. "
+                "Need: transformers, peft, torch. Onsite, add these to the runtime."
+            ),
+        }
+    if not svc.adapter_available:
+        return {
+            "status": "no_adapter",
+            "message": (
+                "No trained LoRA adapter deployed yet. Available once we train "
+                "onsite with HF credits (2026-04-25/26) and push the adapter to "
+                "training/grpo-unsloth-output/ or set META_ADAPTER_PATH."
+            ),
+            "adapter_path": svc.status["adapter_path"],
+        }
+
+    try:
+        spec = svc.generate_spec(task)
+        actions = spec_to_actions(spec)
+        return {"status": "ok", "spec": spec, "actions": actions}
+    except Exception as e:
+        return {"status": "error", "message": f"{type(e).__name__}: {e}"}
+
+
+# ---------------------------------------------------------------------------
 # CLI entry point — required by `openenv validate` for multi-mode deployment
 # ---------------------------------------------------------------------------
 
