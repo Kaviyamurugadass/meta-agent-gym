@@ -1,0 +1,82 @@
+[
+  {
+    "file": "trajectory_0000.json",
+    "task_id": "cr_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0001.json",
+    "task_id": "ws_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0002.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0003.json",
+    "task_id": "ws_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0004.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0005.json",
+    "task_id": "cr_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0006.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0007.json",
+    "task_id": "ws_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0008.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  },
+  {
+    "file": "trajectory_0009.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 51.8,
+    "success": true
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "model_name": "Qwen2.5-0.5B-GRPO-Trained",
+  "training_episodes": 50,
+  "success_rate": 1.0,
+  "mean_reward": 2.56,
+  "training_date": "2026-04-23",
+  "status": "demo_ready",
+  "capabilities": [
+    "Agent specification generation",
+    "Skill selection",
+    "Prompt writing",
+    "Model choice optimization"
+  ]
+}
