@@ -339,7 +339,7 @@ training_metrics = {
 - **Reproducible**: Complete training pipeline
 
 ### Learning Effectiveness
-- **Dramatic improvement**: 2200% reward increase over baseline
+- **Measured learning signal**: per-component last-10 means exceed overall means by +65-67% across description_quality, workflow_clarity, has_required_fields, and prompt_length_ok (see `monitoring/colab_results/report.json`)
 - **Stable convergence**: Consistent expert-level performance
 - **Component mastery**: All quality dimensions show clear progress
 - **Generalization**: Works across domains and difficulties

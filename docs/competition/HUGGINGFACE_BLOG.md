@@ -1,158 +1,154 @@
-# Teaching AI to Design AI Agents: Meta-Learning Breakthrough
+# Meta-Agent Gym: An OpenEnv Environment for Teaching LLMs to Design Agents
 
-## 🌟 The Breakthrough
+**OpenEnv Hackathon 2026 submission — [Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)**
 
-We've taught a tiny language model to do something remarkable: **design complete, production-ready AI agents from just a simple description**.
+## The idea
 
-Imagine saying "Build me an agent that analyzes CSV data and generates reports" and getting back a fully working agent specification that can be deployed immediately. That's what our model learned to do.
+Most RL environments for LLMs test a model's ability to *solve* tasks.
+Meta-Agent Gym tests a different skill: can a small LLM learn to *design agents
+that solve tasks*?
 
-## 🎯 The Problem We Solved
+The policy takes a natural-language task description ("Build an agent that
+scrapes product prices from e-commerce sites") and emits a complete AGENT.md
+specification — name, description, skills, model choice, system prompt — that
+runs across Claude Code, Goose, Copilot, and any framework following the
+[Agent Skills Open Standard](https://anthropic.com).
 
-**Today**: Only programmers can create custom AI agents
-**Barrier**: You need technical skills in prompt engineering, agent frameworks, and system design
-**Result**: Most businesses are stuck with generic AI tools
+It's meta-learning at small scale: teaching an LLM to write the instructions
+that instruct other LLMs.
 
-**Our Solution**: Train an AI model to be an "agent designer" - a meta-skill that bridges the gap between ideas and working AI agents.
+## How it works
 
-## 🏗️ How It Works
+### The action space
 
-### The Environment
-We created **Meta-Agent Gym**, a reinforcement learning environment where:
+We chose a **command-based action space** rather than free-form text:
 
-1. **Input**: Simple task description ("Build an agent that scrapes product prices")
-2. **Actions**: Structured commands (`set_name`, `add_skill`, `write_prompt`, `submit`)
-3. **Learning**: Multi-dimensional reward system teaches quality agent design
-4. **Output**: Complete AGENT.md specification ready for deployment
+```
+SET_NAME, SET_DESCRIPTION, ADD_SKILL, WRITE_PROMPT, SET_MODEL,
+ADD_TOOLS, CHECK_SCORE, INSPECT_EXAMPLE, SUBMIT, NOOP
+```
 
-### The Training Process
-Our model started with **zero knowledge** of agent design:
+Token-efficient, grader-friendly, easy to validate. Each step the agent picks
+one command and fills in its arguments. A typical successful trajectory:
+`SET_NAME → SET_DESCRIPTION → ADD_SKILL → WRITE_PROMPT → SET_MODEL → SUBMIT`.
 
-**Episode 1**: Receives first task → tries `submit` with empty spec → **Reward: 0.0**
-**Episode 15**: Learns to `set_name` → `add_skill` → `write_prompt` → **Reward: 6.75**
-**Episode 50**: Masters complex multi-skill agents → **Reward: 8.7** (expert level)
+### Three-tier verification (RLVR)
 
-The agent learned:
-- **Skill Selection**: Pick right skills for task complexity
-- **Description Quality**: Write clear "when to use" guidance
-- **Workflow Clarity**: Provide step-by-step instructions
-- **Model Choice**: Select cost-appropriate models
-- **Best Practices**: Include error handling and validation
+The reward function composes three layers, each catching different failure modes:
 
-## 📊 The Results
+| Tier | What | Frequency | Cost |
+|---|---|---|---|
+| Hard verifiers | YAML parse, required fields, format | Every step (100%) | ~$0 |
+| Fast judge | Claude Sonnet quality scoring (5 dims) | 90% of steps | ~$0.01 |
+| Real execution | Goose runtime actual test | Steps 3, 6, 9 (10%) | ~$1–10 |
 
-### Dramatic Improvement
-| Metric | Random Baseline | Trained Agent | Improvement |
-|---------|------------------|----------------|-------------|
-| Success Rate | 5% | 68% | **1260%** |
-| Mean Reward | -0.2 | 4.2 | **2200%** |
-| Spec Quality | 0.1 | 0.75 | **650%** |
+Hard gates prevent format hacks. Fast judge provides quality signal. Real
+execution validates that the judge isn't getting gamed.
 
-### Real-World Impact
-**Before**: Custom agent = weeks of development + $10,000+ consulting
-**After**: Custom agent = 30 seconds with our trained model
+### Anti-hacking penalties
 
-**Example**: Small business owner wants inventory monitoring agent
-1. **Old Way**: Hire AI consultant → $5,000 → 2 weeks development
-2. **Our Way**: "Build agent to monitor inventory levels and send alerts" → Instant working agent
+Reward hacking is the first thing the policy tries. We ship with four explicit
+deterrents:
 
-## 🚀 Why This Matters
+- `empty_spec`: **−5.0** (harshest, discourages the NOOP → SUBMIT shortcut)
+- `over_engineered`: **−0.5** (> difficulty-appropriate skill count)
+- `repetitive`: **−0.3** (same command twice)
+- `regression`: **−0.15** (undoing a passing check)
 
-### Democratizes AI Development
-- **Non-technical users** can create specialized agents
-- **Small businesses** can afford custom AI solutions  
-- **Developers** can focus on higher-level problems
-- **Innovation** accelerates when anyone can create agents
+## What we trained
 
-### Pushes AI Frontier
-- **Meta-learning**: Teaching AI to create other AI systems
-- **Complex reasoning**: Multi-step design with quality optimization
-- **Production focus**: Real-world agent requirements, not toy problems
-- **Scalable expertise**: One model can design infinite specialized agents
+- **Base model**: `Qwen/Qwen2.5-0.5B`
+- **Adapter**: LoRA r=16, 8.8M of 502M params trainable (1.75%)
+- **Quantization**: 4-bit NF4 via Unsloth
+- **Loss**: DAPO (asymmetric clipping — outperforms vanilla GRPO per the DAPO paper)
+- **Hardware**: Google Colab T4 (15.6 GB VRAM)
+- **Scale**: 1 epoch × 8 episodes × 2 generations = 4 gradient steps
 
-## 🏆 Technical Innovation
+A sentinel file `training/grpo-unsloth-output/training_summary.json` with
+`"real_training": true` is written only after `trainer.train()` returns, giving
+judges a tamper-evident signal that the run actually happened. The
+[Colab notebook](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
+is deliberately structured to fail loudly on any dependency or training error,
+rather than silently generating placeholder output.
 
-### Three-Tier Verification
-Our environment uses **RLVR (Reinforcement Learning with Verifiable Rewards)**:
+The scale here is small but real. Onsite HF compute credits at the hackathon
+finale will extend the step count without changing the pipeline.
 
-1. **Hard Verifiers** (100% of steps): YAML parsing, required fields, format checks
-2. **LLM Judge** (90% of steps): Claude Sonnet scores 5 quality dimensions  
-3. **Real Execution** (10% of steps): Actually runs generated agent for ground truth
+## Results
 
-This prevents common RL problems like reward hacking and ensures agents actually work.
+### Baselines
 
-### Sophisticated Reward System
-Instead of simple win/loss, we provide **rich, multi-dimensional feedback**:
-- Skill selection quality (25%)
-- Description clarity (20%)
-- Workflow structure (20%)
-- Model appropriateness (15%)
-- Best practices (15%)
-- Efficiency (5%)
+We compared three policies across 20 easy-tier episodes each:
 
-Each component teaches the agent specific aspects of good agent design.
+| Policy | Success | Mean reward |
+|---|---:|---:|
+| Random (uniform over action space) | 0% | 0.00 |
+| Competent heuristic (fills each field then submits) | 100% | 21.33 |
+| Expert benchmark (mixed difficulty) | 20/21 | 16.79 |
 
-## 🎮 Try It Yourself
+The random baseline at 0% is instructive: hard-verifier gates genuinely prevent
+reward hacking, so random actions can't bluff their way through. The competent
+heuristic proves the environment is reachable with >0 reward, so GRPO has
+learning signal to bootstrap from.
 
-### Live Demo
-Watch our agent create a production-ready agent in real-time:
+### Per-component learning signal (50 eval episodes)
 
-**Task**: "Build an agent that analyzes customer reviews and identifies sentiment patterns"
+Over 50 evaluation episodes, later-episode per-component means exceed overall
+means — a positive signal that the environment's decomposed reward produces
+learnable gradient across multiple dimensions:
 
-**Agent's Process**:
-1. `set_name("sentiment-analyzer")` → Agent understands purpose
-2. `set_description("Analyzes customer reviews for sentiment trends and alerts on negative patterns")` → Clear scope
-3. `add_skill("text-processor")` → Right tool for text analysis
-4. `add_skill("pattern-matcher")` → Pattern detection capability
-5. `set_model("sonnet")` → Cost-effective choice
-6. `write_prompt("You are a sentiment analysis specialist...")` → Complete working instructions
-7. `submit` → **Complete agent ready for deployment!**
+| Component | Overall mean | Last-10 mean |
+|---|---:|---:|
+| Per-step reward `total` | 1.83 | 3.05 (+67%) |
+| `description_quality` | 0.31 | 0.51 (+65%) |
+| `workflow_clarity` | 0.23 | 0.38 (+67%) |
+| `has_required_fields` | 0.34 | 0.57 (+67%) |
 
-### Generated Agent
-The output is a complete AGENT.md that works across Claude Code, Goose, Copilot, and any agent framework.
+Episode-level aggregate reward trend: **+0.62 per episode**.
 
-## 🔮 The Future
+### Honest limitation
 
-### Immediate Impact
-- **Small businesses**: Create custom agents without technical teams
-- **Developers**: Rapid prototyping of agent ideas
-- **Enterprises**: Scale agent development across departments
-- **Education**: Teach AI design as a learnable skill
+This submission's evaluation rollouts use the heuristic policy as a placeholder
+for the trained LoRA at inference time — we didn't finish wiring adapter
+loading into rollout collection before the submission window. This means the
+*improvement curves above reflect the environment's reward structure applied to
+a competent heuristic*, not the trained Qwen2.5-0.5B adapter's inference-time
+behaviour. Wiring adapter inference is the planned first task for the onsite
+training window (2026-04-25/26).
 
-### Long-term Vision  
-- **Agent ecosystem**: Millions of specialized agents created by non-experts
-- **AI democratization**: Anyone can be an "AI architect"
-- **Meta-learning**: AI systems that improve other AI systems
-- **Universal agents**: Standardized agent specifications across platforms
+What the submission does demonstrate clearly:
 
-## 🏅 Competition Achievement
+1. A working end-to-end OpenEnv environment with 20+ scenarios across 4 difficulty tiers
+2. A real GRPO run (sentinel-proven) on Qwen2.5-0.5B + 4-bit LoRA
+3. A non-trivial reward surface: random fails completely, competent rule-based play succeeds, expert benchmark exists as a ceiling
+4. A three-tier RLVR verification system with hard gates, fast judge, and real execution calibration
+5. Anti-hacking penalties that shape policy toward the intended task
 
-Our submission demonstrates **excellence across all judging criteria**:
+## Try it
 
-### Innovation (40%) - World's First
-- First environment to teach "agent design" as learnable skill
-- Novel meta-learning approach for AI agent creation
-- Challenges agents with complex, multi-step design tasks
+- 🚀 [Live demo on HF Spaces](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
+- 📓 [Colab training notebook](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
+- 💻 [GitHub repo](https://github.com/Kaviyamurugadass/meta-agent-gym)
 
-### Storytelling (30%) - Clear Journey
-- Compelling narrative from empty prompt to expert designer
-- Relatable problem of custom agent creation barriers
-- Tangible impact on AI accessibility
+## What we learned
 
-### Training Evidence (20%) - Proven Results
-- **Dramatic Learning**: 0% → 100% success rate, 680% reward improvement
-- **Baseline Comparison**: Random agent (0.0 reward) vs Trained agent (2.56 mean reward)
-- **Component Mastery**: All 5 dimensions show 300%+ improvement
-- **Statistical Significance**: 50 episodes with clear learning progression (R² = 0.89)
+A few things that surprised us:
 
-### Technical Excellence (10%) - Robust System
-- Sophisticated three-tier verification system
-- Rich multi-component reward architecture
-- Complete training pipeline with real results
+**The heuristic beats the expert on easy tasks.** Our expert benchmark uses
+"optimal" action sequences for each scenario but its mean reward is pulled
+down by harder tiers. On easy-only, a simple field-filling heuristic scores
+higher. This reframes "expert" as a mixed-difficulty ceiling, not a
+per-scenario ceiling — useful signal for curriculum design.
 
----
+**Silent fallbacks are the real enemy.** Our first three Colab runs "succeeded"
+with placeholder numbers because the notebook swallowed dependency errors and
+wrote mock output files. We rewrote it to fail loudly on any setup or training
+error; the resulting real run exposed two actual bugs (an
+`Observation.done` AttributeError and a ChatML template issue on Unsloth 4-bit
+tokenizers) that the silent path had been hiding.
 
-**Meta-Agent Gym**: We're not just teaching AI to solve problems — we're teaching AI to create solutions that everyone can use.
-
-*Try our live demo: [HF Space Link]*
-*Explore the code: [GitHub Repository]*
-*Read the full paper: [Research Paper Link]*
+**Compute credit windows matter.** A free-tier T4 trains this model in ~20
+minutes — enough to validate the pipeline but not enough for capability gains
+on a model this small. Allocating compute credits to the final 48h of a
+hackathon (as this one does) is the right incentive for teams to build real
+infrastructure first and train at scale last.

@@ -1,128 +1,78 @@
 ---
-title: "Teaching AI to Design AI Agents: Meta-Agent Gym"
-date: 2025-04-23
+title: "Teaching LLMs to Design Agents: Meta-Agent Gym"
+date: 2026-04-24
 video_length: "1:45"
 tags: ["meta-learning", "reinforcement-learning", "agent-design", "openenv"]
 ---
 
-# Meta-Agent Gym: Teaching AI to Design AI Agents
-*(Video Script - Under 2 Minutes)*
+# Meta-Agent Gym — Video Script
 
-## [0:00-0:15] Hook - The Breakthrough
-
-**Visual**: Split screen showing blank prompt → complete agent specification
-
-**Narration**: "What if you could teach an AI to design other AI systems? We built a reinforcement learning environment where a tiny language model learns to create complete, production-ready AI agents from just a simple description."
-
-## [0:15-0:35] The Problem
-
-**Visual**: Business owner struggling with AI tools, complex code
-
-**Narration**: "Today, only programmers can create custom AI agents. You need technical skills in prompt engineering, agent frameworks, and system design. Most businesses are stuck with generic AI tools."
-
-**Visual**: Arrow pointing to "Meta-Agent Gym" solution
-
-**Narration**: "Our solution: Train an AI model to be an 'agent designer' - a meta-skill that bridges the gap between ideas and working AI agents."
-
-## [0:35-0:55] How It Works
-
-**Visual**: Animation showing task input → structured commands → AGENT.md output
-
-**Narration**: "We created Meta-Agent Gym, a reinforcement learning environment where:"
-
-**Visual**: Command sequence: set_name → add_skill → write_prompt → submit
-
-**Narration**: "The model uses structured commands to build agents step by step, learning from a sophisticated reward system that teaches quality agent design."
-
-**Visual**: Three-tier verification animation
-
-**Narration**: "Our three-tier verification ensures quality: hard rules check format, an AI judge scores quality, and real execution tests if agents actually work."
-
-## [0:55-1:15] The Results
-
-**Visual**: Training curve showing dramatic improvement
-
-**Narration**: "Starting from zero knowledge, our model learned quickly:"
-
-**Visual**: Progress bar: 5% → 68% success rate
-
-**Narration**: "Success rate improved from 5% to 68%"
-**Visual**: Reward graph: -0.2 → 4.2 mean reward
-**Narration**: "Mean reward increased by 2200%"
-**Visual**: Component breakdown charts
-**Narration**: "The agent learned skill selection, prompt writing, model choice, and best practices."
-
-## [1:15-1:35] Live Demo
-
-**Visual**: Screen recording of agent generation
-
-**Narration**: "Watch it create a production-ready agent in seconds:"
-
-**Visual**: Task: "Build agent to analyze customer reviews"
-**Visual**: Agent outputs complete specification with skills and prompt
-
-**Narration**: "The result: a complete AGENT.md file that works across Claude Code, Goose, Copilot, and any agent framework."
-
-## [1:35-1:45] Impact & Future
-
-**Visual**: Different users creating agents (business owner, developer, researcher)
-
-**Narration**: "This democratizes AI development - anyone can now create specialized agents for their specific needs."
-
-**Visual**: Future vision slide with expanding ecosystem
-
-**Narration**: "We're not just building tools - we're building the tool that builds tools. The future of AI development is here."
-
-## [1:45] Call to Action
-
-**Visual**: QR codes and links
-
-**Narration**: "Try Meta-Agent Gym yourself at our Hugging Face Space, explore the code on GitHub, and read our full research paper. Join us in democratizing AI creation!"
+*Target length: under 2 minutes (hackathon requirement).*
 
 ---
 
-## Production Notes
+## [0:00–0:15] Hook
 
-### Visual Elements Needed:
-- **[0:00]** Split screen animation (blank → complete agent)
-- **[0:15]** Business struggle montage
-- **[0:35]** Command sequence animation
-- **[0:35]** Three-tier verification diagram
-- **[0:55]** Training curves and progress bars
-- **[1:15]** Screen recording of live demo
-- **[1:35]** User diversity montage
-- **[1:35]** Future ecosystem visualization
-- **[1:45]** QR codes and links slide
+**Visual**: Split screen — empty `AGENT.md` on the left, complete specification appearing on the right.
 
-### Key Metrics to Highlight:
-- **68% success rate** (from 5% baseline)
-- **2200% reward improvement**
-- **100% perfect execution** on test tasks
-- **50 training episodes**
-- **5 quality components** learned
+**Narration**: "Most RL environments test whether an LLM can solve a task. We built one that asks a harder question: can a tiny LLM learn to *design the agent* that solves the task?"
 
-### Technical Terms Simplified:
-- "Meta-learning" → "Teaching AI to teach itself"
-- "GRPO training" → "Advanced learning technique"
-- "Three-tier verification" → "Triple-check quality system"
-- "AGENT.md specification" → "Universal agent recipe"
+## [0:15–0:35] The problem
 
-### Emotional Arc:
-1. **Curiosity** (What if AI could design AI?)
-2. **Problem** (Current barriers to AI creation)
-3. **Solution** (Our breakthrough approach)
-4. **Evidence** (Dramatic learning results)
-5. **Demonstration** (See it work live)
-6. **Inspiration** (Future possibilities)
+**Visual**: A growing list of failed agent specs — empty names, missing prompts, oversized skill lists.
 
-### Call to Action Elements:
-- **Hugging Face Space**: Live demo link
-- **GitHub Repository**: Source code access
-- **Research Paper**: Technical details
-- **Contact Information**: Join the community
+**Narration**: "Designing a good agent is a meta-skill. You need to pick the right skills, write a clear prompt, choose a cost-appropriate model, and avoid over-engineering. It's the kind of thing a human takes weeks to get right."
+
+## [0:35–0:55] How it works
+
+**Visual**: Action-command timeline showing `SET_NAME → SET_DESCRIPTION → ADD_SKILL → WRITE_PROMPT → SET_MODEL → SUBMIT`.
+
+**Narration**: "We gave the model a command-based action space and a three-tier reward: hard verifiers for format, a fast LLM judge for quality, and occasional real execution to keep the judge honest. This is RLVR — reinforcement learning with verifiable rewards, not learned reward models."
+
+## [0:55–1:15] The numbers
+
+**Visual**: Three side-by-side cards — "Random 0% / 0.00", "Heuristic 100% / 21.33", "Expert 20/21 / 16.79".
+
+**Narration**: "Random policy gets 0%: the hard gates genuinely prevent reward hacking. A rule-based heuristic that fills each required field gets 100% on easy tasks with mean reward 21. That's the learnable gap we trained into."
+
+**Visual**: Component chart showing last-10 vs overall mean for description_quality, workflow_clarity, has_required_fields.
+
+**Narration**: "Over 50 evaluation episodes, per-component rewards improve 65 to 67 percent in the last ten episodes. The environment produces learnable signal."
+
+## [1:15–1:35] What we actually trained
+
+**Visual**: Terminal showing `trainer.train()` finishing, then `training_summary.json` with `"real_training": true`.
+
+**Narration**: "We trained Qwen2.5 half-billion with 4-bit LoRA on a free Colab T4. Small but real — four gradient steps, sentinel-verified. We'll scale it up with the onsite HuggingFace credits."
+
+## [1:35–1:45] Call to action
+
+**Visual**: HF Space URL + QR code, GitHub URL.
+
+**Narration**: "Meta-Agent Gym — environment on HuggingFace Spaces, code on GitHub. Train a model to design agents."
 
 ---
 
-*Total Runtime: 1 minute 45 seconds*
-*Format: YouTube Short/LinkedIn Video/TikTok*
-*Style: Fast-paced, visually engaging, clear narration*
+## Production notes
+
+### Honest numbers to highlight
+- **Random policy**: 0% success, 0.00 mean reward (hard gates work)
+- **Competent heuristic**: 100% success, 21.33 mean reward (env is reachable)
+- **Expert benchmark**: 20/21 scenarios succeeded, 16.79 mean reward (mixed-difficulty ceiling)
+- **Per-component last-10 vs overall mean**: description_quality +65%, workflow_clarity +67%, has_required_fields +67%
+- **Positive trend**: +0.62 reward per episode across 50 eval episodes
+- **Training run**: Qwen2.5-0.5B + 4-bit LoRA, 1 epoch × 8 episodes × 2 gens = 4 gradient steps, sentinel `"real_training": true`
+
+### Honesty guardrails
+- Do **not** claim "2200% improvement" or "5% → 68% success" — these are placeholder numbers from the pre-training demo data and are not supported by the real run.
+- Current eval rollouts use the competent heuristic as a stand-in for trained-LoRA inference; claiming "trained beats heuristic" is not defensible yet. The onsite training window is earmarked for wiring up real LoRA inference.
+
+### Visual elements needed
+- Split-screen spec builder animation
+- Command-timeline graphic
+- Three baseline cards (random/heuristic/expert)
+- Per-component last-10 vs overall bar chart
+- Terminal capture of `trainer.train()` completing
+
+### Runtime: 1 minute 45 seconds
+### Format: YouTube Short / LinkedIn video

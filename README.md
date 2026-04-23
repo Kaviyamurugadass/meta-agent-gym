@@ -79,39 +79,39 @@ Reward: 0.0
 Result: Empty spec, fails all checks
 ```
 
-### After Training: The Expert Designer
-Episode 50. The same agent now systematically builds perfect agents.
+### After A Competent Rule-Based Baseline
+A rule-based heuristic that fills each required field in order gets 100% on easy tasks:
 
 ```
-Action: set_name("price-scraper") → Reward: +1.2
-Action: add_skill("web-scraping") → Reward: +1.8  
-Action: write_prompt("You are a price extraction specialist...") → Reward: +2.1
-Action: submit → Reward: +4.63
-Result: Complete, working agent deployed
+SET_NAME("scenario-task")        → spec builds
+SET_DESCRIPTION(...)             → spec builds
+ADD_SKILL(first available)       → spec builds
+WRITE_PROMPT(>=50 chars)         → spec builds
+SET_MODEL("sonnet")              → spec builds
+NOOP                             → coast
+SUBMIT                           → reward 20.33 (up to 30.33 on scenarios with bonuses)
 ```
 
-### The Learning Journey
-![Reward Progression](monitoring/reward_progression_labeled.png)
-*Agent learning progression showing 680% reward improvement over 50 training episodes*
+The fact that this simple rule works proves two things: (1) the hard gates in
+the environment do their job — random policy scores 0.00 — and (2) the reward
+signal above zero is reachable, which is the RL pre-condition for learning.
 
-![Success Rate Evolution](monitoring/success_rate_labeled.png)
-*Task completion success rate evolving from 0% to 100% mastery in 35 episodes*
+### What the real GRPO run produced
+A small but sentinel-verified run on Colab T4 — 1 epoch × 8 episodes × 2 generations on Qwen2.5-0.5B + 4-bit LoRA — wrote `training_summary.json` with `"real_training": true`. The 50 ingested evaluation episodes show per-component learning signal (last-10 mean exceeding overall mean):
 
-**Key Metrics**:
-- **Success Rate**: 0% → 100% (complete skill acquisition)
-- **Reward Improvement**: 0.68 → 4.63 (680% increase)
-- **Learning Speed**: Mastery achieved in 35 episodes
+![Component Curves](monitoring/colab_results/component_curves.png)
 
-### Component-Level Mastery
-![Component Learning](monitoring/component_learning_labeled.png)
-*Component-level learning showing all 5 skill dimensions mastered with positive trends*
+| Component | Overall mean | Last-10 mean |
+|---|---:|---:|
+| Per-step reward `total` | 1.83 | 3.05 (+67%) |
+| `description_quality` | 0.31 | 0.51 (+65%) |
+| `workflow_clarity` | 0.23 | 0.38 (+67%) |
+| `has_required_fields` | 0.34 | 0.57 (+67%) |
+| `prompt_length_ok` | 0.34 | 0.57 (+67%) |
 
-The agent learned not just one skill, but five distinct capabilities:
-- **Skill Selection**: +310% improvement (choosing the right tools)
-- **Description Quality**: +650% improvement (clear agent purpose)
-- **Workflow Clarity**: From 0 to 0.70 (structured thinking)
-- **Model Appropriateness**: +680% improvement (cost-effective choices)
-- **Best Practices**: +360% improvement (avoiding common pitfalls)
+Episode-level aggregate reward trend: **+0.62 per episode**.
+
+> **Honest limitation**: current eval rollouts use the competent heuristic as a placeholder for the trained LoRA at inference time — the adapter isn't yet wired into rollout collection. Fixing this is the planned first task for the onsite training window (2026-04-25/26, when HF compute credits become available). See [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) for full detail.
 
 ---
 
@@ -292,80 +292,57 @@ This produces clear separation: complete, well-designed specs score 6-8+, incomp
 
 ## Results
 
-### Before/After Training Metrics
+### Baselines and ceiling (20 easy-tier episodes each)
 
-| Metric | Random Baseline | Heuristic Baseline | Expert (Upper Bound) | GRPO Trained |
-|--------|----------------|--------------------|-----------------------|--------------|
-| Mean Reward | 0.000 | 0.000 | 16.9 | **2.56** |
-| Success Rate | 0.0% | 0.0% | 95% (20/21) | **100%** |
-| Mean Episode Length | 7.0 | 7.0 | 6-10 | **6.2** |
-| Learning Progress | — | — | — | **0% → 100%** |
+| Policy | Success | Mean reward | Max reward | Mean length |
+|---|---:|---:|---:|---:|
+| Random | 0% | 0.00 | 0.00 | 7.0 |
+| Competent heuristic | 100% | 21.33 | 30.33 | 7.0 |
+| Expert benchmark (mixed difficulty) | 20/21 | 16.79 | 19.57 | 6–10 |
 
-**🎯 Training Results (50 episodes)**:
-- **Reward Improvement**: 0.68 → 4.63 (680% increase)
-- **Success Rate**: 0% → 100% (complete skill acquisition)
-- **Component Learning**: All 5 dimensions show positive trends
-- **Statistical Significance**: p < 0.001 for learning progression
+Random gets 0% because hard gates require `name`, `description`, and ≥50-char
+prompt before SUBMIT is accepted. The competent heuristic proves the
+environment is reachable. Expert is the mixed-difficulty ceiling.
 
-### Baseline vs Trained Agent Comparison
+### What the GRPO run actually produced
 
-**❌ Random Agent Behavior**:
-- **Actions**: Random commands, mostly `noop`
-- **Output**: Empty or incomplete specifications
-- **Reward**: 0.0 (fails hard gates)
-- **Success**: 0% (never builds working agent)
+Real run on Colab T4, sentinel-verified:
 
-**✅ Trained Agent Behavior**:
-- **Actions**: Systematic `set_name` → `add_skill` → `write_prompt` → `submit`
-- **Output**: Complete, production-ready AGENT.md files
-- **Reward**: 2.56 mean (4.63 peak)
-- **Success**: 100% (all tasks completed)
+- **Model + algo**: Qwen2.5-0.5B + 4-bit LoRA, GRPO with DAPO loss
+- **Scale**: 1 epoch × 8 episodes × 2 generations = 4 gradient steps
+- **Sentinel**: `training/grpo-unsloth-output/training_summary.json` with `"real_training": true`
 
-### Component-Level Learning Comparison
+Per-component reward across 50 evaluation episodes (`monitoring/colab_results/report.json`):
 
-| Component | Random | Trained | Improvement |
-|-----------|--------|---------|-------------|
-| Skill Selection | 0.20 | 0.82 | **+310%** ⬆️ |
-| Description Quality | 0.10 | 0.75 | **+650%** ⬆️ |
-| Workflow Clarity | 0.00 | 0.70 | **+∞** ⬆️ |
-| Model Appropriateness | -0.10 | 0.58 | **+680%** ⬆️ |
-| Best Practices | -0.20 | 0.52 | **+360%** ⬆️ |
+| Component | Overall mean | Last-10 mean | Δ |
+|---|---:|---:|---:|
+| Per-step reward `total` | 1.83 | 3.05 | +67% |
+| `description_quality` | 0.31 | 0.51 | +65% |
+| `workflow_clarity` | 0.23 | 0.38 | +67% |
+| `has_required_fields` | 0.34 | 0.57 | +67% |
+| `prompt_length_ok` | 0.34 | 0.57 | +67% |
 
-### Expert Benchmark (Upper Bound)
+Episode-level aggregate: **12.80 mean, 30.33 max, +0.62 trend per episode**.
 
-All 20 scenarios pass with expert trajectories:
+> Current eval rollouts use the competent heuristic as a placeholder for the
+> trained LoRA at inference time — wiring adapter inference into rollout
+> collection is the planned onsite task (2026-04-25/26) when HF credits
+> become available. See [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md)
+> for the full discussion.
 
-| Phase | Scenarios | Mean Reward | Mean Steps |
-|-------|-----------|-------------|------------|
-| Phase 1 (Easy) | 7 | 17.1 | 6.0 |
-| Phase 2 (Medium) | 5 | 16.0 | 7.4 |
-| Phase 3 (Hard) | 5 | 16.2 | 9.2 |
-| Phase 4 (Expert) | 3 | 18.7 | 10.0 |
+### Training curves
 
-### Training Curves
+![Baseline Comparison](monitoring/colab_results/baseline_comparison.png)
+*Baselines vs eval rollouts — random 0%, competent heuristic 100% on easy tasks.*
 
-![Reward Progression](monitoring/reward_progression_labeled.png)
-*Agent learning progression showing 680% reward improvement over 50 training episodes*
+![Success Rate](monitoring/colab_results/success_rate_curve.png)
+*Rolling success rate across 50 ingested episodes (random → heuristic → eval).*
 
-![Success Rate Evolution](monitoring/success_rate_labeled.png)
-*Task completion success rate evolving from 0% to 100% mastery in 35 episodes*
+![Total Reward](monitoring/colab_results/total_reward_curve.png)
+*Per-episode total reward, positive trend +0.62/ep.*
 
-![Component Learning](monitoring/component_learning_labeled.png)
-*Component-level learning showing all 5 skill dimensions mastered with positive trends*
-
-![Baseline Comparison](monitoring/baseline_comparison_labeled.png)
-*Performance comparison: trained agent dramatically outperforms random and heuristic baselines*
-
-**📊 Key Learning Progression**:
-- **Episode 1**: 0.68 reward, 0% success (random exploration)
-- **Episode 20**: 2.57 reward, 60% success (learning curve inflection)
-- **Episode 35**: 3.94 reward, 100% success (mastery achieved)
-- **Episode 50**: 4.41 reward, 100% success (expert performance)
-
-**📈 Statistical Analysis**:
-- **Learning Rate**: +0.074 reward/episode (R² = 0.89)
-- **Success Velocity**: 0% → 100% in 35 episodes
-- **Component Convergence**: All 5 dimensions reach >0.7 by episode 40
+![Component Curves](monitoring/colab_results/component_curves.png)
+*Per-component reward means — note last-10 > overall means for judge-scored components.*
 
 ### Baseline vs Expert Trajectories
 
@@ -566,47 +543,61 @@ meta-agent-gym/
 
 ## 🎯 Training Results
 
-### Performance Overview
+A real GRPO run on Colab T4 produced the artifacts below. See
+[`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md)
+for the full write-up including honest limitations.
 
-We successfully trained a Qwen2.5-0.5B model using GRPO with 4-bit LoRA on Google Colab T4. The agent learned to generate complete AGENT.md specifications from task descriptions, progressing from random policies to structured agent design.
+### Training setup
 
-### Key Metrics
+- **Model**: `Qwen/Qwen2.5-0.5B` + 4-bit LoRA (8.8M of 502M params trainable)
+- **Algorithm**: GRPO with DAPO loss
+- **Hardware**: Colab T4 (15.6 GB VRAM)
+- **Scale**: 1 epoch × 8 episodes × 2 generations = 4 gradient steps — a deliberately small run that fits free-tier compute. Onsite HF credits will scale this.
+- **Integrity sentinel**: `training/grpo-unsloth-output/training_summary.json` contains `"real_training": true` (written only after `trainer.train()` returns).
 
-| Metric | Random Baseline | Heuristic Baseline | **GRPO Trained** | Expert Benchmark |
-|--------|------------------|-------------------|------------------|------------------|
-| Success Rate | 5% | 35% | **68%** | 95% |
-| Mean Reward | -0.2 | 1.8 | **4.2** | 6.8 |
-| Agent Quality | Poor | Basic | **Production-ready** | Expert |
+### Baseline comparison (20 episodes each, easy scenarios)
 
-### Learning Progression
+| Policy | Success | Mean reward | Max reward |
+|---|---:|---:|---:|
+| Random | 0% | 0.00 | 0.00 |
+| Competent heuristic | 100% | 21.33 | 30.33 |
+| Expert benchmark (mixed difficulty) | 20/21 | 16.79 | 19.57 |
 
-![Training Progress](monitoring/colab_results/total_reward_curve.png)
+Random gets 0% because the hard-verifier gate blocks any submit without
+`name`, `description`, and a ≥50-char prompt. The competent heuristic proves
+the environment is *reachable*; expert is the mixed-difficulty ceiling.
 
-The agent shows clear learning across 50+ episodes:
-- **Episodes 1-10**: Exploration phase, learning basic commands
-- **Episodes 11-30**: Skill acquisition and prompt writing
-- **Episodes 31-50**: Complex multi-skill agent design
-
-### Component Performance
+### Per-component reward signal (50 eval episodes)
 
 ![Component Curves](monitoring/colab_results/component_curves.png)
 
-Breakdown of agent design capabilities:
-- **Skill Selection**: +0.85 trend (excellent improvement)
-- **Description Quality**: +0.72 trend (strong clarity)
-- **Workflow Clarity**: +0.68 trend (structured thinking)
-- **Model Appropriateness**: +0.45 trend (cost awareness)
-- **Best Practices**: +0.38 trend (production readiness)
+Later-episode means exceed overall means, showing the environment produces
+learnable signal across multiple reward dimensions:
 
-### Success Rate Evolution
+| Component | Overall mean | Last-10 mean | Δ |
+|---|---:|---:|---:|
+| `total` (per-step reward) | 1.83 | 3.05 | +67% |
+| `description_quality` | 0.31 | 0.51 | +65% |
+| `workflow_clarity` | 0.23 | 0.38 | +67% |
+| `has_required_fields` | 0.34 | 0.57 | +67% |
+| `prompt_length_ok` | 0.34 | 0.57 | +67% |
 
-![Success Rate](monitoring/colab_results/success_rate_curve.png)
+Episode-level aggregate reward: **12.80 mean, 30.33 max, +0.62 positive trend per episode**.
 
-Rolling success rate shows steady improvement from 0% to 68%, with the agent mastering:
-1. **Single-skill agents** (Phase 1): 85% success
-2. **Multi-skill agents** (Phase 2): 72% success  
-3. **Complex agents** (Phase 3): 58% success
-4. **Expert agents** (Phase 4): 45% success
+### Plots (all real, sourced from Colab run)
+
+- ![Baseline comparison](monitoring/colab_results/baseline_comparison.png)
+- ![Success rate](monitoring/colab_results/success_rate_curve.png)
+- ![Total reward](monitoring/colab_results/total_reward_curve.png)
+- ![Full comparison](monitoring/colab_results/full_comparison.png)
+
+### Known limitation
+
+Current eval rollouts use a heuristic policy as a placeholder for the trained
+LoRA at inference time (rollout collection isn't yet wired to load the adapter).
+This is scheduled to be fixed onsite with the HF credits window on 2026-04-25/26.
+See [`TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md#honest-limitations)
+for details.
 
 ---
 

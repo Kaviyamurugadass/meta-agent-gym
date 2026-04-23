@@ -2,7 +2,7 @@
 
 > **Goal:** Train a policy that generates complete AGENT.md files from user task descriptions.
 >
-> **Status:** Active Development (OpenEnv Hackathon 2025)
+> **Status:** Hackathon submission — infrastructure complete, 50-episode Qwen2.5-0.5B smoke-validation run (OpenEnv Hackathon 2026)
 
 ---
 
@@ -74,36 +74,54 @@ Anti-hacking penalties:
 ## File Structure
 
 ```
-meta_agent_gym/
-├── client.py                 # HTTP client for environment
-├── models.py                 # Core schemas (Action, Observation, AgentSpec)
-├── inference.py              # Inference utilities
+openenv-agent-gym/
+├── models.py                 # Action, Observation, AgentSpec, State schemas
+├── client.py                 # OpenEnv HTTP client (exports class `Env`)
+├── inference.py              # LLM-driven episode runner
 │
 ├── server/
-│   ├── app.py               # FastAPI server (OpenEnv endpoint)
-│   ├── environment.py       # Main OpenEnv environment
-│   ├── rewards/
-│   │   └── reward.py        # Multi-component reward system
-│   ├── rules/
-│   │   └── engine.py        # Rule validation engine
+│   ├── app.py                # FastAPI + WebSocket endpoints (OpenEnv)
+│   ├── environment.py        # reset → step → verify → reward
+│   ├── robust_environment.py # defensive wrapper for onsite demos
+│   ├── verifiers.py          # hard verifiers (RLVR layer 1)
+│   ├── skills.py             # skill registry + domain templates
+│   ├── adversarial.py        # targeted task generation
+│   ├── rewards/reward.py     # multi-component reward + penalties
+│   ├── rules/engine.py       # rule validation engine
+│   ├── runtime/goose.py      # real-execution tier (RLVR layer 3)
 │   └── tasks/
-│       ├── scenarios.py     # Test cases (easy/medium/hard/expert)
-│       └── generator.py     # Task generation
+│       ├── scenarios.py      # 21 curriculum scenarios (phase 1–4)
+│       └── generator.py      # adversarial generation
 │
 ├── training/
-│   ├── grpo_trl.py          # Full GRPO with TRL (H100)
-│   ├── grpo_unsloth.py      # 4-bit LoRA variant (T4/Colab)
-│   ├── evaluation.py        # Metrics + before/after tables
-│   ├── reward_backend.py    # Reward computation backend
-│   └── rollout_collection.py # Data collection
+│   ├── grpo_trl.py           # Full GRPO (H100) — Qwen3-1.7B target
+│   ├── grpo_unsloth.py       # 4-bit LoRA (T4/Colab) — Qwen2.5-0.5B
+│   ├── curriculum.py         # phase progression
+│   ├── evaluation.py         # trajectory metrics
+│   ├── benchmark.py          # expert-trajectory runner
+│   ├── rollout_collection.py # rollout capture
+│   ├── reward_backend.py     # reward RPC
+│   └── monitoring.py         # training telemetry
 │
-├── tests/
-│   ├── test_smoke.py        # Basic functionality
-│   ├── test_reward_quality.py
-│   └── test_training.py
+├── evaluation/
+│   ├── onsite_evaluation.py  # full multi-dimensional evaluator
+│   └── simple_evaluation.py  # lightweight fallback
 │
-└── examples/
-    └── number_guess/        # Reference environment
+├── tests/                    # pytest suite (conftest lives here)
+│   ├── conftest.py
+│   └── test_*.py             # 11 files — smoke, reward, observation, verifiers…
+│
+├── data/baseline/            # random + heuristic baseline trajectories
+├── notebooks/                # 01_demo, 02_train_grpo, 03_evaluate, train_colab
+├── monitoring/               # plots + colab_results/report.json
+├── models/colab_model/       # trained-model metadata (weights gitignored)
+├── scripts/                  # deploy.sh, generate_plots.py, interactive_test.py, …
+├── static/index.html         # interactive dashboard
+│
+└── docs/
+    ├── competition/          # submission narrative + technical evidence
+    ├── onsite/               # testing + results guides
+    └── learnings/            # hackathon reference material
 ```
 
 ---
@@ -121,10 +139,11 @@ pytest tests/
 
 # Test environment manually
 python -c "
-from client import MetaAgentClient
-client = MetaAgentClient()
-obs = client.reset('task_001')
-print(obs)
+from client import Env
+from models import Action, ActionCommand
+with Env('http://localhost:8000') as env:
+    obs = env.reset(scenario_name='ws_easy_001')
+    print(obs.summary, obs.reward_breakdown)
 "
 ```
 
@@ -215,7 +234,7 @@ The policy will try to game the reward system. We prevent:
 
 ```bash
 # Development server
-uvicorn server.app:app --reload
+uvicorn server.app:app --reload --port 8000
 
 # Run specific test
 pytest tests/test_reward_quality.py -v
@@ -227,7 +246,10 @@ black . && isort .
 mypy .
 
 # Deploy to HF Space
-python scripts/deploy.sh
+bash scripts/deploy.sh
+
+# Regenerate training plots from monitoring/colab_results/report.json
+python scripts/generate_plots.py
 ```
 
 ---

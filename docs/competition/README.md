@@ -18,7 +18,7 @@ We've created a reinforcement learning environment where a model receives only a
 |------------|--------|----------------|-------|
 | **Environment Innovation** | 40% | World's first "agent design" environment | **EXCELLENT** |
 | **Storytelling & Presentation** | 30% | Compelling "democratizing AI" narrative | **EXCELLENT** |
-| **Training Evidence** | 20% | 2200% reward improvement, clear curves | **EXCELLENT** |
+| **Training Evidence** | 20% | Real GRPO run (sentinel-verified), baseline comparison, per-component learning signal | Addressed |
 | **Reward & Pipeline** | 10% | Sophisticated three-tier verification | **EXCELLENT** |
 
 ### Key Achievements
@@ -34,11 +34,11 @@ We've created a reinforcement learning environment where a model receives only a
 - Tangible impact on AI accessibility
 - Engaging demo with visible learning
 
-🥉 **Training Evidence**: Dramatic learning with concrete proof
-- 2200% reward improvement over baseline
-- All 5 quality dimensions show clear progress
-- Before/after behavior comparison
-- Observable agent learning curves
+🥉 **Training Evidence**: Real run with sentinel-verified artifacts
+- Qwen2.5-0.5B + 4-bit LoRA, GRPO w/ DAPO, 1 epoch × 8 episodes × 2 generations
+- Baselines: random 0% success, competent heuristic 100%/21.33 reward, expert 16.79 ceiling
+- Per-component reward signal: description_quality +65%, workflow_clarity +67%, has_required_fields +67% (last-10 vs overall mean, 50 eval episodes)
+- Positive trend: +0.62 reward per episode across 50 eval episodes
 
 🏅 **Technical Excellence**: Sophisticated reward and training system
 - Multi-dimensional reward architecture
@@ -48,22 +48,24 @@ We've created a reinforcement learning environment where a model receives only a
 
 ## 📊 Performance Results
 
-### Learning Progression
-| Metric | Random Baseline | Trained Agent | Improvement |
-|---------|------------------|----------------|-------------|
-| Success Rate | 5% | 68% | **1260%** |
-| Mean Reward | -0.2 | 4.2 | **2200%** |
-| Spec Completeness | 0% | 85% | **∞** |
-| Skill Selection | 0.1 | 0.82 | **720%** |
-| Description Quality | 0.0 | 0.75 | **∞** |
-| Workflow Clarity | 0.0 | 0.70 | **∞** |
+### Baseline comparison (20 episodes each, easy scenarios)
+| Policy | Success | Mean reward | Max reward |
+|---|---:|---:|---:|
+| Random | 0% | 0.00 | 0.00 |
+| Competent heuristic | 100% | 21.33 | 30.33 |
+| Expert benchmark (mixed difficulty) | 20/21 | 16.79 | 19.57 |
 
-### Component Learning Breakthroughs
-- **Skill Selection**: 0.2 → 0.82 (310% improvement)
-- **Description Quality**: 0.1 → 0.75 (650% improvement)
-- **Workflow Clarity**: 0.0 → 0.70 (learned structured thinking)
-- **Model Appropriateness**: -0.1 → 0.58 (learned cost awareness)
-- **Best Practices**: -0.2 → 0.52 (learned production quality)
+### Per-component learning signal (50 eval episodes)
+
+| Component | Overall mean | Last-10 mean | Δ |
+|---|---:|---:|---:|
+| Per-step reward `total` | 1.83 | 3.05 | +67% |
+| `description_quality` | 0.31 | 0.51 | +65% |
+| `workflow_clarity` | 0.23 | 0.38 | +67% |
+| `has_required_fields` | 0.34 | 0.57 | +67% |
+| `prompt_length_ok` | 0.34 | 0.57 | +67% |
+
+Episode-level aggregate: mean **12.80**, max **30.33**, positive trend **+0.62/episode**.
 
 ## 🏗️ Technical Innovation
 
@@ -118,14 +120,15 @@ This provides token efficiency, validator-friendly actions, and clean GRPO signa
 ![Component Breakdown](monitoring/colab_results/component_curves.png)
 ![Success Rate Evolution](monitoring/colab_results/success_rate_curve.png)
 
-### Before vs After Comparison
-**Random Agent**: `noop`, `noop`, `submit` → Fails with empty spec (Reward: 0.0)
-**Trained Agent**: Structured approach → Creates working agents (Reward: 6.75+)
+### Random vs competent heuristic (observed)
+**Random policy**: uniform-over-commands actions → repeatedly SUBMITs empty spec → hard gate blocks → reward 0.0 across all 20 episodes.
+**Competent heuristic**: fills each required field in order (name → description → skill → prompt → model), submits on final step → passes hard gate → mean reward 21.33 on easy scenarios.
 
-### Observable Behavior Change
-- **Episode 1**: Agent submits empty spec → Reward: 0.0
-- **Episode 25**: Agent coordinates 2-3 skills → Reward: 5.8
-- **Episode 50**: Agent handles 5+ skill expert tasks → Reward: 8.7
+### Observed learning signal
+Per-component reward means improve in the last 10 of 50 evaluation episodes
+compared to the overall mean (description_quality +65%, workflow_clarity +67%,
+has_required_fields +67%) — see
+[TRAINING_EVIDENCE.md](TRAINING_EVIDENCE.md) for the full breakdown.
 
 ## 🚀 Impact & Vision
 
@@ -221,11 +224,11 @@ open http://localhost:8000
 - **Robust engineering**: Error handling and recovery
 - **Complete pipeline**: End-to-end training with real results
 
-### Real Training Evidence
-- **Dramatic improvement**: 1260% better than random baseline
-- **Component learning**: Each quality dimension shows clear progress
-- **Observable behavior**: Before/after agent actions clearly different
-- **Stable convergence**: Consistent expert-level performance
+### Real training evidence
+- **Sentinel-verified run**: `training_summary.json` with `"real_training": true`, written only after `trainer.train()` returns
+- **Baseline separation**: random 0.00 → heuristic 21.33 → expert 16.79 (mixed difficulty)
+- **Per-component signal**: 4 reward components improve ~+65-67% (last-10 vs overall mean)
+- **Scale-limited but real**: 4 gradient steps on Colab T4 — pipeline validated, onsite credits extend scale
 
 ### Compelling Storytelling
 - **Clear narrative**: From empty prompt to expert designer

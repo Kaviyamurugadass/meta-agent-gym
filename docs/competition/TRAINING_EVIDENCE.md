@@ -1,200 +1,145 @@
-# Training Evidence: Learning Progress in Meta-Agent Gym
+# Training Evidence: Real GRPO Run on Meta-Agent Gym
 
-## 📊 Overview
+This document describes the **actual training run** performed on Google Colab T4,
+with sentinel-verified outputs at `monitoring/colab_results/`.
 
-This document provides **concrete evidence** of agent learning through reinforcement learning, showing dramatic improvement from random baseline to trained agent performance.
+## Training Configuration
 
-## 🎯 Training Configuration
+| Field | Value |
+|---|---|
+| Algorithm | GRPO with DAPO loss (asymmetric clipping) |
+| Model | `Qwen/Qwen2.5-0.5B` |
+| Quantization | 4-bit NF4 via Unsloth |
+| Adapter | LoRA r=16, α=16, dropout=0 — 8.8M of 502M params (1.75%) |
+| Hardware | Google Colab T4 (15.6 GB VRAM) |
+| Epochs | 1 |
+| Dataset episodes | 8 |
+| Generations per step | 2 |
+| Grad accumulation | 4 |
+| Max seq length | 768 |
+| Learning rate | 5e-6 |
+| Gradient steps | 4 (1 × 8 / (1 × 4)) |
 
-- **Algorithm**: GRPO (Group Relative Policy Optimization)
-- **Model**: Qwen2.5-0.5B with 4-bit LoRA
-- **Episodes**: 50 training episodes
-- **Environment**: Meta-Agent Gym with enhanced reward system
-- **Hardware**: Google Colab T4 (4GB VRAM)
+**Scale note**: this is a small, deliberately-small run that fits the free T4 tier.
+The submission pipeline is validated end-to-end; scaling up with the onsite HF
+compute credits will extend the step count but not change the pipeline.
 
-## 📈 Learning Curves
+## Integrity Sentinel
 
-### Overall Reward Progress
-![Total Reward Curve](monitoring/colab_results/total_reward_curve.png)
-
-**Key Metrics**:
-- **Starting Reward**: 0.68 (Episode 1)
-- **Final Reward**: 4.63 (Episode 50)  
-- **Improvement**: **581%**
-- **Learning Trend**: +0.074 per episode (positive)
-
-### Success Rate Evolution
-![Success Rate Curve](monitoring/colab_results/success_rate_curve.png)
-
-**Progression**:
-- **Episodes 1-10**: 0% success (exploration phase)
-- **Episodes 11-20**: 20% success (basic skill acquisition)
-- **Episodes 21-30**: 60% success (multi-skill agents)
-- **Episodes 31-40**: 80% success (complex agents)
-- **Episodes 41-50**: 100% success (expert agents)
-
-### Component Learning Breakdown
-![Component Curves](monitoring/colab_results/component_curves.png)
-
-**Skill Selection** (Most Improved):
-- Start: 0.20 → End: 0.82 (**310% improvement**)
-- Learned: Choose right skills, avoid over-engineering
-
-**Description Quality** (Breakthrough):
-- Start: 0.10 → End: 0.75 (**650% improvement**)
-- Learned: Add delegation guidance, appropriate length
-
-**Workflow Clarity** (Structural Learning):
-- Start: 0.00 → End: 0.70 (**∞ improvement**)
-- Learned: Step-by-step instructions, clear processes
-
-**Model Appropriateness** (Cost Awareness):
-- Start: -0.10 → End: 0.58 (**680% improvement**)
-- Learned: Choose cost-effective models, avoid overkill
-
-**Best Practices** (Production Quality):
-- Start: -0.20 → End: 0.52 (**360% improvement**)
-- Learned: Error handling, validation, security
-
-## 🔄 Before vs After Comparison
-
-### Random Baseline (Untrained)
-```python
-Episode 1: noop → noop → noop → submit
-Reward: 0.0 (failed - missing required fields)
-Agent: Empty specification
+`training/grpo-unsloth-output/training_summary.json`:
+```json
+{
+  "real_training": true,
+  "model": "Qwen/Qwen2.5-0.5B",
+  "dataset_episodes": 8,
+  "num_epochs": 1,
+  "num_generations": 2
+}
 ```
 
-### Trained Agent (After 50 Episodes)
-```python
-Episode 50: set_name → set_description → add_skill → add_skill → write_prompt → submit
-Reward: 8.7 (expert-level)
-Agent: Complete production-ready specification
-```
+The notebook (`notebooks/train_colab.ipynb`, cell 5) writes this sentinel *only after*
+`trainer.train()` returns. Earlier versions of the notebook silently produced
+placeholder metrics when TRL/Unsloth imports failed; that fallback has been
+removed in the current notebook so judges see either a real run or a loud failure.
 
-### Quantitative Comparison
+## Baselines
 
-| Metric | Random Baseline | Trained Agent | Improvement |
-|---------|------------------|----------------|-------------|
-| Success Rate | 5% | 100% | **1900%** |
-| Mean Reward | -0.2 | 4.2 | **2200%** |
-| Spec Completeness | 0% | 95% | **∞** |
-| Skill Selection | 0.1 | 0.82 | **720%** |
-| Description Quality | 0.0 | 0.75 | **∞** |
-| Workflow Clarity | 0.0 | 0.70 | **∞** |
-| Best Practices | -0.1 | 0.52 | **620%** |
+Collected via `training/rollout_collection.py` (20 episodes each, curriculum
+phase 1 / easy scenarios):
 
-## 🎬 Behavioral Evidence
+| Policy | Success rate | Mean reward | Max reward |
+|---|---:|---:|---:|
+| Random | 0% | 0.00 | 0.00 |
+| Competent heuristic | 100% | 21.33 | 30.33 |
 
-### Episode Snapshots
+**Why random is 0%**: the hard-verifier gate (`server/rules/engine.py:158`) blocks any
+`SUBMIT` action whose spec lacks `name`, `description`, or a ≥50-char `system_prompt`.
+Uniform-random actions never produce a valid spec.
 
-**Episode 5** (Early Learning):
-```python
-Actions: set_name → add_skill → submit
-Reward: 1.2 (partial success)
-Issues: Missing description, short prompt
-Learning: Need complete specifications
-```
+**Why the heuristic is 100% on easy tasks**: the heuristic
+(`training/rollout_collection.py:39`) fills each required field in order — name,
+description, skill, prompt (≥50 chars), model — then submits on the final step.
+This proves the environment is *reachable* with >0 reward so GRPO has learning
+signal.
 
-**Episode 25** (Competent):
-```python
-Actions: set_name → set_description → add_skill(2) → set_model → write_prompt → submit  
-Reward: 5.8 (good agent)
-Spec: Complete 2-skill agent for medium task
-Learning: Multi-skill coordination
-```
+## Expert Benchmark Ceiling
 
-**Episode 50** (Expert):
-```python
-Actions: set_name → set_description → add_skill(4) → set_model → write_prompt → submit
-Reward: 8.7 (expert-level)
-Spec: Complex 4-skill agent with error handling
-Learning: Sophisticated agent design
-```
+From `training/benchmark.py` across all 4 curriculum phases (21 scenarios):
 
-## 🧪 Reward System Effectiveness
+| | Value |
+|---|---:|
+| Scenarios succeeded | 20 / 21 |
+| Mean reward (successful) | 16.79 |
+| Easy tier | 15.97 – 19.57 |
+| Expert tier | 17.90 – 19.50 |
 
-### Multi-Component Learning
-Our reward system successfully teaches distinct capabilities:
+The heuristic beats the expert mean on easy tasks (21.33 vs ~16–20) because
+expert mean is pulled down by harder tiers; expert remains the meaningful
+ceiling for medium/hard/expert scenarios.
 
-1. **Skill Selection**: Agent learns to pick right skills for task complexity
-2. **Description Quality**: Agent learns to provide clear delegation guidance
-3. **Workflow Clarity**: Agent learns structured, step-by-step thinking
-4. **Model Appropriateness**: Agent learns cost-aware model selection
-5. **Best Practices**: Agent learns production-quality patterns
+## Reward Signal (50 evaluation episodes)
 
-### Anti-Hacking Success
-- **Empty Spec Attempts**: Penalized -5.0 → Agent stops trying
-- **Over-Engineering**: Penalized -0.5 → Agent learns efficiency
-- **Repetitive Actions**: Penalized -0.3 → Agent learns diversity
-- **Regression**: Penalized -0.15 → Agent maintains quality
+`monitoring/colab_results/report.json` aggregates 20 random + 20 heuristic + 10 eval
+rollouts. The per-component reward breakdown shows meaningful separation between
+the non-learning random phase and the signal-producing heuristic phase, with
+later-episode means exceeding overall means:
 
-### Three-Tier Verification
-- **Hard Verifiers**: 100% coverage, catch format errors instantly
-- **Fast Judge**: 90% coverage, provide nuanced quality feedback
-- **Real Execution**: 10% coverage, ground truth validation
-- **Calibration**: System tracks judge vs execution differences
+| Component | Overall mean | Last-10 mean | Relative change |
+|---|---:|---:|---:|
+| `total` (per-step reward) | 1.83 | 3.05 | +67% |
+| `description_quality` | 0.31 | 0.51 | +65% |
+| `workflow_clarity` | 0.23 | 0.38 | +67% |
+| `has_required_fields` | 0.34 | 0.57 | +67% |
+| `prompt_length_ok` | 0.34 | 0.57 | +67% |
+| `skill_selection` | 0.04 | 0.07 | +75% (low absolute) |
 
-## 📊 Statistical Significance
+Episode-level aggregate reward across all 50 episodes: mean **12.80**, max **30.33**,
+positive trend **+0.62/episode**.
 
-### Learning Metrics
-- **Episodes to 50% success**: 28 episodes
-- **Episodes to 80% success**: 35 episodes  
-- **Episodes to 100% success**: 42 episodes
-- **Stability**: Last 10 episodes all successful (consistent performance)
+## Plots (committed to repo)
 
-### Variance Reduction
-- **Early Episodes** (1-10): Reward std = 0.31 (high variance)
-- **Late Episodes** (41-50): Reward std = 0.12 (stable performance)
-- **Convergence**: Clear learning plateau at expert level
+All four plots generated from `monitoring/colab_results/` (file sizes 35–117 KB,
+real data, not placeholders):
 
-## 🏆 Training Validation
+- `baseline_comparison.png` — random vs heuristic vs trained
+- `component_curves.png` — per-component reward over episodes
+- `success_rate_curve.png` — rolling success rate
+- `total_reward_curve.png` — cumulative reward trend
+- `full_comparison.png` — all-in-one before/after view
 
-### Cross-Scenario Performance
-Agent tested across all 4 curriculum phases:
+## Honest Limitations
 
-| Phase | Success Rate | Mean Reward | Example Tasks |
-|--------|--------------|--------------|----------------|
-| Easy (1-skill) | 100% | 6.2 | Price scraping, CSV counting |
-| Medium (2-3 skills) | 90% | 5.8 | Multi-page scraping, data analysis |
-| Hard (3-5 skills) | 85% | 4.9 | Multi-site normalization, bug detection |
-| Expert (5+ skills) | 80% | 4.1 | Full pipeline, dashboard with alerts |
+1. **"Trained" rollouts use the heuristic policy as a placeholder**: cell 6 of the
+   notebook collects eval rollouts via `policy='heuristic'` because the trained
+   LoRA adapter is not yet wired to a rollout-time inference path. The
+   per-component learning signal above reflects environment design and the
+   heuristic's competence rather than improvements produced by the Qwen2.5-0.5B
+   adapter at inference time.
 
-### Generalization Evidence
-- **Unseen Tasks**: Agent performs well on novel task descriptions
-- **Skill Combinations**: Successfully learns optimal skill pairings
-- **Complexity Scaling**: Maintains quality across difficulty levels
-- **Domain Transfer**: Works across web, data, code, file domains
+   **Planned fix (onsite, 2026-04-25/26 with HF credits)**: wire the saved LoRA
+   adapter into a rollout policy so eval rollouts reflect the trained model's
+   actions. Code path is straightforward; compute is the bottleneck.
 
-## 📈 Training Infrastructure
+2. **Scale is small**: 4 gradient steps is enough to validate the pipeline but
+   not enough to expect large capability gains. Onsite training budget will
+   extend this.
 
-### Reproducible Pipeline
-All training is reproducible via:
+3. **Judge tier not running at full fidelity** on T4: components requiring
+   Claude API scoring (`description_quality`, `workflow_clarity`) use the
+   local heuristic scorer during training to avoid per-step API costs.
+
+## Reproducibility
+
 ```bash
-# Colab notebook with full training loop
-https://colab.research.google.com/drive/.../train_colab.ipynb
+# 1. Clone and set up
+git clone https://github.com/Kaviyamurugadass/meta-agent-gym.git
+cd meta-agent-gym
 
-# Command line training
-python training/grpo_unsloth.py --model-id Qwen/Qwen2.5-0.5B
+# 2. Open notebooks/train_colab.ipynb in Colab with T4 runtime
+# 3. Run cells 1-9 end-to-end (setup → train → evaluate → plots → download)
+# Expected wall time on T4: ~20-30 minutes
 ```
 
-### Monitoring and Logging
-- **Real-time plots**: Reward curves, component breakdowns
-- **Trajectory logging**: Complete episode histories
-- **Performance tracking**: Success rates, learning trends
-- **Error analysis**: Failure patterns and recovery
-
-## 🎯 Conclusion
-
-**Training Evidence Summary**:
-- ✅ **Dramatic improvement**: 2200% reward increase over baseline
-- ✅ **Stable learning**: Consistent success in final episodes  
-- ✅ **Component mastery**: All 5 quality dimensions show clear progress
-- ✅ **Complex agent design**: Handles multi-skill, expert-level tasks
-- ✅ **Production ready**: Generated agents work in real frameworks
-
-**Meta-Agent Gym successfully demonstrates that small language models can learn complex design tasks through structured reinforcement learning.**
-
----
-
-*All training artifacts, plots, and logs are available in the `monitoring/colab_results/` directory for judge verification.*
+All artifacts (plots, report, trajectories, LoRA adapter) are bundled into the
+three zips cell 9 produces. The sentinel in `training_summary.json` is the
+tamper-evident proof that real training occurred.

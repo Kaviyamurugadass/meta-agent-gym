@@ -1,0 +1,1058 @@
+{
+  "task_id": "ou_easy_001",
+  "scenario_name": null,
+  "difficulty": "easy",
+  "steps": [
+    {
+      "step": 1,
+      "action": {
+        "command": "set_name",
+        "args": {
+          "name": "ou-easy-001"
+        },
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.6
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "task_id": "ou_easy_001",
+        "step": 1,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 1/7, spec(1 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "command": "set_name",
+              "args": {
+                "name": "ou-easy-001"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.0,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.0,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 2,
+      "action": {
+        "command": "set_description",
+        "args": {
+          "description": "Agent that handles ou_easy_001 tasks end-to-end."
+        },
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.6
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "task_id": "ou_easy_001",
+        "step": 2,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end."
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 2/7, spec(2 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "description"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "command": "set_name",
+              "args": {
+                "name": "ou-easy-001"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "command": "set_description",
+              "args": {
+                "description": "Agent that handles ou_easy_001 tasks end-to-end."
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 3,
+      "action": {
+        "command": "add_skill",
+        "args": {
+          "skill": "web-scraping"
+        },
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.6
+      },
+      "observation": {
+        "done": false,
+        "reward": 0.0,
+        "task_id": "ou_easy_001",
+        "step": 3,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end.",
+          "skills": [
+            "web-scraping"
+          ]
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 0.0,
+        "feedback": [],
+        "summary": "Step 3/7, spec(3 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "description",
+            "skills"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "command": "set_name",
+              "args": {
+                "name": "ou-easy-001"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "command": "set_description",
+              "args": {
+                "description": "Agent that handles ou_easy_001 tasks end-to-end."
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 3,
+            "action": {
+              "command": "add_skill",
+              "args": {
+                "skill": "web-scraping"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 0.0,
+          "prompt_length_ok": 0.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.0,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "gated": 1.0,
+          "gate_failed": 1.0,
+          "total": 0.0
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 0.0,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 0.0,
+        "prompt_length_ok": 0.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.0,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "gated": 1.0,
+        "gate_failed": 1.0,
+        "total": 0.0
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 4,
+      "action": {
+        "command": "write_prompt",
+        "args": {
+          "prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+          "mode": "replace"
+        },
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.6
+      },
+      "observation": {
+        "done": false,
+        "reward": 5.433333333333332,
+        "task_id": "ou_easy_001",
+        "step": 4,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end.",
+          "skills": [
+            "web-scraping"
+          ],
+          "system_prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting."
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 5.433333333333332,
+        "feedback": [],
+        "summary": "Step 4/7, spec(4 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "description",
+            "skills",
+            "system_prompt"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "command": "set_name",
+              "args": {
+                "name": "ou-easy-001"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "command": "set_description",
+              "args": {
+                "description": "Agent that handles ou_easy_001 tasks end-to-end."
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 3,
+            "action": {
+              "command": "add_skill",
+              "args": {
+                "skill": "web-scraping"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "command": "write_prompt",
+              "args": {
+                "prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+                "mode": "replace"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.433333333333332,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 1.0,
+          "prompt_length_ok": 1.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.6666666666666666,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "core": 4.7333333333333325,
+          "novelty_bonus": 0.1,
+          "progress": 0.6,
+          "soft_violation_penalty": -0.0,
+          "regression_penalty": -0.0,
+          "total": 5.433333333333332
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 5.433333333333332,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 1.0,
+        "prompt_length_ok": 1.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.6666666666666666,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "core": 4.7333333333333325,
+        "novelty_bonus": 0.1,
+        "progress": 0.6,
+        "soft_violation_penalty": -0.0,
+        "regression_penalty": -0.0,
+        "total": 5.433333333333332
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 5,
+      "action": {
+        "command": "set_model",
+        "args": {
+          "model": "sonnet"
+        },
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.6
+      },
+      "observation": {
+        "done": false,
+        "reward": 5.033333333333332,
+        "task_id": "ou_easy_001",
+        "step": 5,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end.",
+          "skills": [
+            "web-scraping"
+          ],
+          "system_prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 5.033333333333332,
+        "feedback": [],
+        "summary": "Step 5/7, spec(5 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "description",
+            "skills",
+            "system_prompt",
+            "model"
+          ]
+        },
+        "history": [
+          {
+            "step": 1,
+            "action": {
+              "command": "set_name",
+              "args": {
+                "name": "ou-easy-001"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 2,
+            "action": {
+              "command": "set_description",
+              "args": {
+                "description": "Agent that handles ou_easy_001 tasks end-to-end."
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 3,
+            "action": {
+              "command": "add_skill",
+              "args": {
+                "skill": "web-scraping"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "command": "write_prompt",
+              "args": {
+                "prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+                "mode": "replace"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.433333333333332,
+            "violations": []
+          },
+          {
+            "step": 5,
+            "action": {
+              "command": "set_model",
+              "args": {
+                "model": "sonnet"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.033333333333332,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 1.0,
+          "prompt_length_ok": 1.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.6666666666666666,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "core": 4.7333333333333325,
+          "novelty_bonus": 0.1,
+          "progress": 0.2,
+          "soft_violation_penalty": -0.0,
+          "regression_penalty": -0.0,
+          "total": 5.033333333333332
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 5.033333333333332,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 1.0,
+        "prompt_length_ok": 1.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.6666666666666666,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "core": 4.7333333333333325,
+        "novelty_bonus": 0.1,
+        "progress": 0.2,
+        "soft_violation_penalty": -0.0,
+        "regression_penalty": -0.0,
+        "total": 5.033333333333332
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 6,
+      "action": {
+        "command": "noop",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.5
+      },
+      "observation": {
+        "done": false,
+        "reward": 4.933333333333332,
+        "task_id": "ou_easy_001",
+        "step": 6,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end.",
+          "skills": [
+            "web-scraping"
+          ],
+          "system_prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 4.933333333333332,
+        "feedback": [],
+        "summary": "Step 6/7, noop",
+        "latest_output": {
+          "noop": true
+        },
+        "history": [
+          {
+            "step": 2,
+            "action": {
+              "command": "set_description",
+              "args": {
+                "description": "Agent that handles ou_easy_001 tasks end-to-end."
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 3,
+            "action": {
+              "command": "add_skill",
+              "args": {
+                "skill": "web-scraping"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "command": "write_prompt",
+              "args": {
+                "prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+                "mode": "replace"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.433333333333332,
+            "violations": []
+          },
+          {
+            "step": 5,
+            "action": {
+              "command": "set_model",
+              "args": {
+                "model": "sonnet"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.033333333333332,
+            "violations": []
+          },
+          {
+            "step": 6,
+            "action": {
+              "command": "noop",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 4.933333333333332,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 1.0,
+          "prompt_length_ok": 1.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.6666666666666666,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "core": 4.7333333333333325,
+          "novelty_bonus": 0.1,
+          "progress": 0.1,
+          "soft_violation_penalty": -0.0,
+          "regression_penalty": -0.0,
+          "total": 4.933333333333332
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 4.933333333333332,
+      "done": false,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 1.0,
+        "prompt_length_ok": 1.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.6666666666666666,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "core": 4.7333333333333325,
+        "novelty_bonus": 0.1,
+        "progress": 0.1,
+        "soft_violation_penalty": -0.0,
+        "regression_penalty": -0.0,
+        "total": 4.933333333333332
+      },
+      "latent_snapshot": null
+    },
+    {
+      "step": 7,
+      "action": {
+        "command": "submit",
+        "args": {},
+        "invoked_subagent": null,
+        "justification": null,
+        "confidence": 0.7
+      },
+      "observation": {
+        "done": true,
+        "reward": 4.933333333333332,
+        "task_id": "ou_easy_001",
+        "step": 7,
+        "max_steps": 7,
+        "current_spec": {
+          "name": "ou-easy-001",
+          "description": "Agent that handles ou_easy_001 tasks end-to-end.",
+          "skills": [
+            "web-scraping"
+          ],
+          "system_prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+          "model": "sonnet"
+        },
+        "investigation_result": null,
+        "available_skills": [
+          "web-scraping",
+          "http-client",
+          "html-parser",
+          "json-parser",
+          "csv-handler",
+          "data-transformer",
+          "data-validator",
+          "data-aggregator",
+          "code-reviewer",
+          "code-fixer",
+          "test-generator",
+          "file-reader",
+          "file-writer",
+          "log-analyzer",
+          "pattern-matcher",
+          "report-generator",
+          "notifier"
+        ],
+        "score": 4.933333333333332,
+        "feedback": [],
+        "summary": "Step 7/7, spec(5 fields)",
+        "latest_output": {
+          "spec_keys": [
+            "name",
+            "description",
+            "skills",
+            "system_prompt",
+            "model"
+          ]
+        },
+        "history": [
+          {
+            "step": 3,
+            "action": {
+              "command": "add_skill",
+              "args": {
+                "skill": "web-scraping"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 0.0,
+            "violations": []
+          },
+          {
+            "step": 4,
+            "action": {
+              "command": "write_prompt",
+              "args": {
+                "prompt": "You are a specialist agent. Read the task carefully, plan the steps, execute each one, then verify the result before submitting.",
+                "mode": "replace"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.433333333333332,
+            "violations": []
+          },
+          {
+            "step": 5,
+            "action": {
+              "command": "set_model",
+              "args": {
+                "model": "sonnet"
+              },
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.6
+            },
+            "reward": 5.033333333333332,
+            "violations": []
+          },
+          {
+            "step": 6,
+            "action": {
+              "command": "noop",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.5
+            },
+            "reward": 4.933333333333332,
+            "violations": []
+          },
+          {
+            "step": 7,
+            "action": {
+              "command": "submit",
+              "args": {},
+              "invoked_subagent": null,
+              "justification": null,
+              "confidence": 0.7
+            },
+            "reward": 4.933333333333332,
+            "violations": []
+          }
+        ],
+        "reward_breakdown": {
+          "yaml_valid": 1.0,
+          "has_required_fields": 1.0,
+          "prompt_length_ok": 1.0,
+          "model_valid": 1.0,
+          "skills_format_ok": 1.0,
+          "skill_selection": 0.0,
+          "description_quality": 0.6,
+          "workflow_clarity": 0.6666666666666666,
+          "model_appropriateness": 0.8,
+          "best_practices": 0.0,
+          "efficiency": 1.0,
+          "core": 4.7333333333333325,
+          "novelty_bonus": 0.1,
+          "progress": 0.1,
+          "soft_violation_penalty": -0.0,
+          "regression_penalty": -0.0,
+          "total": 4.933333333333332
+        },
+        "rule_violations": [],
+        "budget_remaining": null,
+        "time_remaining": null,
+        "truncated": false
+      },
+      "reward": 4.933333333333332,
+      "done": true,
+      "reward_breakdown": {
+        "yaml_valid": 1.0,
+        "has_required_fields": 1.0,
+        "prompt_length_ok": 1.0,
+        "model_valid": 1.0,
+        "skills_format_ok": 1.0,
+        "skill_selection": 0.0,
+        "description_quality": 0.6,
+        "workflow_clarity": 0.6666666666666666,
+        "model_appropriateness": 0.8,
+        "best_practices": 0.0,
+        "efficiency": 1.0,
+        "core": 4.7333333333333325,
+        "novelty_bonus": 0.1,
+        "progress": 0.1,
+        "soft_violation_penalty": -0.0,
+        "regression_penalty": -0.0,
+        "total": 4.933333333333332
+      },
+      "latent_snapshot": null
+    }
+  ],
+  "total_reward": 20.33333333333333,
+  "success": true,
+  "metadata": {
+    "policy": "heuristic"
+  }
+}
