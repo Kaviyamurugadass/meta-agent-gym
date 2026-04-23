@@ -85,13 +85,105 @@ class RuleEngine:
     # ------------------------------------------------------------------ Domain hook
 
     def _domain_rules(self) -> list[Rule]:
-        """DOMAIN: override to append domain-specific rules.
+        """DOMAIN: meta-agent specific rules.
 
-        Examples by domain:
-            - code auditor: forbid editing files not in repo, forbid partial syntax
-            - SRE: forbid kubectl delete, require kubectl get before act
-            - clinical: require QC before DE analysis
+        Rules for agent specification generation:
+            - Don't add duplicate skills
+            - Don't use overkill model for task difficulty
+            - Don't submit incomplete specs
+            - Don't over-engineer (too many skills)
         """
+        return [
+            self._check_duplicate_skill,
+            self._check_overkill_model,
+            self._check_submit_readiness,
+            self._check_over_engineering,
+        ]
+
+    # ------------------------------------------------------------------ Meta-agent domain rules
+
+    @staticmethod
+    def _check_duplicate_skill(action: Action, state: State, task: TaskSpec) -> list[RuleViolation]:
+        """Prevent adding the same skill twice."""
+        from models import ActionCommand
+
+        if action.command == ActionCommand.ADD_SKILL:
+            skill = action.args.get("skill")
+            current_skills = state.current_spec.get("skills", [])
+            if skill in current_skills:
+                return [RuleViolation(
+                    severity="soft",
+                    category="redundancy",
+                    message=f"Skill '{skill}' already added.",
+                    penalty=0.05,
+                )]
+        return []
+
+    @staticmethod
+    def _check_overkill_model(action: Action, state: State, task: TaskSpec) -> list[RuleViolation]:
+        """Prevent using opus for easy tasks (overkill)."""
+        from models import ActionCommand
+
+        if action.command == ActionCommand.SET_MODEL:
+            model = action.args.get("model", "sonnet")
+            if model == "opus" and task.difficulty in ["easy", "medium"]:
+                return [RuleViolation(
+                    severity="soft",
+                    category="efficiency",
+                    message=f"Using opus for {task.difficulty} task is overkill.",
+                    penalty=0.10,
+                )]
+        return []
+
+    @staticmethod
+    def _check_submit_readiness(action: Action, state: State, task: TaskSpec) -> list[RuleViolation]:
+        """Prevent submitting incomplete agent specifications."""
+        from models import ActionCommand
+
+        if action.command == ActionCommand.SUBMIT:
+            spec = state.current_spec
+            missing = []
+
+            if not spec.get("name"):
+                missing.append("name")
+            if not spec.get("description"):
+                missing.append("description")
+            if not spec.get("system_prompt") or len(spec.get("system_prompt", "")) < 50:
+                missing.append("system_prompt (too short)")
+
+            if missing:
+                return [RuleViolation(
+                    severity="hard",
+                    category="prerequisite",
+                    message=f"Cannot submit: missing {', '.join(missing)}.",
+                )]
+        return []
+
+    @staticmethod
+    def _check_over_engineering(action: Action, state: State, task: TaskSpec) -> list[RuleViolation]:
+        """Prevent over-engineering: too many skills for task difficulty."""
+        from models import ActionCommand
+
+        if action.command == ActionCommand.ADD_SKILL:
+            current_skills = state.current_spec.get("skills", [])
+            skill_count = len(current_skills) + 1  # Including the one being added
+
+            # Limits per difficulty
+            limits = {
+                "easy": 3,
+                "medium": 5,
+                "hard": 7,
+                "expert": 10,
+            }
+
+            limit = limits.get(task.difficulty, 5)
+            if skill_count > limit:
+                return [RuleViolation(
+                    severity="soft",
+                    category="efficiency",
+                    message=f"Over-engineering: {skill_count} skills exceeds {task.difficulty} limit ({limit}).",
+                    penalty=0.10,
+                )]
         return []
 
 
