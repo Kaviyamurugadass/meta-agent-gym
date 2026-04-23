@@ -1,8 +1,10 @@
-"""Core OpenEnv environment — reset / step / state lifecycle.
+"""Core OpenEnv environment — meta-agent generation.
 
-TEMPLATE: Override `_execute_action` and `_build_observation` on finale day
-for domain-specific behavior. The framework itself (rule checks, reward
-computation, structured logging, trajectory recording) stays untouched.
+META-AGENT EXTENSION:
+    - Three-tier verification (hard verifiers → judge → real execution)
+    - Command-based action space for agent generation
+    - POMDP structure with hidden "optimal spec" state
+    - Curriculum progression (1-skill → 5+ skills)
 
 Structured logging tags [START]/[STEP]/[END] follow Round 1 requirement.
 """
@@ -19,6 +21,8 @@ import yaml
 
 from models import (
     Action,
+    ActionCommand,
+    AgentSpec,
     Observation,
     RewardConfig,
     RuleViolation,
@@ -26,33 +30,48 @@ from models import (
     TaskSpec,
 )
 
-# OpenEnv ABC — our Environment subclasses this so create_app accepts it.
-# Fall back to `object` if openenv-core isn't installed (local dev only).
+# OpenEnv ABC
 try:
     from openenv.core import Environment as _OpenEnvBase
 except ImportError:
     _OpenEnvBase = object  # type: ignore[assignment,misc]
 
-# Sibling-module imports are defensive: during scaffolding, engine/reward/tasks
-# may not exist yet. Environment falls back to safe no-op behavior.
+# Sibling-module imports
 try:
     from server.rules.engine import RuleEngine
 except ImportError:
     RuleEngine = None  # type: ignore[assignment,misc]
 
 try:
-    from server.rewards.reward import RewardComputer
+    from server.rewards.reward import MetaAgentRewardComputer
 except ImportError:
-    RewardComputer = None  # type: ignore[assignment,misc]
+    MetaAgentRewardComputer = None  # type: ignore[assignment,misc]
 
 try:
     from server.tasks.generator import TaskGenerator
 except ImportError:
     TaskGenerator = None  # type: ignore[assignment,misc]
 
+try:
+    from server.tasks.scenarios import SCENARIOS, get_scenario
+except ImportError:
+    SCENARIOS = None  # type: ignore[assignment,misc]
+    get_scenario = None  # type: ignore[assignment,misc]
+
+try:
+    from server.skills import AVAILABLE_SKILLS, get_curriculum_skills
+except ImportError:
+    AVAILABLE_SKILLS = {}
+    get_curriculum_skills = None  # type: ignore[assignment,misc]
+
+try:
+    from server.verifiers import HardVerifiers
+except ImportError:
+    HardVerifiers = None  # type: ignore[assignment,misc]
+
 
 # ---------------------------------------------------------------------------
-# Logging setup — load training/logging.yaml once at import time
+# Logging setup
 # ---------------------------------------------------------------------------
 
 _LOGGING_CONFIGURED = False
@@ -84,36 +103,37 @@ logger = logging.getLogger("server.environment")
 
 
 class Environment(_OpenEnvBase):
-    """Domain-agnostic OpenEnv environment skeleton.
+    """Meta-agent generation environment.
+
+    The environment trains a policy to generate AGENT.md files from task
+    descriptions. Uses three-tier verification:
+        1. Hard verifiers (100% of steps, free)
+        2. Fast judge (90% of steps, ~$0.01)
+        3. Real execution (steps 3, 6, 9, ~$1-10)
 
     Inherits from openenv.core.Environment. Required abstract methods:
         reset(seed, episode_id, **kwargs) -> Observation
         step(action, timeout_s, **kwargs) -> Observation
-        state -> State   # NOTE: property, not method
-
-    Fill-in points (finale day):
-        _execute_action      — mutate hidden state based on action
-        _build_observation   — project state → what agent sees (POMDP-aware)
-        _check_termination   — custom end conditions (default: step >= max_steps)
+        state -> State
     """
 
-    # All session state lives on `self` (self._state, self._task, self._rng).
-    # OpenEnv creates a fresh Environment instance per session, so state is
-    # naturally isolated. Required for max_concurrent_envs > 1.
     SUPPORTS_CONCURRENT_SESSIONS = True
+
+    # META-AGENT: Steps to run real execution (10% of steps)
+    REAL_EXEC_STEPS = [3, 6, 9]
 
     def __init__(
         self,
         reward_config: Optional[RewardConfig] = None,
         domain_randomise: bool = True,
         seed: Optional[int] = None,
+        curriculum_phase: int = 1,  # META-AGENT: Curriculum phase (1-4)
     ) -> None:
-        # Call super if we inherit from OpenEnv (not object fallback)
         if _OpenEnvBase is not object:
             try:
                 super().__init__()
             except TypeError:
-                pass  # OpenEnv base may not have a compatible __init__
+                pass
 
         self.reward_config = reward_config or RewardConfig()
         self.domain_randomise = domain_randomise
@@ -121,16 +141,22 @@ class Environment(_OpenEnvBase):
         self._rng = random.Random(seed)
         self._state: Optional[State] = None
         self._task: Optional[TaskSpec] = None
+        self._curriculum_phase = curriculum_phase
 
-        # Plugins — lazy-init so absent modules don't break scaffolding
+        # Plugins
         self._rules = RuleEngine() if RuleEngine is not None else None
         self._reward = (
-            RewardComputer(self.reward_config) if RewardComputer is not None else None
+            MetaAgentRewardComputer(self.reward_config)
+            if MetaAgentRewardComputer is not None
+            else None
         )
         self._tasks = TaskGenerator(seed=seed) if TaskGenerator is not None else None
 
-        # Cached breakdown from the last reward computation (populates Observation)
         self._last_breakdown: dict[str, float] = {}
+
+        # META-AGENT: Judge state (90% frequency)
+        self._judge_step_count = 0
+        self._calibration_data: list[dict] = []
 
     # ------------------------------------------------------------------ OpenEnv interface
 
@@ -140,23 +166,36 @@ class Environment(_OpenEnvBase):
         episode_id: Optional[str] = None,  # noqa: ARG002
         **kwargs,
     ) -> Observation:
-        """Start a new episode. Extra kwargs accepted: `scenario_name`."""
+        """Start a new episode. Extra kwargs accepted: `scenario_name`, `curriculum_phase`."""
         if seed is not None:
             self._rng = random.Random(seed)
+
         scenario_name = kwargs.get("scenario_name")
+        curriculum_phase = kwargs.get("curriculum_phase", self._curriculum_phase)
+        self._curriculum_phase = curriculum_phase
+
         task = self._pick_task(scenario_name)
         self._task = task
+
+        # META-AGENT: Initialize state with empty spec
         self._state = State(
             task_id=task.task_id,
             step=0,
             max_steps=task.max_steps,
+            current_spec={},  # Start with empty spec
+            hidden_truth=self._generate_hidden_truth(task),
         )
+
+        # Reset judge state
+        self._judge_step_count = 0
+
         logger.info(
-            "reset task=%s difficulty=%s max_steps=%d",
-            task.task_id, task.difficulty, task.max_steps,
+            "reset task=%s difficulty=%s max_steps=%d phase=%d",
+            task.task_id, task.difficulty, task.max_steps, self._curriculum_phase,
             extra={"hackathon_tag": "START"},
         )
-        return self._build_observation(reward=0.0, violations=[])
+
+        return self._build_observation(reward=0.0, violations={})
 
     def step(
         self,
@@ -164,17 +203,11 @@ class Environment(_OpenEnvBase):
         timeout_s: Optional[float] = None,  # noqa: ARG002
         **kwargs,  # noqa: ARG002
     ) -> Observation:
-        """Advance one step.
-
-        OpenEnv HTTP is stateless (fresh Environment per request). WebSocket
-        sessions preserve state. Auto-reset here so HTTP /step still works
-        standalone for debugging/smoke tests — WebSocket clients control
-        their own reset/step cadence.
-        """
+        """Advance one step."""
         if self._state is None or self._task is None:
             self.reset()
 
-        # 1. Rule engine checks — hard violations block, soft violations pass through
+        # 1. Rule engine checks
         violations = self._check_rules(action)
         hard = [v for v in violations if v.severity == "hard"]
 
@@ -193,11 +226,7 @@ class Environment(_OpenEnvBase):
         # 3. Compute reward
         reward = self._compute_reward(action, violations)
 
-        # 3b. Truncation wipe — if this step hits max_steps and config sets
-        # truncation_reward_total, force the cumulative episode reward to
-        # exactly that value. Guarantees GRPO advantage variance between
-        # success episodes (naturally high) and truncated episodes
-        # (deterministically wiped).
+        # 4. Handle truncation wipe
         if (
             self._state.step >= self._state.max_steps
             and self.reward_config.truncation_reward_total is not None
@@ -209,8 +238,9 @@ class Environment(_OpenEnvBase):
             self._last_breakdown["truncation_wipe"] = wipe_adjustment
 
         self._state.cumulative_reward += reward
+        self._state.previous_score = self._last_breakdown.get("total", 0.0)
 
-        # 4. Record step in history (trajectory replay support)
+        # 5. Record step
         self._state.step_history.append({
             "step": self._state.step,
             "action": action.model_dump(),
@@ -232,15 +262,12 @@ class Environment(_OpenEnvBase):
                 self._state.cumulative_reward, self._state.step, obs.done, obs.truncated,
                 extra={"hackathon_tag": "END"},
             )
+
         return obs
 
     @property
     def state(self) -> State:
-        """Full state (hidden + visible). Debug/eval only — not for agent.
-
-        NOTE: This is a @property (not method) per openenv.core.Environment ABC.
-        Auto-resets on first access to support stateless HTTP GET /state.
-        """
+        """Full state (hidden + visible)."""
         if self._state is None:
             self.reset()
         assert self._state is not None
@@ -248,40 +275,141 @@ class Environment(_OpenEnvBase):
 
     # ------------------------------------------------------------------ Fill-in hooks
 
-    def _execute_action(self, action: Action) -> None:  # noqa: ARG002
-        """Domain-specific state transition.
+    def _execute_action(self, action: Action) -> None:
+        """Apply meta-agent command to current spec."""
+        assert self._state is not None
 
-        DOMAIN: override to mutate ``self._state.hidden_truth`` and
-        ``self._state.progress_flags`` based on the action. The base class
-        just tracks step count.
-        """
-        return
+        cmd = action.command
+        args = action.args
+        spec = self._state.current_spec
+
+        # Investigation commands (don't modify spec)
+        if cmd == ActionCommand.CHECK_SCORE:
+            # Will be handled in _build_observation
+            return
+        elif cmd == ActionCommand.INSPECT_EXAMPLE:
+            # Will be handled in _build_observation
+            return
+
+        # Spec building commands
+        if cmd == ActionCommand.SET_NAME:
+            spec["name"] = args.get("name", "")
+        elif cmd == ActionCommand.SET_DESCRIPTION:
+            spec["description"] = args.get("description", "")
+        elif cmd == ActionCommand.ADD_SKILL:
+            skill = args.get("skill")
+            if skill:
+                spec.setdefault("skills", []).append(skill)
+                # Dedupe
+                spec["skills"] = list(set(spec["skills"]))
+        elif cmd == ActionCommand.REMOVE_SKILL:
+            skill = args.get("skill")
+            if skill and "skills" in spec:
+                spec["skills"] = [s for s in spec["skills"] if s != skill]
+        elif cmd == ActionCommand.SET_MODEL:
+            spec["model"] = args.get("model", "sonnet")
+        elif cmd == ActionCommand.ADD_TOOLS:
+            tool = args.get("tool")
+            if tool:
+                spec.setdefault("allowed_tools", []).append(tool)
+        elif cmd == ActionCommand.WRITE_PROMPT:
+            # Can append or replace
+            prompt = args.get("prompt", "")
+            mode = args.get("mode", "replace")  # "replace" or "append"
+            if mode == "append":
+                spec["system_prompt"] = spec.get("system_prompt", "") + "\n" + prompt
+            else:
+                spec["system_prompt"] = prompt
+        elif cmd == ActionCommand.SET_MEMORY:
+            spec["memory"] = args.get("memory")
+        elif cmd == ActionCommand.SET_MAX_TURNS:
+            spec["max_turns"] = args.get("max_turns")
 
     def _build_observation(
         self,
         reward: float,
-        violations: list[RuleViolation],
+        violations: dict | list[RuleViolation],
     ) -> Observation:
-        """Project state → agent-visible view.
-
-        DOMAIN: extend with domain-specific ``summary``, ``latest_output``.
-        Keep hidden_truth out of the observation for POMDP integrity.
-        """
+        """Project state → agent-visible view (POMDP)."""
         assert self._state is not None and self._task is not None
 
         done = self._check_termination()
         truncated = (
             self._state.step >= self._state.max_steps and not done
         )
+
+        # META-AGENT: Build investigation result if relevant
+        investigation_result = None
+        latest_output: dict | None = None
+        summary_parts = [f"Step {self._state.step}/{self._state.max_steps}"]
+
+        last_action = (
+            self._state.step_history[-1]["action"]
+            if self._state.step_history
+            else None
+        )
+        if last_action:
+            cmd = last_action.get("command")
+            if cmd == ActionCommand.CHECK_SCORE.value:
+                investigation_result = {
+                    "current_score": self._last_breakdown.get("total", 0.0),
+                    "breakdown": dict(self._last_breakdown),
+                }
+                latest_output = {"score_check": self._last_breakdown.get("total", 0.0)}
+                summary_parts.append("checked")
+            elif cmd == ActionCommand.INSPECT_EXAMPLE.value:
+                investigation_result = self._get_example_agent(self._task.domain)
+                latest_output = {"example_inspected": self._task.domain}
+                summary_parts.append("inspected")
+            elif cmd == ActionCommand.INSPECT.value:
+                # INSPECT command provides task info
+                latest_output = {
+                    "domain": self._task.domain,
+                    "difficulty": self._task.difficulty,
+                    "required_skills": self._task.required_skills,
+                }
+                summary_parts.append(f"inspected {self._task.domain}")
+            elif cmd == ActionCommand.NOOP.value:
+                latest_output = {"noop": True}
+                summary_parts.append("noop")
+            else:
+                # Other commands modify spec
+                spec_keys = list(self._state.current_spec.keys())
+                latest_output = {"spec_keys": spec_keys}
+                summary_parts.append(f"spec({len(spec_keys)} fields)")
+
+        summary = ", ".join(summary_parts)
+
+        # META-AGENT: Build feedback list
+        feedback = []
+        if violations:
+            if isinstance(violations, list):
+                for v in violations:
+                    feedback.append(f"{v.category}: {v.message}")
+            else:
+                feedback = [str(violations)]
+
+        # Add reward-based feedback
+        if self._last_breakdown.get("total", 0) < 0:
+            feedback.append("Current score is negative. Consider revising your approach.")
+
         return Observation(
             task_id=self._state.task_id,
             step=self._state.step,
             max_steps=self._state.max_steps,
-            summary=f"Step {self._state.step}/{self._state.max_steps}",
+            # META-AGENT fields
+            current_spec=dict(self._state.current_spec),
+            investigation_result=investigation_result,
+            available_skills=list(AVAILABLE_SKILLS.keys()),
+            score=self._last_breakdown.get("total", 0.0),
+            feedback=feedback,
+            # Standard fields
+            summary=summary,
+            latest_output=latest_output,
             history=self._state.step_history[-5:],
             reward=reward,
             reward_breakdown=dict(self._last_breakdown),
-            rule_violations=violations,
+            rule_violations=violations if isinstance(violations, list) else [],
             budget_remaining=self._task.budget,
             time_remaining=self._task.time_limit,
             done=done,
@@ -289,34 +417,67 @@ class Environment(_OpenEnvBase):
         )
 
     def _check_termination(self) -> bool:
-        """Is the task complete (natural success)? Override per domain.
+        """Is the task complete? META-AGENT: Submit command triggers completion."""
+        if not self._state or not self._state.step_history:
+            return False
 
-        Default: False. The base class produces `truncated=True` when
-        step >= max_steps (via _build_observation) but never `done=True`
-        on its own — completion is domain-specific (e.g., correct guess,
-        successful fix, submitted answer matching ground truth).
+        last_action = self._state.step_history[-1]["action"]
+        if last_action.get("command") == ActionCommand.SUBMIT.value:
+            # Validate spec is complete before accepting submit
+            if HardVerifiers is not None:
+                passed, _ = HardVerifiers.get_gate_results(self._state.current_spec)
+                return passed
+            return True
 
-        Domains override this to return True when task success conditions
-        are met. This distinction matters for:
-          - truncation_reward_total wipe (only applies when truncated, not done)
-          - GRPO advantage computation (success vs timeout rewards differ)
-        """
         return False
 
     # ------------------------------------------------------------------ Internal helpers
 
     def _pick_task(self, scenario_name: Optional[str]) -> TaskSpec:
-        if self._tasks is not None:
-            return self._tasks.generate(
-                scenario_name=scenario_name,
-                domain_randomise=self.domain_randomise,
-            )
+        """Pick a task based on curriculum phase."""
+        if SCENARIOS is not None and get_scenario is not None:
+            # Try specific scenario first
+            if scenario_name:
+                scenario = get_scenario(scenario_name)
+                if scenario:
+                    return scenario
+
+            # Filter by curriculum phase
+            from server.tasks.scenarios import get_scenarios_by_phase
+            phase_tasks = get_scenarios_by_phase(self._curriculum_phase)
+            if phase_tasks:
+                return self._rng.choice(phase_tasks)
+
+            # Fallback to all scenarios
+            return self._rng.choice(SCENARIOS)
+
         return TaskSpec(
             task_id=scenario_name or "placeholder",
             difficulty="easy",
-            problem_statement="Placeholder task — TaskGenerator not yet wired.",
+            problem_statement="Placeholder task",
             max_steps=5,
         )
+
+    def _generate_hidden_truth(self, task: TaskSpec) -> dict:
+        """Generate hidden ground truth for the task."""
+        # This is the "optimal" spec that the policy should discover
+        # In practice, this could come from expert demonstrations
+        return {
+            "optimal_skills": set(task.required_skills + task.recommended_skills),
+            "optimal_model": "sonnet" if task.difficulty != "expert" else "opus",
+            "min_prompt_length": 100,
+        }
+
+    def _get_example_agent(self, domain: str) -> dict:
+        """Get an example good agent for this domain."""
+        from server.skills import get_template_for_domain
+
+        template = get_template_for_domain(domain)
+        return {
+            "domain": domain,
+            "example_template": template or "No template available",
+            "hint": f"Focus on {domain}-specific skills and best practices",
+        }
 
     def _check_rules(self, action: Action) -> list[RuleViolation]:
         if self._rules is None:
