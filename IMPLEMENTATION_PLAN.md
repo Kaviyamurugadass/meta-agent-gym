@@ -1,6 +1,6 @@
 # meta-agent-gym: Implementation Plan v4
 
-> **Status:** ✅ P0 COMPLETE | P1 MOSTLY COMPLETE | P2 PARTIAL
+> **Status:** ✅ P0 COMPLETE | ✅ P1 COMPLETE | P2 MOSTLY COMPLETE
 > **Last Updated:** 2025-04-23
 > **Focus:** Core Components First (UI Later)
 > **Based on:** PyTorch OpenEnv Hackathon + RLVR Best Practices
@@ -11,20 +11,21 @@
 
 ### ✅ COMPLETE - P0 Critical Path (13/13)
 - [x] Hard Verifiers, AGENT.md Schema, Action Commands, Observation
-- [x] Skill Registry, Test Cases (7 scenarios), Fast Judge
+- [x] Skill Registry, Test Cases, Fast Judge
 - [x] Multi-Component Reward, OpenEnv Environment, Goose Runner
-- [x] Calibration Tracker, Unit Tests (136 pass), Deploy to HF
+- [x] Calibration Tracker, Unit Tests (201 pass), Deploy to HF
 
-### ✅ COMPLETE - P1 MVP Enhancement (6/9)
+### ✅ COMPLETE - P1 MVP Enhancement (9/9)
 - [x] GRPO Trainers (H100 + T4), Medium/Hard Tests
 - [x] Anti-Hacking Checks, Evaluator, Integration Tests
-- [⚠️] Curriculum Controller (partial)
-- [❌] Adversarial Designer, Monitoring Dashboard
+- [x] Curriculum Controller — `training/curriculum.py` with auto-advancement, regression, save/load
+- [x] Adversarial Designer — `server/adversarial.py` with 7 strategies (15 templates)
+- [x] Monitoring Dashboard — `training/monitoring.py` with component plots + JSON reports
 
-### ⚠️ PARTIAL - P2 Polish (2/4)
+### ✅ COMPLETE - P2 Polish (3/4)
 - [x] Investigation Tools, Documentation
-- [⚠️] More Test Cases (7 scenarios, target: 20+)
-- [❌] Demo Video
+- [x] More Test Cases — 21 scenarios across all domains (web, data, code, files, analysis, output)
+- [ ] Demo Video
 
 ---
 
@@ -1935,7 +1936,7 @@ class SubAgentOrchestrator:
 ## File Structure (UPDATED v4)
 
 ```
-meta_agent_gym/
+meta-agent-gym/
 ├── client.py                        # HTTP client for environment
 ├── models.py                        # Core schemas (Action, Observation, AgentSpec)
 ├── inference.py                     # Inference utilities
@@ -1945,50 +1946,46 @@ meta_agent_gym/
 │   ├── app.py                      # FastAPI server (OpenEnv endpoint)
 │   ├── environment.py              # Main OpenEnv environment
 │   │
-│   ├── verifiers.py                # NEW v4: Hard verifiers (YAML, fields)
-│   ├── judge.py                    # Fast judge with calibration
+│   ├── verifiers.py                # Hard verifiers (YAML, fields)
+│   ├── skills.py                   # Skill registry + curriculum mapping
+│   ├── adversarial.py              # Adversarial designer (7 strategies, 15 templates)
 │   │
 │   ├── rewards/
-│   │   ├── reward.py               # Multi-component reward system
-│   │   └── anti_hack.py            # NEW v4: Anti-hacking penalties
+│   │   └── reward.py               # Multi-component reward system + anti-hacking
 │   │
 │   ├── rules/
 │   │   └── engine.py               # Rule validation engine
 │   │
 │   ├── tasks/
-│   │   ├── scenarios.py            # Test cases (curriculum phases)
-│   │   └── generator.py            # Task generation
+│   │   ├── scenarios.py            # 21 scenarios across 6 domains + 4 phases
+│   │   └── generator.py            # Task generation + domain randomization
 │   │
-│   ├── runtime/
-│   │   └── goose.py                # Real execution (steps 3,6,9)
-│   │
-│   └── adversarial/
-│       └── designer.py             # Challenge generator
+│   └── runtime/
+│       └── goose.py                # Real execution (steps 3,6,9)
 │
 ├── training/
-│   ├── grpo_trl.py                 # Full GRPO with TRL (H100)
-│   ├── grpo_unsloth.py             # 4-bit LoRA variant (T4/Colab)
-│   ├── curriculum.py               # Curriculum controller
+│   ├── grpo_trl.py                 # Full GRPO with TRL (H100) + --curriculum flag
+│   ├── grpo_unsloth.py             # 4-bit LoRA variant (T4/Colab) + --curriculum flag
+│   ├── curriculum.py               # Auto-advancing curriculum controller
+│   ├── monitoring.py               # Per-component reward tracking + plots
 │   ├── evaluation.py               # Metrics + before/after tables
-│   ├── monitoring.py               # Track all reward components
-│   ├── reward_backend.py           # Reward computation backend
-│   ├── rollout_collection.py       # Data collection
-│   └── trajectory.py               # Trajectory handling
+│   ├── reward_backend.py           # Reward computation backend (local/remote)
+│   ├── rollout_collection.py       # Data collection + --curriculum-phase flag
+│   ├── trajectory.py               # Trajectory serialization (JSONL)
+│   ├── benchmark.py                # Expert trajectory runner (21 scenarios)
+│   ├── plot_rewards.py             # Reward curve plotting
+│   └── benchmark.py                # Expert trajectory runner (21+ scenarios)
 │
 ├── tests/
 │   ├── test_smoke.py               # Basic functionality
-│   ├── test_reward_quality.py      # Reward component tests
-│   ├── test_observation_quality.py # Observation tests
-│   └── test_training.py            # Training tests
+│   ├── test_meta_agent_env.py      # Environment tests
+│   ├── test_meta_agent_reward.py   # Reward component tests
+│   └── test_training.py            # Training pipeline tests
 │
 ├── data/
-│   ├── test_cases/
-│   │   ├── easy.json               # Phase 1: 1 skill
-│   │   ├── medium.json             # Phase 2: 2-3 skills
-│   │   ├── hard.json               # Phase 3: 3-5 skills
-│   │   └── expert.json             # Phase 4: 5+ skills
-│   └── agents/
-│       └── examples/               # Reference good agents
+│   └── baseline/
+│       ├── random/                 # Random policy rollouts
+│       └── heuristic/              # Heuristic policy rollouts
 │
 ├── scripts/
 │   └── deploy.sh                   # Deploy to HF Space
@@ -1997,70 +1994,15 @@ meta_agent_gym/
     └── number_guess/               # Reference environment
 ```
 
-### NEW v4 Modules
+### Implemented Modules
 
-| Module | Purpose | Priority |
-|--------|---------|----------|
-| `verifiers.py` | Hard YAML/field checks (free, 100%) | P0 |
-| `anti_hack.py` | Explicit penalty system | P0 |
-| `monitoring.py` | Track all reward components during training | P1 |
-| `curriculum.py` | Phase progression controller | P1 |
-
-```
-meta_agent_gym/
-├── __init__.py
-├── models/
-│   ├── __init__.py
-│   ├── agent_spec.py              # P0 - Agent spec schema
-│   ├── action.py                  # P0 - Command-based actions (NEW)
-│   ├── observation.py             # P0 - POMDP observation (NEW)
-│   └── state.py                   # P0 - Environment state
-├── core/
-│   ├── __init__.py
-│   ├── skills.py                  # P0 - Skill registry
-│   ├── templates.py               # P0 - Domain templates
-│   └── test_case.py               # P0 - Test case schema
-├── judge/
-│   ├── __init__.py
-│   └── judge.py                   # P0 - Claude judge with calibration
-├── runtime/
-│   ├── __init__.py
-│   └── goose.py                   # P0 - Goose integration
-├── rewards/
-│   ├── __init__.py
-│   ├── reward.py                  # P0 - Decomposed reward (NEW)
-│   └── justification.md           # P0 - Reward docs (NEW)
-├── adversarial/
-│   ├── __init__.py
-│   └── designer.py                # P1 - Challenge generator
-├── agents/
-│   ├── __init__.py
-│   └── subagents.py               # P1 - Sub-agent roles (NEW)
-├── training/
-│   ├── __init__.py
-│   ├── grpo_trainer.py            # P1 - Full GRPO (H100)
-│   ├── grpo_unsloth.py            # P1 - 4-bit LoRA (T4) (NEW)
-│   ├── curriculum.py              # P1 - Curriculum controller (NEW)
-│   └── evaluation.py              # P1 - Metrics + before/after (NEW)
-└── environment.py                 # P0 - OpenEnv environment
-
-data/
-├── test_cases/
-│   ├── generic.json               # P0 - Base test cases
-│   └── adversarial.json           # P1 - Generated challenges
-└── agents/
-    └── examples/                  # P0 - Example good agents
-
-tests/
-├── test_agent_spec.py             # P0
-├── test_action.py                 # P0 (NEW)
-├── test_observation.py            # P0 (NEW)
-├── test_reward.py                 # P0 (NEW)
-├── test_judge.py                  # P0
-├── test_goose_runner.py           # P0
-├── test_curriculum.py             # P1 (NEW)
-└── test_training.py               # P1
-```
+| Module | File | Status | Description |
+|--------|------|--------|-------------|
+| `verifiers.py` | `server/` | ✅ P0 | Hard YAML/field checks (free, 100%) |
+| `skills.py` | `server/` | ✅ P0 | 17 skills across 6 categories |
+| `adversarial.py` | `server/` | ✅ P1 | 7 strategies targeting reward weaknesses |
+| `curriculum.py` | `training/` | ✅ P1 | Auto-advancing phase controller with save/load |
+| `monitoring.py` | `training/` | ✅ P1 | Per-component reward tracking + matplotlib plots |
 
 ---
 
@@ -2251,8 +2193,19 @@ The plan now follows RLVR best practices:
 3. **Fast judge** - Claude Sonnet quality scoring (90% of steps)
 4. **Real execution** - Goose runtime validation (10% at steps 3, 6, 9)
 5. **Anti-hacking** - Explicit penalties for common exploits
-6. **Curriculum** - 1-skill → 2-3 skills → 3-5 skills → 5+ skills
+6. **Curriculum** - 1-skill → 2-3 skills → 3-5 skills → 5+ skills (auto-advancing)
 7. **Early deployment** - Deploy to HF Space Day 5 (P0)
+
+### Current Stats
+
+| Metric | Value |
+|--------|-------|
+| Total scenarios | 21 (+ 15 adversarial templates) |
+| Test count | 201 pass, 5 skipped |
+| Skills available | 17 across 6 categories |
+| Curriculum phases | 4 (easy → expert) |
+| Adversarial strategies | 7 targeting specific reward weaknesses |
+| Training variants | H100 (TRL) + T4 (Unsloth 4-bit LoRA) |
 
 ### What Changed from v3
 
@@ -2260,12 +2213,14 @@ The plan now follows RLVR best practices:
 |-----------|----|----|
 | Verification | Judge only | 3-tier: Hard → Judge → Real |
 | Reward | Single decomposed | Multiple independent (RLVR) |
-| Anti-hack | Red herrings | Explicit penalties |
-| Curriculum | Generic | Explicit phase progression |
+| Anti-hack | Red herrings | Explicit penalties + adversarial designer |
+| Curriculum | Generic | Auto-advancing phase controller |
+| Scenarios | 7 (web-heavy) | 21 across 6 domains + 15 adversarial |
+| Monitoring | None | Per-component tracking + plots |
 | Deployment | End of project | P0 Day 5 (early!) |
 
 ---
 
-*Version: 4.0*
+*Version: 4.1*
 *Updated: 2025-04-23*
 *Based on: PyTorch OpenEnv Hackathon + RLVR Best Practices*

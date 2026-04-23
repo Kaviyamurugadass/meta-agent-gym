@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from fastapi.responses import RedirectResponse
 from models import Action, Observation
 from server.environment import Environment
 
@@ -105,6 +106,11 @@ if _static_dir.exists() and any(_static_dir.iterdir()):
 # ---------------------------------------------------------------------------
 # Health + metadata endpoints
 # ---------------------------------------------------------------------------
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/web/")
 
 
 @app.get("/health")
