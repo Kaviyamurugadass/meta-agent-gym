@@ -90,10 +90,30 @@ def test_heuristic_policy_submits_near_end():
     assert action.command == ActionCommand.SUBMIT
 
 
-def test_heuristic_policy_noops_midgame():
+def test_heuristic_policy_fills_name_first():
+    """With an empty spec, the heuristic's first action is SET_NAME."""
     import random
     from training.rollout_collection import heuristic_policy
-    obs = {"step": 1, "max_steps": 10}
+    obs = {"step": 1, "max_steps": 10, "current_spec": {}}
+    action = heuristic_policy(obs, random.Random(42))
+    assert action.command == ActionCommand.SET_NAME
+
+
+def test_heuristic_policy_noops_when_spec_complete():
+    """Once every required field is set, the heuristic coasts on NOOP until SUBMIT."""
+    import random
+    from training.rollout_collection import heuristic_policy
+    obs = {
+        "step": 3,
+        "max_steps": 10,
+        "current_spec": {
+            "name": "x",
+            "description": "y",
+            "skills": ["web-scraping"],
+            "system_prompt": "You are a specialist agent. " * 3,
+            "model": "sonnet",
+        },
+    }
     action = heuristic_policy(obs, random.Random(42))
     assert action.command == ActionCommand.NOOP
 
@@ -191,14 +211,24 @@ def test_benchmark_unknown_scenario_raises():
 # ---------------------------------------------------------------------------
 
 
+def _has_cuda() -> bool:
+    try:
+        import torch
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+
 @pytest.mark.parametrize("script", ["training/grpo_trl.py", "training/grpo_unsloth.py"])
 def test_grpo_script_dry_run(script):
     """Dry-run each training script — no GPU, no training, just verify imports + wiring."""
+    if script.endswith("grpo_unsloth.py") and not _has_cuda():
+        pytest.skip("unsloth requires an NVIDIA/Intel GPU at import time")
     result = subprocess.run(
         [sys.executable, script, "--dry-run"],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=180,  # unsloth cold-import + torch + triton can take 60–90s on first run
         cwd=str(Path(__file__).resolve().parent.parent),
     )
     assert result.returncode == 0, f"stderr:\n{result.stderr}\nstdout:\n{result.stdout}"

@@ -219,14 +219,13 @@ The policy will try to game the reward system. We prevent:
 
 ---
 
-## Track Alignment (OpenEnv Hackathon)
+## Track Alignment (OpenEnv Hackathon 2026)
 
-| Track | How We Fit |
-|-------|-----------|
-| Multi-Agent | Sub-agent specialist roles (static analyzer, doc reviewer) |
-| World Modeling | POMDP: hidden state = "what makes a good agent" |
-| Long-Horizon | Multi-step generation with investigation commands |
-| Self-Improvement | Adversarial designer generates harder tests |
+| Track | Role | How we fit |
+|-------|------|-----------|
+| Self-Improvement | **primary** | Adversarial task generator targets weakest component scores; curriculum escalates on per-component mastery |
+| World Modeling | partner | POMDP — hidden state = "what makes a good agent for this task"; observation = spec + reward breakdown + violations |
+| RLVR | partner | Hard verifiers for YAML/fields/length; LLM judge only for what can't be checked programmatically |
 
 ---
 
@@ -266,8 +265,9 @@ python scripts/generate_plots.py
 
 ## Memory Context
 
-- Project is in active hackathon mode (OpenEnv 2025)
-- Focus is on core components first, UI later
-- Using PyTorch stack: TRL + Unsloth + OpenEnv
-- Target: Generate production-ready AGENT.md files
-- Verification: Hard checks (100%) + Judge (90%) + Real execution (10% at steps 3,6,9)
+- OpenEnv Hackathon 2026 submission — primary track Self-Improvement, partners World-Modeling + RLVR
+- Deployed: `huggingface.co/spaces/Kaviya-M/meta-agent-gym` (Docker, cpu-basic)
+- Validated: 50-episode Qwen2.5-0.5B run on Colab T4; real numbers in `monitoring/colab_results/report.json`
+- Stack: TRL GRPO + Unsloth 4-bit LoRA + OpenEnv + Claude Sonnet (judge) + Goose (execution)
+- Verification: hard checks (100%) + fast judge (90%) + real execution (10% at steps 3, 6, 9)
+- The policy ships as discrete commands (`SET_NAME`, `ADD_SKILL`, `WRITE_PROMPT`, …), not free-form markdown — clean action semantics for GRPO
