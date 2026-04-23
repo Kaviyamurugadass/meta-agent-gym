@@ -1,195 +1,688 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>openenv-r2-kit — Template</title>
-    <style>
-        :root {
-            --bg: #0b1020;
-            --fg: #eef1f7;
-            --muted: #8892a6;
-            --accent: #7aa2f7;
-            --accent-2: #bb9af7;
-            --panel: rgba(255,255,255,0.04);
-            --border: rgba(255,255,255,0.08);
-        }
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: radial-gradient(ellipse at top, #1a1f3a 0%, var(--bg) 60%);
-            color: var(--fg);
-        }
-        .wrap {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 48px 24px 80px;
-        }
-        header { margin-bottom: 40px; }
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin: 0 0 8px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-2));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .tagline { color: var(--muted); font-size: 1rem; }
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-        .panel h2 {
-            font-size: 1.1rem;
-            font-weight: 500;
-            margin: 0 0 16px;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td {
-            text-align: left;
-            padding: 10px 12px;
-            border-bottom: 1px solid var(--border);
-        }
-        th { color: var(--muted); font-weight: 500; }
-        code {
-            font-family: "SF Mono", Menlo, Consolas, monospace;
-            font-size: 0.85rem;
-            color: var(--accent-2);
-            background: rgba(122,162,247,0.08);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: rgba(34, 197, 94, 0.15);
-            color: #86efac;
-            font-size: 0.85rem;
-        }
-        .status::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
-            box-shadow: 0 0 8px #22c55e;
-        }
-        .status.stale { background: rgba(250, 204, 21, 0.15); color: #fde68a; }
-        .status.stale::before { background: #facc15; box-shadow: 0 0 8px #facc15; }
-        .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 8px;
-            background: var(--accent);
-            color: #0b1020;
-            font-weight: 500;
-            text-decoration: none;
-            font-size: 0.9rem;
-            margin-right: 8px;
-        }
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--fg);
-        }
-        footer {
-            margin-top: 32px;
-            color: var(--muted);
-            font-size: 0.85rem;
-            text-align: center;
-        }
-        .warn {
-            border-left: 3px solid #fbbf24;
-            padding-left: 14px;
-            margin: 16px 0;
-            color: #fde68a;
-            font-size: 0.9rem;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>meta-agent-gym — RL Environment for Agent Design</title>
+<style>
+:root {
+    --bg: #0b1020;
+    --fg: #eef1f7;
+    --muted: #8892a6;
+    --accent: #7aa2f7;
+    --accent-2: #bb9af7;
+    --panel: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --success: #86efac;
+    --warning: #fde68a;
+    --error: #fca5a5;
+    --radius: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg)}
+body{overflow:hidden}
+
+/* ─── Header ─── */
+.header{display:flex;align-items:center;gap:16px;padding:12px 24px;border-bottom:1px solid var(--border);background:rgba(11,16,32,0.95);backdrop-filter:blur(12px);z-index:10;position:relative}
+.header h1{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-0.02em}
+.header .tagline{color:var(--muted);font-size:0.8rem;margin-left:4px}
+.header .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:0.75rem;font-weight:500;margin-left:auto}
+.header .pill.ok{background:rgba(34,197,94,0.12);color:var(--success)}
+.header .pill.ok::before{content:"";width:7px;height:7px;background:#22c55e;border-radius:50%;box-shadow:0 0 6px #22c55e}
+.header .pill.err{background:rgba(252,165,165,0.12);color:var(--error)}
+.header .pill.err::before{content:"";width:7px;height:7px;background:#ef4444;border-radius:50%}
+.header .pill.warn{background:rgba(250,204,21,0.12);color:var(--warning)}
+
+/* ─── Layout ─── */
+.main{display:grid;grid-template-columns:320px 1fr;height:calc(100vh - 53px);overflow:hidden}
+.col{display:flex;flex-direction:column;overflow-y:auto}
+.col:first-child{border-right:1px solid var(--border)}
+.col::-webkit-scrollbar{width:5px}
+.col::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ─── Panels ─── */
+.panel{padding:16px 20px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.panel-title .badge{font-size:0.65rem;padding:2px 6px;border-radius:4px;background:rgba(122,162,247,0.15);color:var(--accent)}
+
+/* ─── Form Elements ─── */
+select,input,textarea,button{font-family:inherit;font-size:0.82rem}
+select,input[type=text],input[type=number],textarea{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,0.04);color:var(--fg);outline:none;transition:border-color 0.2s}
+select:focus,input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:60px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:0.78rem;line-height:1.5}
+select option{background:#1a1f3a;color:var(--fg)}
+label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:0.06em}
+.field{margin-bottom:10px}
+.row{display:flex;gap:8px;align-items:end}
+.row>*{flex:1}
+
+/* ─── Buttons ─── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:6px;border:none;cursor:pointer;font-weight:500;font-size:0.82rem;transition:all 0.15s}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);color:#0b1020}
+.btn-primary:hover:not(:disabled){background:#93b4fc}
+.btn-secondary{background:rgba(255,255,255,0.06);color:var(--fg);border:1px solid var(--border)}
+.btn-secondary:hover:not(:disabled){background:rgba(255,255,255,0.1)}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--error);border:1px solid rgba(239,68,68,0.2)}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,0.25)}
+.btn-sm{padding:4px 8px;font-size:0.72rem;border-radius:4px}
+.btn-group{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+/* ─── Task Card ─── */
+.task-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px}
+.task-card .task-id{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:0.78rem;color:var(--accent)}
+.task-card .task-desc{font-size:0.82rem;color:var(--fg);margin:8px 0;line-height:1.5}
+.task-meta{display:flex;gap:6px;flex-wrap:wrap}
+.tag{padding:3px 8px;border-radius:4px;font-size:0.68rem;font-weight:500}
+.tag-easy{background:rgba(34,197,94,0.12);color:var(--success)}
+.tag-medium{background:rgba(59,130,246,0.12);color:#93c5fd}
+.tag-hard{background:rgba(250,204,21,0.12);color:var(--warning)}
+.tag-expert{background:rgba(239,68,68,0.12);color:var(--error)}
+.tag-skill{background:rgba(187,154,247,0.12);color:var(--accent-2)}
+.tag-domain{background:rgba(122,162,247,0.1);color:var(--accent)}
+
+/* ─── Step History ─── */
+.step-list{list-style:none}
+.step-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.78rem}
+.step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;background:var(--accent);color:#0b1020;flex-shrink:0}
+.step-item.done .step-num{background:rgba(34,197,94,0.2);color:var(--success)}
+.step-item.fail .step-num{background:rgba(239,68,68,0.2);color:var(--error)}
+.step-cmd{font-family:"SF Mono",Menlo,Consolas,monospace;color:var(--accent)}
+.step-reward{margin-left:auto;font-weight:600;font-size:0.72rem}
+.step-reward.pos{color:var(--success)}
+.step-reward.neg{color:var(--error)}
+
+/* ─── Reward Bars ─── */
+.reward-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:0.75rem}
+.reward-label{width:100px;text-align:right;color:var(--muted);font-family:"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reward-track{flex:1;height:8px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden}
+.reward-fill{height:100%;border-radius:4px;transition:width 0.4s ease}
+.reward-fill.good{background:linear-gradient(90deg,#22c55e,#86efac)}
+.reward-fill.mid{background:linear-gradient(90deg,#facc15,#fde68a)}
+.reward-fill.low{background:linear-gradient(90deg,#ef4444,#fca5a5)}
+.reward-val{width:36px;text-align:right;font-weight:600;font-family:"SF Mono",Menlo,Consolas,monospace}
+.reward-total{font-size:1.1rem;font-weight:700;text-align:right;padding-top:8px;border-top:1px solid var(--border);margin-top:8px}
+
+/* ─── Agent Preview ─── */
+.agent-preview{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:"SF Mono",Menlo,Consolas,monospace;font-size:0.75rem;line-height:1.6;white-space:pre-wrap;color:var(--muted);max-height:300px;overflow-y:auto}
+.agent-preview .key{color:var(--accent)}
+.agent-preview .val{color:var(--fg)}
+.agent-preview .sep{color:var(--accent-2)}
+
+/* ─── Feedback ─── */
+.feedback-list{list-style:none}
+.feedback-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.78rem;display:flex;gap:6px;align-items:flex-start}
+.feedback-dot{width:5px;height:5px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.feedback-dot.info{background:var(--accent)}
+.feedback-dot.good{background:var(--success)}
+.feedback-dot.bad{background:var(--error)}
+.feedback-dot.warn{background:var(--warning)}
+
+/* ─── Violation Chips ─── */
+.violation{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:0.7rem;margin:2px}
+.violation.hard{background:rgba(239,68,68,0.12);color:var(--error)}
+.violation.soft{background:rgba(250,204,21,0.1);color:var(--warning)}
+
+/* ─── Skills Pills ─── */
+.skill-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.skill-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:4px;font-size:0.72rem;background:rgba(187,154,247,0.12);color:var(--accent-2)}
+.skill-pill button{background:none;border:none;color:var(--error);cursor:pointer;font-size:0.7rem;padding:0;line-height:1}
+
+/* ─── Empty State ─── */
+.empty{color:var(--muted);text-align:center;padding:24px;font-size:0.82rem;line-height:1.6}
+.empty code{color:var(--accent);background:rgba(122,162,247,0.08);padding:1px 5px;border-radius:3px;font-size:0.78rem}
+
+/* ─── Episode Complete Banner ─── */
+.banner{padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:0.82rem;font-weight:500;display:flex;align-items:center;gap:8px}
+.banner.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2);color:var(--success)}
+.banner.failure{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--error)}
+
+/* ─── Responsive ─── */
+@media(max-width:768px){.main{grid-template-columns:1fr;grid-template-rows:auto 1fr}.col:first-child{border-right:none;border-bottom:1px solid var(--border);max-height:40vh}}
+</style>
 </head>
 <body>
-    <div class="wrap">
-        <header>
-            <h1>openenv-r2-kit</h1>
-            <div class="tagline">Domain-agnostic OpenEnv template — ready to specialize in hours, not days.</div>
-            <div style="margin-top: 16px;" id="status-pill">
-                <span class="status stale" id="status">Checking server…</span>
-            </div>
-        </header>
 
+<div class="header">
+    <h1>meta-agent-gym</h1>
+    <span class="tagline">RL Environment for Agent Design</span>
+    <span class="pill ok" id="healthPill">Checking...</span>
+</div>
+
+<div class="main">
+    <!-- Left Column: Task + Controls -->
+    <div class="col">
         <div class="panel">
-            <h2>Endpoints</h2>
-            <table>
-                <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
-                <tbody>
-                    <tr><td>POST</td><td><code>/reset</code></td><td>Start a new episode</td></tr>
-                    <tr><td>POST</td><td><code>/step</code></td><td>Apply an action</td></tr>
-                    <tr><td>GET</td><td><code>/state</code></td><td>Full state (debug/eval)</td></tr>
-                    <tr><td>GET</td><td><code>/schema</code></td><td>Action/Observation JSON schemas</td></tr>
-                    <tr><td>WS</td><td><code>/ws</code></td><td>Persistent session (via OpenEnv)</td></tr>
-                    <tr><td>GET</td><td><code>/health</code></td><td>Liveness check</td></tr>
-                </tbody>
-            </table>
-            <div style="margin-top: 16px;">
-                <a class="btn" href="/schema">View schema</a>
-                <a class="btn btn-ghost" href="/health">Health</a>
-                <a class="btn btn-ghost" href="/docs">OpenAPI docs</a>
+            <div class="panel-title">Task Selection</div>
+            <div class="field">
+                <label for="taskSelect">Scenario</label>
+                <select id="taskSelect" disabled>
+                    <option value="">Loading tasks...</option>
+                </select>
+            </div>
+            <div id="taskCard" class="task-card" style="display:none"></div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="btnStart" disabled>Start Episode</button>
+                <button class="btn btn-secondary" id="btnReset" disabled>New Episode</button>
             </div>
         </div>
 
         <div class="panel">
-            <h2>Quick start</h2>
-            <pre style="overflow-x:auto; font-size:0.85rem; color: var(--muted);"><code>from client import Env
-from models import Action, ActionCommand
+            <div class="panel-title">Agent Builder <span class="badge" id="stepBadge">Step 0/7</span></div>
 
-with Env("http://localhost:8000") as env:
-    obs = env.reset()
-    obs = env.step(Action(command=ActionCommand.NOOP))
-    print(obs.reward, obs.done)</code></pre>
-        </div>
+            <div class="field">
+                <label for="cmdName">set_name</label>
+                <div class="row">
+                    <input type="text" id="cmdName" placeholder="e.g. price-scraper">
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('set_name',{name:document.getElementById('cmdName').value})">Run</button>
+                </div>
+            </div>
 
-        <div class="panel">
-            <h2>Template status</h2>
-            <div class="warn">
-                This is a template deployment. The env accepts actions and returns structured
-                observations, but reward components are placeholder zeros until a domain is
-                filled in. See <code>FINALE_GUIDE.md</code> in the repo for the fill-in checklist.
+            <div class="field">
+                <label for="cmdDesc">set_description</label>
+                <div class="row">
+                    <input type="text" id="cmdDesc" placeholder="What the agent does">
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('set_description',{description:document.getElementById('cmdDesc').value})">Run</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>add_skill / remove_skill</label>
+                <div class="row">
+                    <select id="cmdSkill"><option value="">Select skill...</option></select>
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('add_skill',{skill:document.getElementById('cmdSkill').value})">+</button>
+                    <button class="btn btn-sm btn-danger" onclick="execCmd('remove_skill',{skill:document.getElementById('cmdSkill').value})">-</button>
+                </div>
+                <div class="skill-pills" id="skillPills"></div>
+            </div>
+
+            <div class="field">
+                <label for="cmdModel">set_model</label>
+                <div class="row">
+                    <select id="cmdModel">
+                        <option value="sonnet">sonnet</option>
+                        <option value="haiku">haiku</option>
+                        <option value="opus">opus</option>
+                        <option value="inherit">inherit</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('set_model',{model:document.getElementById('cmdModel').value})">Run</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="cmdTools">add_tools</label>
+                <div class="row">
+                    <input type="text" id="cmdTools" placeholder="tool1, tool2">
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('add_tools',{tools:document.getElementById('cmdTools').value.split(',').map(s=>s.trim()).filter(Boolean)})">Run</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="cmdPrompt">write_prompt</label>
+                <textarea id="cmdPrompt" rows="3" placeholder="You are a specialist agent..."></textarea>
+                <button class="btn btn-sm btn-secondary" style="margin-top:4px;width:100%" onclick="execCmd('write_prompt',{prompt:document.getElementById('cmdPrompt').value})">Write Prompt</button>
+            </div>
+
+            <div class="field">
+                <label for="cmdMemory">set_memory</label>
+                <div class="row">
+                    <select id="cmdMemory">
+                        <option value="project">project</option>
+                        <option value="user">user</option>
+                        <option value="local">local</option>
+                    </select>
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('set_memory',{scope:document.getElementById('cmdMemory').value})">Run</button>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="cmdMaxTurns">set_max_turns</label>
+                <div class="row">
+                    <input type="number" id="cmdMaxTurns" value="10" min="1" max="50">
+                    <button class="btn btn-sm btn-secondary" onclick="execCmd('set_max_turns',{max_turns:parseInt(document.getElementById('cmdMaxTurns').value)})">Run</button>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:12px">
+                <button class="btn btn-secondary" onclick="execCmd('check_score',{})">Check Score</button>
+                <button class="btn btn-secondary" onclick="execCmd('inspect_example',{})">See Example</button>
+                <button class="btn btn-primary" id="btnSubmit" disabled onclick="execCmd('submit',{})">Submit Agent</button>
             </div>
         </div>
 
-        <footer>
-            Built for the Meta × PyTorch × Hugging Face OpenEnv Hackathon.
-        </footer>
+        <div class="panel">
+            <div class="panel-title">Step History</div>
+            <ul class="step-list" id="stepList">
+                <li class="empty">Start an episode to see step history</li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Feedback</div>
+            <ul class="feedback-list" id="feedbackList">
+                <li class="empty">Feedback from verifiers will appear here</li>
+            </ul>
+        </div>
     </div>
 
-    <script>
-        fetch("/health")
-            .then(r => r.ok ? r.json() : Promise.reject(r.status))
-            .then(data => {
-                const el = document.getElementById("status");
-                el.className = "status";
-                el.textContent = `Healthy · max_concurrent_envs=${data.max_concurrent_envs} · openenv=${data.using_openenv}`;
-            })
-            .catch(err => {
-                const el = document.getElementById("status");
-                el.className = "status stale";
-                el.textContent = `Server unreachable: ${err}`;
-            });
-    </script>
+    <!-- Right Column: Rewards + Preview -->
+    <div class="col">
+        <div class="panel" id="bannerSlot"></div>
+
+        <div class="panel">
+            <div class="panel-title">Reward Breakdown <span class="badge" id="rewardBadge">Total: 0.00</span></div>
+            <div id="rewardBars">
+                <div class="empty">Rewards appear after taking actions</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">Rule Violations</div>
+            <div id="violations">
+                <div class="empty">No violations</div>
+            </div>
+        </div>
+
+        <div class="panel" style="flex:1;display:flex;flex-direction:column">
+            <div class="panel-title">
+                Generated AGENT.md
+                <span style="margin-left:auto;display:flex;gap:4px">
+                    <button class="btn btn-sm btn-secondary" onclick="copyAgent()">Copy</button>
+                    <button class="btn btn-sm btn-secondary" onclick="downloadAgent()">Download</button>
+                </span>
+            </div>
+            <div class="agent-preview" id="agentPreview">---</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ─── State ───
+const TASKS = [
+    {id:"ws_easy_001",difficulty:"easy",domain:"web",desc:"Extract product prices from a single e-commerce page",skills:["web-scraping","html-parser"]},
+    {id:"da_easy_001",difficulty:"easy",domain:"data",desc:"Count rows in a CSV file and report basic statistics",skills:["csv-handler"]},
+    {id:"cr_easy_001",difficulty:"easy",domain:"code",desc:"Review a Python function for error handling issues",skills:["code-reviewer"]},
+    {id:"fi_easy_001",difficulty:"easy",domain:"files",desc:"Read a log file and extract lines matching a pattern",skills:["file-reader"]},
+    {id:"fi_easy_002",difficulty:"easy",domain:"files",desc:"Write data to a JSON file with proper formatting",skills:["file-writer","json-parser"]},
+    {id:"an_easy_001",difficulty:"easy",domain:"analysis",desc:"Analyze a log file to count ERROR-level messages",skills:["log-analyzer"]},
+    {id:"ou_easy_001",difficulty:"easy",domain:"output",desc:"Generate a markdown summary report from bullet points",skills:["report-generator"]},
+    {id:"ws_medium_001",difficulty:"medium",domain:"web",desc:"Scrape multiple pages of product listings with pagination",skills:["web-scraping","html-parser","http-client"]},
+    {id:"da_medium_001",difficulty:"medium",domain:"data",desc:"Analyze CSV data: handle missing values and compute statistics",skills:["csv-handler","data-transformer","data-validator"]},
+    {id:"cr_medium_001",difficulty:"medium",domain:"code",desc:"Review code for security vulnerabilities (SQL injection, XSS)",skills:["code-reviewer","pattern-matcher"]},
+    {id:"fi_medium_001",difficulty:"medium",domain:"files",desc:"Transform CSV data to JSON format with validation",skills:["csv-handler","json-parser","data-validator"]},
+    {id:"an_medium_001",difficulty:"medium",domain:"analysis",desc:"Identify patterns and anomalies in application log data",skills:["log-analyzer","pattern-matcher"]},
+    {id:"ws_hard_001",difficulty:"hard",domain:"web",desc:"Build a multi-site scraper that normalizes data from 3 sources",skills:["web-scraping","html-parser","http-client","data-transformer"]},
+    {id:"da_hard_001",difficulty:"hard",domain:"data",desc:"Build a data pipeline ingesting CSV + JSON + API with dedup",skills:["csv-handler","json-parser","http-client","data-validator","data-aggregator"]},
+    {id:"cr_hard_001",difficulty:"hard",domain:"code",desc:"Detect bugs, suggest fixes, and generate test cases",skills:["code-reviewer","code-fixer","test-generator"]},
+    {id:"fi_hard_001",difficulty:"hard",domain:"files",desc:"Process and correlate entries across multiple log files",skills:["file-reader","log-analyzer","pattern-matcher","data-aggregator"]},
+    {id:"an_hard_001",difficulty:"hard",domain:"analysis",desc:"Trend analysis with anomaly detection from time-series data",skills:["log-analyzer","pattern-matcher","data-transformer","data-aggregator"]},
+    {id:"ws_expert_001",difficulty:"expert",domain:"web",desc:"Comprehensive web scraping with JS rendering and rate limiting",skills:["web-scraping","html-parser","http-client","data-transformer","data-validator","notifier"]},
+    {id:"da_expert_001",difficulty:"expert",domain:"data",desc:"Full data pipeline: ingest, clean, analyze, detect anomalies, report",skills:["csv-handler","json-parser","data-transformer","data-validator","data-aggregator","report-generator"]},
+    {id:"ou_expert_001",difficulty:"expert",domain:"output",desc:"Dashboard report generation with anomaly alerts and trends",skills:["report-generator","data-aggregator","pattern-matcher","notifier","data-transformer","log-analyzer"]},
+];
+
+const SKILLS = [
+    "web-scraping","http-client","html-parser","json-parser","csv-handler",
+    "data-transformer","data-validator","data-aggregator",
+    "code-reviewer","code-fixer","test-generator",
+    "file-reader","file-writer",
+    "log-analyzer","pattern-matcher",
+    "report-generator","notifier"
+];
+
+let ws = null;
+let wsConnected = false;
+let pendingResolve = null;
+let currentSpec = {};
+let episodeActive = false;
+let stepCount = 0;
+let maxSteps = 7;
+
+// ─── WebSocket ───
+function wsUrl(){
+    const proto = location.protocol==="https:"?"wss:":"ws:";
+    return proto+"//"+location.host+"/ws";
+}
+
+function connectWS(){
+    return new Promise((resolve, reject) => {
+        ws = new WebSocket(wsUrl());
+        ws.onopen = () => { wsConnected=true; resolve(); };
+        ws.onerror = (e) => reject(e);
+        ws.onclose = () => {
+            wsConnected = false;
+            updateHealthPill(false);
+            // Reconnect if episode was active
+            if(episodeActive){
+                setTimeout(() => { connectWS().catch(()=>{}); }, 2000);
+            }
+        };
+        ws.onmessage = (e) => {
+            let msg;
+            try { msg = JSON.parse(e.data); } catch { return; }
+            if(msg.type === "observation" || msg.type === "state"){
+                if(pendingResolve){ pendingResolve(msg.data); pendingResolve=null; }
+            } else if(msg.type === "error"){
+                if(pendingResolve){ pendingResolve({error:msg.data}); pendingResolve=null; }
+            }
+        };
+    });
+}
+
+function wsSend(type, data){
+    return new Promise((resolve, reject) => {
+        if(!ws || ws.readyState !== WebSocket.OPEN){
+            reject(new Error("Not connected"));
+            return;
+        }
+        pendingResolve = resolve;
+        ws.send(JSON.stringify({type, data}));
+        setTimeout(() => {
+            if(pendingResolve === resolve){
+                pendingResolve = null;
+                reject(new Error("Timeout"));
+            }
+        }, 15000);
+    });
+}
+
+// ─── Init ───
+(function init(){
+    populateTasks();
+    populateSkills();
+    checkHealth();
+})();
+
+function populateTasks(){
+    const sel = document.getElementById("taskSelect");
+    sel.innerHTML = '<option value="">Pick a scenario...</option>';
+    const groups = {};
+    TASKS.forEach(t => {
+        if(!groups[t.difficulty]) groups[t.difficulty] = [];
+        groups[t.difficulty].push(t);
+    });
+    ["easy","medium","hard","expert"].forEach(d => {
+        if(!groups[d]) return;
+        const og = document.createElement("optgroup");
+        og.label = d.charAt(0).toUpperCase()+d.slice(1)+" ("+groups[d].length+")";
+        groups[d].forEach(t => {
+            const o = document.createElement("option");
+            o.value = t.id;
+            o.textContent = t.id+" — "+t.desc.slice(0,50)+(t.desc.length>50?"...":"");
+            og.appendChild(o);
+        });
+        sel.appendChild(og);
+    });
+    sel.disabled = false;
+    sel.onchange = showTaskCard;
+    document.getElementById("btnStart").disabled = false;
+}
+
+function populateSkills(){
+    const sel = document.getElementById("cmdSkill");
+    sel.innerHTML = '<option value="">Select skill...</option>';
+    SKILLS.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s; o.textContent = s;
+        sel.appendChild(o);
+    });
+}
+
+function showTaskCard(){
+    const id = document.getElementById("taskSelect").value;
+    const card = document.getElementById("taskCard");
+    if(!id){card.style.display="none";return}
+    const t = TASKS.find(x=>x.id===id);
+    if(!t){card.style.display="none";return}
+    card.style.display="block";
+    card.innerHTML = `
+        <div class="task-id">${t.id}</div>
+        <div class="task-desc">${t.desc}</div>
+        <div class="task-meta">
+            <span class="tag tag-${t.difficulty}">${t.difficulty}</span>
+            <span class="tag tag-domain">${t.domain}</span>
+            ${t.skills.map(s=>'<span class="tag tag-skill">'+s+'</span>').join('')}
+        </div>`;
+}
+
+// ─── Health ───
+function updateHealthPill(ok){
+    const pill = document.getElementById("healthPill");
+    pill.className = ok ? "pill ok" : "pill err";
+    pill.textContent = ok ? "Connected" : "Disconnected";
+}
+
+async function checkHealth(){
+    try{
+        const r = await fetch("/health");
+        updateHealthPill(r.ok);
+    }catch(e){ updateHealthPill(false); }
+}
+
+// ─── Episode Control ───
+document.getElementById("btnStart").onclick = startEpisode;
+document.getElementById("btnReset").onclick = resetEpisode;
+
+async function startEpisode(){
+    const taskId = document.getElementById("taskSelect").value;
+    if(!taskId) return;
+    const btn = document.getElementById("btnStart");
+    btn.disabled = true; btn.textContent = "Starting...";
+    try{
+        // Connect WebSocket if needed
+        if(!wsConnected) await connectWS();
+        updateHealthPill(true);
+
+        // Send reset via WebSocket
+        const data = await wsSend("reset", {scenario_name: taskId});
+        if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+        const obs = data.observation || {};
+        episodeActive = true;
+        stepCount = obs.step || 0;
+        maxSteps = obs.max_steps || 7;
+        currentSpec = obs.current_spec || {};
+        document.getElementById("btnSubmit").disabled = false;
+        document.getElementById("btnReset").disabled = false;
+        updateStepBadge();
+        updateSkillPills();
+        updatePreview();
+        if(obs.reward_breakdown) updateRewards(obs.reward_breakdown);
+        if(obs.feedback) updateFeedback(obs.feedback);
+        if(obs.rule_violations) updateViolations(obs.rule_violations);
+    }catch(e){
+        alert("Failed to start episode: "+e.message);
+        updateHealthPill(false);
+    }
+    btn.textContent = "Start Episode";
+    btn.disabled = false;
+}
+
+function resetEpisode(){
+    episodeActive = false;
+    stepCount = 0;
+    currentSpec = {};
+    if(ws){ ws.close(); ws=null; wsConnected=false; }
+    document.getElementById("btnStart").disabled = false;
+    document.getElementById("btnSubmit").disabled = true;
+    document.getElementById("btnReset").disabled = true;
+    document.getElementById("stepList").innerHTML = '<li class="empty">Start an episode to see step history</li>';
+    document.getElementById("feedbackList").innerHTML = '<li class="empty">Feedback from verifiers will appear here</li>';
+    document.getElementById("rewardBars").innerHTML = '<div class="empty">Rewards appear after taking actions</div>';
+    document.getElementById("violations").innerHTML = '<div class="empty">No violations</div>';
+    document.getElementById("agentPreview").textContent = "---";
+    document.getElementById("bannerSlot").innerHTML = "";
+    document.getElementById("rewardBadge").textContent = "Total: 0.00";
+    updateStepBadge();
+    updateSkillPills();
+}
+
+// ─── Execute Command ───
+async function execCmd(command, args){
+    if(!episodeActive){alert("Start an episode first");return}
+    if(Object.values(args).every(v=>!v && v!==0)){
+        if(command!=="check_score" && command!=="inspect_example" && command!=="submit") return;
+    }
+    try{
+        const data = await wsSend("step", {command, args});
+        if(data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+        const obs = data.observation || {};
+        const done = data.done || false;
+        const reward = data.reward || obs.reward || 0;
+        stepCount = obs.step || stepCount + 1;
+        if(obs.max_steps) maxSteps = obs.max_steps;
+        if(obs.current_spec) currentSpec = obs.current_spec;
+        updateStepBadge();
+        addStepHistory(command, reward);
+        updateSkillPills();
+        updatePreview();
+        if(obs.reward_breakdown) updateRewards(obs.reward_breakdown);
+        if(obs.score !== undefined) document.getElementById("rewardBadge").textContent = "Total: "+obs.score.toFixed(2);
+        if(obs.feedback) updateFeedback(obs.feedback);
+        if(obs.rule_violations) updateViolations(obs.rule_violations);
+        if(obs.investigation_result) showInvestigation(obs.investigation_result);
+        if(done){
+            episodeActive = false;
+            document.getElementById("btnSubmit").disabled = true;
+            showBanner(reward, obs.score);
+        }
+    }catch(e){
+        alert("Action failed: "+e.message);
+    }
+}
+
+// ─── UI Updates ───
+function updateStepBadge(){
+    document.getElementById("stepBadge").textContent = "Step "+stepCount+"/"+maxSteps;
+}
+
+function updateSkillPills(){
+    const el = document.getElementById("skillPills");
+    const skills = currentSpec.skills || [];
+    if(!skills.length){el.innerHTML="";return}
+    el.innerHTML = skills.map(s =>
+        '<span class="skill-pill">'+s+'<button onclick="execCmd(\'remove_skill\',{skill:\''+s+'\'})">&times;</button></span>'
+    ).join("");
+}
+
+function addStepHistory(cmd, reward){
+    const list = document.getElementById("stepList");
+    if(list.querySelector(".empty")) list.innerHTML="";
+    const li = document.createElement("li");
+    const cls = reward > 0 ? "pos" : (reward < 0 ? "neg" : "");
+    li.className = "step-item";
+    li.innerHTML = '<span class="step-num">'+stepCount+'</span>'
+        +'<span class="step-cmd">'+cmd+'</span>'
+        +'<span class="step-reward '+cls+'">'+(reward>=0?"+":"")+reward.toFixed(2)+'</span>';
+    list.appendChild(li);
+    list.scrollTop = list.scrollHeight;
+}
+
+function updateRewards(breakdown){
+    const container = document.getElementById("rewardBars");
+    let total = 0;
+    let html = "";
+    const labels = {
+        yaml_valid:"YAML Valid",has_required_fields:"Required Fields",
+        prompt_length_ok:"Prompt Length",skill_selection:"Skill Selection",
+        description_quality:"Description",workflow_clarity:"Workflow",
+        model_appropriateness:"Model Fit",best_practices:"Best Practices",
+        efficiency:"Efficiency",format_compliance:"Format",
+        model_valid:"Model Valid",skills_format_ok:"Skills Format",
+        core:"Core Reward",novelty_bonus:"Novelty",progress:"Progress",
+        total:"Total"
+    };
+    const skipKeys = ["gated","gate_failed"];
+    for(const [k,v] of Object.entries(breakdown)){
+        if(skipKeys.includes(k)) continue;
+        const pct = Math.max(0,Math.min(100,Math.abs(v)*100));
+        const cls = v >= 0.7 ? "good" : (v >= 0.4 ? "mid" : "low");
+        total += v;
+        html += '<div class="reward-row">'
+            +'<span class="reward-label">'+(labels[k]||k)+'</span>'
+            +'<div class="reward-track"><div class="reward-fill '+cls+'" style="width:'+pct+'%"></div></div>'
+            +'<span class="reward-val">'+v.toFixed(2)+'</span>'
+            +'</div>';
+    }
+    html += '<div class="reward-total">Score: '+total.toFixed(2)+'</div>';
+    container.innerHTML = html;
+}
+
+function updateFeedback(feedback){
+    const list = document.getElementById("feedbackList");
+    if(!feedback || !feedback.length) return;
+    if(list.querySelector(".empty")) list.innerHTML="";
+    feedback.forEach(f => {
+        const li = document.createElement("li");
+        const dotCls = f.toLowerCase().includes("error")||f.toLowerCase().includes("fail")?"bad":
+            f.toLowerCase().includes("good")||f.toLowerCase().includes("pass")?"good":"info";
+        li.className = "feedback-item";
+        li.innerHTML = '<span class="feedback-dot '+dotCls+'"></span><span>'+f+'</span>';
+        list.appendChild(li);
+    });
+}
+
+function updateViolations(violations){
+    const el = document.getElementById("violations");
+    if(!violations || !violations.length){el.innerHTML='<div class="empty">No violations</div>';return}
+    el.innerHTML = violations.map(v =>
+        '<span class="violation '+(v.severity||"soft")+'">'+(v.severity||"soft")+': '+(v.message||v.category||JSON.stringify(v))+'</span>'
+    ).join(" ");
+}
+
+function updatePreview(){
+    const el = document.getElementById("agentPreview");
+    if(!currentSpec || Object.keys(currentSpec).length === 0){el.textContent="---";return}
+    let md = '<span class="sep">---</span>\n';
+    const fm = {};
+    if(currentSpec.name) fm["name"] = currentSpec.name;
+    if(currentSpec.description) fm["description"] = currentSpec.description;
+    if(currentSpec.skills && currentSpec.skills.length) fm["skills"] = currentSpec.skills;
+    if(currentSpec.model) fm["model"] = currentSpec.model;
+    if(currentSpec.memory) fm["memory"] = currentSpec.memory;
+    if(currentSpec.max_turns) fm["max-turns"] = currentSpec.max_turns;
+    if(currentSpec.allowed_tools && currentSpec.allowed_tools.length) fm["allowed-tools"] = currentSpec.allowed_tools;
+    for(const [k,v] of Object.entries(fm)){
+        if(Array.isArray(v)){
+            md += '<span class="key">'+k+'</span>:\n';
+            v.forEach(s => md += '  - '+s+'\n');
+        } else {
+            md += '<span class="key">'+k+'</span>: <span class="val">'+v+'</span>\n';
+        }
+    }
+    md += '<span class="sep">---</span>\n';
+    if(currentSpec.system_prompt){
+        md += '\n'+currentSpec.system_prompt.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    el.innerHTML = md;
+}
+
+function showInvestigation(result){
+    if(result.score_breakdown) updateRewards(result.score_breakdown);
+    if(result.feedback) updateFeedback(result.feedback);
+}
+
+function showBanner(finalReward, score){
+    const slot = document.getElementById("bannerSlot");
+    const s = score || finalReward || 0;
+    const cls = s > 3 ? "success" : "failure";
+    const txt = s > 3 ? "Episode Complete — Agent Accepted" : "Episode Complete — Agent Rejected";
+    slot.innerHTML = '<div class="banner '+cls+'">'+txt+' (score: '+s.toFixed(2)+')</div>';
+}
+
+// ─── Copy / Download ───
+function copyAgent(){
+    const text = document.getElementById("agentPreview").textContent;
+    navigator.clipboard.writeText(text).then(()=>{alert("Copied to clipboard")});
+}
+
+function downloadAgent(){
+    const text = document.getElementById("agentPreview").textContent;
+    const blob = new Blob([text],{type:"text/markdown"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "AGENT.md";
+    a.click();
+}
+</script>
 </body>
 </html>

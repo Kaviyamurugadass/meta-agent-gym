@@ -1,63 +1,35 @@
-# Multi-stage build using openenv-base — proven pattern for HF Spaces deploy.
-
-ARG BASE_IMAGE=ghcr.io/meta-pytorch/openenv-base:latest
-FROM ${BASE_IMAGE} AS builder
+# Simplified Dockerfile for HF Spaces deployment
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Git required by some dependencies (VCS installs)
+# Install system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy environment code into a subdir so the build is stable
-COPY . /app/env
-WORKDIR /app/env
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv
 
-# Ensure uv is available (base image may not include it)
-RUN if ! command -v uv >/dev/null 2>&1; then \
-        curl -LsSf https://astral.sh/uv/install.sh | sh && \
-        mv /root/.local/bin/uv /usr/local/bin/uv && \
-        mv /root/.local/bin/uvx /usr/local/bin/uvx; \
-    fi
+# Copy project files
+COPY . .
 
-# Install dependencies — use lockfile if present for reproducible builds.
-# Two passes: first no-install-project (build deps), then full install.
-RUN --mount=type=cache,target=/root/.cache/uv \
-    if [ -f uv.lock ]; then \
-        uv sync --frozen --no-install-project --no-editable; \
-    else \
-        uv sync --no-install-project --no-editable; \
-    fi
+# Install dependencies
+RUN uv sync --no-editable
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    if [ -f uv.lock ]; then \
-        uv sync --frozen --no-editable; \
-    else \
-        uv sync --no-editable; \
-    fi
-
-# -----------------------------------------------------------------------------
-# Runtime stage — clean image with just the venv + code
-# -----------------------------------------------------------------------------
-FROM ${BASE_IMAGE}
-
-WORKDIR /app
-
-COPY --from=builder /app/env/.venv /app/.venv
-COPY --from=builder /app/env /app/env
-
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/env:$PYTHONPATH"
-
-# Log directory referenced by training/logging.yaml file handlers
-RUN mkdir -p /app/env/logs
-
+# Expose port
 EXPOSE 8000
 
+# Set environment variables
+ENV PYTHONPATH="/app:$PYTHONPATH"
+ENV PYTHONUNBUFFERED=1
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-ENV ENABLE_WEB_INTERFACE=true
-
-CMD ["sh", "-c", "cd /app/env && uvicorn server.app:app --host 0.0.0.0 --port 8000"]
+# Run the server
+CMD ["uv", "run", "uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "8000"]

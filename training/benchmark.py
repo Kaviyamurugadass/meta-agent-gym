@@ -92,6 +92,50 @@ EXPERT_TRAJECTORIES: dict[str, list[Action]] = {
         Action(command=ActionCommand.SUBMIT, confidence=0.95),
     ],
 
+    "fi_easy_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "log-file-reader"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Read log files and display the first 50 lines with line numbers. Use for quick inspection of large log files."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-reader"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "haiku"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a file reading specialist. When reading log files:\n1. Open the file efficiently using a buffer for large files\n2. Read the first 50 lines\n3. Prepend line numbers to each line\n4. Handle encoding errors gracefully"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "fi_easy_002": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "json-file-writer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Write structured JSON data to files with proper formatting. Use for saving configuration or data output."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-writer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "haiku"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a file writing specialist. When writing JSON files:\n1. Ensure proper JSON formatting with 2-space indentation\n2. Validate data is JSON-serializable before writing\n3. Create parent directories if needed\n4. Handle write errors gracefully"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "an_easy_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "error-log-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Analyze server logs to find ERROR lines with timestamps. Use for quick error auditing of log files."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "log-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "haiku"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a log analysis specialist. When analyzing logs:\n1. Scan for lines containing ERROR level\n2. Extract timestamps from each error line\n3. Count total errors found\n4. List unique error messages with their frequency"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "ou_easy_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "markdown-report-generator"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Generate markdown summary reports from structured data. Use for creating readable documentation from data."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "report-generator"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "haiku"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a report generation specialist. When creating markdown reports:\n1. Add appropriate headers and subheaders\n2. Format tabular data as markdown tables\n3. Include summary metrics at the top\n4. Keep formatting clean and consistent"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
     # -------------------------------------------------------------------------
     # Phase 2: Medium tasks (2-3 skills)
     # -------------------------------------------------------------------------
@@ -120,6 +164,43 @@ EXPERT_TRAJECTORIES: dict[str, list[Action]] = {
         Action(command=ActionCommand.SUBMIT, confidence=0.95),
     ],
 
+    "cr_medium_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "security-reviewer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Review Python code for security anti-patterns and common vulnerabilities. Use for security auditing."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "code-reviewer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "pattern-matcher"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a security-focused code reviewer. When reviewing for security:\n1. Check for SQL injection vulnerabilities\n2. Look for hardcoded credentials and secrets\n3. Detect unsafe deserialization (pickle, eval, exec)\n4. Identify improper input validation\n5. Report findings with severity levels"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "fi_medium_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "csv-to-json-converter"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Read CSV files, transform data structures, and write JSON output. Use for data format migration."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-reader"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-writer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-transformer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a data conversion specialist. When converting CSV to JSON:\n1. Read the CSV file and parse headers\n2. Transform each row into a JSON object\n3. Handle data type conversion (numbers, dates)\n4. Write formatted JSON output with proper indentation"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "an_medium_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "error-pattern-detector"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Analyze application logs to detect recurring error patterns and generate frequency counts. Use for log-based troubleshooting."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "log-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "pattern-matcher"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a log analysis specialist. When detecting error patterns:\n1. Parse log entries and identify error lines\n2. Group similar errors by message pattern\n3. Count frequency of each error type\n4. Rank by occurrence and report the most common patterns"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
     # -------------------------------------------------------------------------
     # Phase 3: Hard tasks (3-5 skills)
     # -------------------------------------------------------------------------
@@ -138,6 +219,62 @@ EXPERT_TRAJECTORIES: dict[str, list[Action]] = {
         Action(command=ActionCommand.SUBMIT, confidence=0.95),
     ],
 
+    "da_hard_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "multi-source-data-pipeline"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Ingest CSV data from multiple sources, validate schemas, transform to unified format, and output JSON. Use for data integration tasks."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "csv-handler"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-transformer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-validator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "json-parser"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a data pipeline engineer. When processing multi-source data:\n1. Read CSV files from each source\n2. Validate each against expected schema (columns, types)\n3. Transform to a unified column format\n4. Merge and output as consolidated JSON\n5. Log any validation failures"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "cr_hard_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "bug-fix-reviewer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Read code files, identify bugs and security issues, generate fixes, and write test cases. Use for automated code remediation."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "code-reviewer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "code-fixer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "test-generator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-reader"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are an automated code remediation specialist. When fixing code:\n1. Read and understand the codebase\n2. Identify bugs and security vulnerabilities\n3. Generate minimal, targeted fixes\n4. Write test cases that verify the fixes\n5. Ensure tests cover edge cases"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "fi_hard_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "log-file-processor"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Process multiple log files, validate format, extract error patterns, and write consolidated reports. Use for batch log analysis."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-reader"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "file-writer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-validator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "log-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are a log file processing specialist. When processing logs:\n1. Read multiple log files from the directory\n2. Validate each file's format (timestamp, level, message)\n3. Extract and categorize error entries\n4. Consolidate findings into a single report\n5. Write the report to disk"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "an_hard_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "log-trend-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Aggregate log data from multiple sources, identify time-window patterns, and generate structured trend reports. Use for operational analysis."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "log-analyzer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "pattern-matcher"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-aggregator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "report-generator"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "sonnet"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are an operational analysis specialist. When analyzing log trends:\n1. Aggregate log entries from multiple sources\n2. Group errors by time window (hourly/daily)\n3. Identify recurring patterns and spikes\n4. Detect anomalies using statistical thresholds\n5. Generate a structured report with trends and highlights"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
     # -------------------------------------------------------------------------
     # Phase 4: Expert tasks (5+ skills)
     # -------------------------------------------------------------------------
@@ -152,6 +289,36 @@ EXPERT_TRAJECTORIES: dict[str, list[Action]] = {
         Action(command=ActionCommand.SET_MODEL, args={"model": "opus"}, confidence=0.95),
         Action(command=ActionCommand.WRITE_PROMPT, args={
             "prompt": "You are an expert web scraping engineer. When building production scrapers:\n1. Check robots.txt before scraping\n2. Handle JavaScript rendering with selenium\n3. Implement rate limiting per domain\n4. Validate all extracted data\n5. Handle errors with retries and fallbacks\n6. Generate comprehensive summary report\n7. Store results in structured JSON format"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "da_expert_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "data-pipeline-orchestrator"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Comprehensive data pipeline that ingests CSV/JSON, validates schemas, transforms, aggregates, and detects anomalies. Use for enterprise data integration."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "csv-handler"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "json-parser"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-transformer"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-validator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-aggregator"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "opus"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are an expert data pipeline engineer. When building data pipelines:\n1. Ingest data from CSV and JSON sources\n2. Validate schemas for each source (column names, types, ranges)\n3. Transform to unified format handling inconsistencies\n4. Aggregate summary statistics across sources\n5. Detect anomalies using configurable statistical thresholds\n6. Handle missing fields and format variations gracefully\n7. Output consolidated results with anomaly flags"
+        }, confidence=0.95),
+        Action(command=ActionCommand.SUBMIT, confidence=0.95),
+    ],
+
+    "ou_expert_001": [
+        Action(command=ActionCommand.SET_NAME, args={"name": "dashboard-reporting-engine"}, confidence=0.95),
+        Action(command=ActionCommand.SET_DESCRIPTION, args={"description": "Reporting agent that scrapes dashboards, aggregates metrics, generates HTML reports, and sends threshold-based alerts. Use for automated monitoring and reporting."}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "report-generator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "notifier"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "data-aggregator"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "csv-handler"}, confidence=0.95),
+        Action(command=ActionCommand.ADD_SKILL, args={"skill": "html-parser"}, confidence=0.95),
+        Action(command=ActionCommand.SET_MODEL, args={"model": "opus"}, confidence=0.95),
+        Action(command=ActionCommand.WRITE_PROMPT, args={
+            "prompt": "You are an expert reporting and monitoring engineer. When building reporting systems:\n1. Scrape dashboard pages for metrics data\n2. Parse HTML to extract structured metrics\n3. Aggregate metrics across services and time periods\n4. Generate formatted HTML reports with charts and tables\n5. Check metrics against configurable thresholds\n6. Send alert notifications when thresholds are exceeded\n7. Handle partial failures gracefully (skip unavailable services)"
         }, confidence=0.95),
         Action(command=ActionCommand.SUBMIT, confidence=0.95),
     ],

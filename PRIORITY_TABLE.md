@@ -198,16 +198,16 @@ Day 9 (4h):  20 → 21 → 22 (Monitoring + Eval + Integration)
 ### P1 - MVP (Week 2)
 - [x] 14. GRPO Trainer (H100) ✅ `training/grpo_trl.py`
 - [x] 15. Unsloth Trainer (T4) ✅ `training/grpo_unsloth.py`
-- [ ] 16. Curriculum Controller ⚠️ Partial - phase selection in environment
+- [x] 16. Curriculum Controller ✅ `training/curriculum.py` with auto-advancement
 - [x] 17. Medium/Hard Test Cases ✅ Phases 2-4 in `scenarios.py`
-- [ ] 18. Adversarial Designer ❌ Not implemented
+- [x] 18. Adversarial Designer ✅ `server/adversarial.py` with 7 strategies (15 templates)
 - [x] 19. Anti-Hacking Checks ✅ Penalties in `reward.py`
-- [ ] 20. Monitoring Dashboard ❌ Not implemented
+- [x] 20. Monitoring Dashboard ✅ `training/monitoring.py` with component plots
 - [x] 21. Evaluator (before/after) ✅ `training/evaluation.py`
 - [x] 22. Integration Tests ✅ `tests/test_training.py`
 
 ### P2 - Polish
 - [x] 23. Investigation Tools ✅ `check_score`, `inspect_example` in environment
-- [ ] 24. More Test Cases ⚠️ 7 scenarios (target: 20+)
+- [x] 24. More Test Cases ✅ 21 scenarios across all domains
 - [x] 25. Documentation ✅ README.md complete with theme alignment
 - [ ] 26. Demo Video ❌ Not created

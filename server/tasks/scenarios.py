@@ -50,7 +50,7 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
         },
         citations=["https://developer.mozilla.org/en-US/docs/Web/HTML"],
         expected_findings={
-            "skill_count": 1,  # Number of required skills
+            "skill_count": 1,
         },
         red_herrings=[
             "Don't add selenium unless task explicitly requires JavaScript rendering",
@@ -101,6 +101,102 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
             "Focus only on error handling, not other issues",
         ],
     ),
+    TaskSpec(
+        task_id="fi_easy_001",
+        domain="files",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that reads a log file and displays the first 50 lines "
+            "with line numbers. The agent should handle large files efficiently."
+        ),
+        max_steps=7,
+        required_skills=["file-reader"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "output_format": "numbered_lines",
+        },
+        citations=["https://docs.python.org/3/tutorial/inputoutput.html"],
+        expected_findings={
+            "skill_count": 1,
+        },
+        red_herrings=[
+            "Don't load entire file into memory for large files",
+            "Don't add log parsing unless explicitly requested",
+        ],
+    ),
+    TaskSpec(
+        task_id="fi_easy_002",
+        domain="files",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that writes structured JSON output to a file "
+            "with proper formatting and indentation."
+        ),
+        max_steps=7,
+        required_skills=["file-writer"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "output_format": "json",
+        },
+        citations=["https://docs.python.org/3/library/json.html"],
+        expected_findings={
+            "skill_count": 1,
+        },
+        red_herrings=[
+            "Don't add file reading capabilities unless requested",
+            "Simple write operation is sufficient",
+        ],
+    ),
+    TaskSpec(
+        task_id="an_easy_001",
+        domain="analysis",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that analyzes server logs and identifies ERROR lines "
+            "with their timestamps. The agent should count total errors and list unique error messages."
+        ),
+        max_steps=7,
+        required_skills=["log-analyzer"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "log_format": "standard",
+        },
+        citations=["https://docs.python.org/3/library/re.html"],
+        expected_findings={
+            "skill_count": 1,
+        },
+        red_herrings=[
+            "Don't add pattern matching for complex multi-line errors",
+            "Simple ERROR line extraction is sufficient",
+        ],
+    ),
+    TaskSpec(
+        task_id="ou_easy_001",
+        domain="output",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that generates a markdown summary report "
+            "from structured data. The report should include headers, tables, and key metrics."
+        ),
+        max_steps=7,
+        required_skills=["report-generator"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "output_format": "markdown",
+        },
+        citations=["https://www.markdownguide.org/"],
+        expected_findings={
+            "skill_count": 1,
+        },
+        red_herrings=[
+            "Don't add data aggregation unless explicitly requested",
+            "Focus on report formatting, not data processing",
+        ],
+    ),
 ]
 
 
@@ -126,7 +222,7 @@ PHASE_2_SCENARIOS: list[TaskSpec] = [
         },
         citations=["https://developer.mozilla.org/en-US/docs/Web/HTML"],
         expected_findings={
-            "skill_count": 2,  # web-scraping, html-parser
+            "skill_count": 2,
         },
         red_herrings=[
             "Don't add selenium unless JavaScript is explicitly required",
@@ -154,6 +250,80 @@ PHASE_2_SCENARIOS: list[TaskSpec] = [
         red_herrings=[
             "Don't add visualization unless explicitly requested",
             "Simple imputation is acceptable",
+        ],
+    ),
+    TaskSpec(
+        task_id="cr_medium_001",
+        domain="code",
+        difficulty="medium",
+        problem_statement=(
+            "Build an agent that reviews Python code for security anti-patterns "
+            "and common vulnerabilities such as SQL injection, hardcoded credentials, "
+            "and unsafe deserialization."
+        ),
+        max_steps=10,
+        required_skills=["code-reviewer", "pattern-matcher"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "focus": "security",
+        },
+        citations=["https://owasp.org/www-project-top-ten/"],
+        expected_findings={
+            "skill_count": 2,
+        },
+        red_herrings=[
+            "Don't suggest performance optimizations",
+            "Focus on security issues, not code style",
+        ],
+    ),
+    TaskSpec(
+        task_id="fi_medium_001",
+        domain="files",
+        difficulty="medium",
+        problem_statement=(
+            "Build an agent that reads a CSV file, transforms the data structure, "
+            "and writes the results to a new JSON file with proper formatting."
+        ),
+        max_steps=10,
+        required_skills=["file-reader", "file-writer", "data-transformer"],
+        recommended_skills=["csv-handler"],
+        user_preferences={
+            "language": "python",
+            "input_format": "csv",
+            "output_format": "json",
+        },
+        citations=["https://docs.python.org/3/library/csv.html"],
+        expected_findings={
+            "skill_count": 3,
+        },
+        red_herrings=[
+            "Don't add data validation unless explicitly requested",
+            "Simple format conversion is sufficient",
+        ],
+    ),
+    TaskSpec(
+        task_id="an_medium_001",
+        domain="analysis",
+        difficulty="medium",
+        problem_statement=(
+            "Build an agent that analyzes application logs to detect recurring error patterns "
+            "and generates frequency counts of each error type."
+        ),
+        max_steps=10,
+        required_skills=["log-analyzer", "pattern-matcher"],
+        recommended_skills=["data-aggregator"],
+        user_preferences={
+            "language": "python",
+            "output_format": "frequency_table",
+        },
+        citations=["https://docs.python.org/3/library/collections.html"],
+        expected_findings={
+            "skill_count": 2,
+        },
+        red_herrings=[
+            "Don't add real-time monitoring capabilities",
+            "Historical analysis only, not streaming",
         ],
     ),
 ]
@@ -186,6 +356,105 @@ PHASE_3_SCENARIOS: list[TaskSpec] = [
         },
         red_herrings=[
             "Different sites may have different HTML structures — normalization is expected",
+        ],
+    ),
+    TaskSpec(
+        task_id="da_hard_001",
+        domain="data",
+        difficulty="hard",
+        problem_statement=(
+            "Build an agent that ingests CSV data from multiple sources, "
+            "validates each against expected schemas, transforms to a unified format, "
+            "and outputs consolidated JSON results."
+        ),
+        max_steps=15,
+        required_skills=["csv-handler", "data-transformer", "data-validator", "json-parser"],
+        recommended_skills=["data-aggregator"],
+        user_preferences={
+            "language": "python",
+            "constraints": ["multi_source", "schema_validation"],
+        },
+        citations=["https://pandas.pydata.org/docs/"],
+        expected_findings={
+            "skill_count": 4,
+        },
+        red_herrings=[
+            "Don't add database storage unless explicitly requested",
+            "File-based output is sufficient",
+        ],
+    ),
+    TaskSpec(
+        task_id="cr_hard_001",
+        domain="code",
+        difficulty="hard",
+        problem_statement=(
+            "Build an agent that reads code files, identifies bugs and security issues, "
+            "generates fixes for the problems found, and writes corresponding test cases."
+        ),
+        max_steps=15,
+        required_skills=["code-reviewer", "code-fixer", "test-generator", "file-reader"],
+        recommended_skills=["pattern-matcher"],
+        user_preferences={
+            "language": "python",
+            "constraints": ["generate_fixes", "generate_tests"],
+        },
+        citations=["https://docs.python.org/3/library/unittest.html"],
+        expected_findings={
+            "skill_count": 4,
+        },
+        red_herrings=[
+            "Don't rewrite the entire codebase — fix only identified issues",
+            "Test cases should cover the specific bugs found",
+        ],
+    ),
+    TaskSpec(
+        task_id="fi_hard_001",
+        domain="files",
+        difficulty="hard",
+        problem_statement=(
+            "Build a file-processing agent that reads multiple log files, validates their format, "
+            "extracts error patterns, and writes a consolidated error report."
+        ),
+        max_steps=15,
+        required_skills=["file-reader", "file-writer", "data-validator", "log-analyzer"],
+        recommended_skills=["pattern-matcher"],
+        user_preferences={
+            "language": "python",
+            "constraints": ["multi_file", "format_validation"],
+        },
+        citations=["https://docs.python.org/3/library/pathlib.html"],
+        expected_findings={
+            "skill_count": 4,
+        },
+        red_herrings=[
+            "Don't add real-time log monitoring",
+            "Batch processing of existing files is sufficient",
+        ],
+    ),
+    TaskSpec(
+        task_id="an_hard_001",
+        domain="analysis",
+        difficulty="hard",
+        problem_statement=(
+            "Build an analysis agent that aggregates data from multiple log sources, "
+            "identifies patterns across time windows, and generates a structured "
+            "report with trend analysis and anomaly highlights."
+        ),
+        max_steps=15,
+        required_skills=["log-analyzer", "pattern-matcher", "data-aggregator", "report-generator"],
+        recommended_skills=["notifier"],
+        user_preferences={
+            "language": "python",
+            "output_format": "structured_report",
+            "constraints": ["time_window_analysis", "anomaly_detection"],
+        },
+        citations=["https://docs.python.org/3/library/datetime.html"],
+        expected_findings={
+            "skill_count": 4,
+        },
+        red_herrings=[
+            "Don't add machine learning models for anomaly detection",
+            "Statistical threshold-based detection is sufficient",
         ],
     ),
 ]
@@ -228,6 +497,72 @@ PHASE_4_SCENARIOS: list[TaskSpec] = [
             "Rate limiting is required even for single-site scraping",
         ],
     ),
+    TaskSpec(
+        task_id="da_expert_001",
+        domain="data",
+        difficulty="expert",
+        problem_statement=(
+            "Build a comprehensive data pipeline agent that: ingests data from CSV and JSON sources, "
+            "validates schemas, transforms to unified format, aggregates summary statistics, "
+            "and detects anomalies with configurable thresholds. Must handle inconsistent formats "
+            "and missing fields across sources."
+        ),
+        max_steps=20,
+        required_skills=[
+            "csv-handler",
+            "json-parser",
+            "data-transformer",
+            "data-validator",
+            "data-aggregator",
+        ],
+        recommended_skills=["report-generator", "notifier"],
+        user_preferences={
+            "language": "python",
+            "constraints": ["multi_source", "schema_validation", "anomaly_detection"],
+        },
+        citations=["https://pandas.pydata.org/docs/", "https://docs.python.org/3/library/json.html"],
+        expected_findings={
+            "skill_count": 5,
+        },
+        red_herrings=[
+            "Anomaly detection should use statistical thresholds, not ML models",
+            "Don't add database connectors — file-based I/O only",
+            "Real-time streaming is NOT required",
+        ],
+    ),
+    TaskSpec(
+        task_id="ou_expert_001",
+        domain="output",
+        difficulty="expert",
+        problem_statement=(
+            "Build a reporting agent that: scrapes dashboard data from internal web pages, "
+            "aggregates metrics across services, generates formatted HTML reports, "
+            "and sends notification alerts when metrics exceed configurable thresholds. "
+            "Must handle multiple data formats and partial failures gracefully."
+        ),
+        max_steps=20,
+        required_skills=[
+            "report-generator",
+            "notifier",
+            "data-aggregator",
+            "csv-handler",
+            "html-parser",
+        ],
+        recommended_skills=["http-client", "json-parser"],
+        user_preferences={
+            "language": "python",
+            "constraints": ["html_reports", "threshold_alerting", "multi_format"],
+        },
+        citations=["https://developer.mozilla.org/en-US/docs/Web/HTML"],
+        expected_findings={
+            "skill_count": 5,
+        },
+        red_herrings=[
+            "Don't add a web server — this is a batch reporting tool",
+            "Email notifications are sufficient, don't add Slack/SMS integrations",
+            "HTML report generation is more important than real-time monitoring",
+        ],
+    ),
 ]
 
 
@@ -268,3 +603,8 @@ def get_scenarios_by_phase(phase: int) -> list[TaskSpec]:
 def get_scenarios_by_difficulty(difficulty: str) -> list[TaskSpec]:
     """Get scenarios by difficulty level."""
     return [s for s in SCENARIOS if s.difficulty == difficulty]
+
+
+def register_scenarios(extra: list[TaskSpec]) -> None:
+    """Register additional scenarios (e.g., adversarial tasks) at runtime."""
+    SCENARIOS.extend(extra)

@@ -107,6 +107,7 @@ def collect(
     scenario_name: Optional[str] = None,
     seed: Optional[int] = None,
     domain_randomise: bool = True,
+    curriculum_phase: Optional[int] = None,
 ) -> TrajectoryDataset:
     """Collect N episodes, save to output_dir as a TrajectoryDataset."""
     rng = random.Random(seed)
@@ -116,6 +117,7 @@ def collect(
         env = Environment(
             domain_randomise=domain_randomise,
             seed=rng.randint(0, 10_000_000),
+            curriculum_phase=curriculum_phase or 1,
         )
         traj = run_episode(env, policy, scenario_name=scenario_name, rng=rng)
         dataset.append(traj)
@@ -147,6 +149,8 @@ def main() -> None:
     parser.add_argument("--scenario-name", type=str, default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--no-randomise", action="store_true")
+    parser.add_argument("--curriculum-phase", type=int, default=None,
+                        help="Curriculum phase (1-4) for task selection")
     args = parser.parse_args()
 
     collect(
@@ -156,6 +160,7 @@ def main() -> None:
         scenario_name=args.scenario_name,
         seed=args.seed,
         domain_randomise=not args.no_randomise,
+        curriculum_phase=args.curriculum_phase,
     )
 
 

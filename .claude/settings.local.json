@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(goose configure *)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python -m pytest tests/test_smoke.py::test_hybrid_mode_gates_on_zero_safety -v)",
+      "Bash(uv run *)"
     ]
   }
 }

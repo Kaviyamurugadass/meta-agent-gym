@@ -91,6 +91,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--base-url", default="http://localhost:8000",
                    help="Used when --reward-backend=remote")
 
+    # Curriculum
+    p.add_argument("--curriculum", action="store_true",
+                   help="Enable curriculum learning with automatic phase progression")
+    p.add_argument("--curriculum-state", type=str, default=None,
+                   help="Path to saved curriculum state JSON (resume training)")
+
     # Dev / debug
     p.add_argument("--dry-run", action="store_true",
                    help="Validate setup without launching training")
@@ -145,10 +151,21 @@ def _build_prompt_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
 
     prompts: list[dict[str, Any]] = []
     scenarios = args.scenario_name or [None]
+
+    controller = None
+    if args.curriculum:
+        from training.curriculum import CurriculumController
+        controller = (
+            CurriculumController.load(args.curriculum_state)
+            if args.curriculum_state
+            else CurriculumController()
+        )
+
     for i in range(args.dataset_episodes):
         scenario = scenarios[i % len(scenarios)]
+        phase = controller.current_phase if controller else 1
         env = Environment(domain_randomise=args.domain_randomise, seed=args.seed + i)
-        obs = env.reset(scenario_name=scenario)
+        obs = env.reset(scenario_name=scenario, curriculum_phase=phase)
         prompts.append({
             "prompt": [
                 {"role": "system", "content": SYSTEM_PROMPT},
