@@ -4,7 +4,9 @@
       "Bash(goose configure *)",
       "WebSearch",
       "Bash(python -m pytest tests/test_smoke.py::test_hybrid_mode_gates_on_zero_safety -v)",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(python -c \"import sys; sys.path.insert\\(0, '.'\\); from server.environment import Environment; e = Environment\\(\\); print\\('✓ Environment imports successfully'\\)\")",
+      "Bash(git add *)"
     ]
   }
 }

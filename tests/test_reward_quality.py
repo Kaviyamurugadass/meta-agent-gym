@@ -91,8 +91,7 @@ def test_expert_beats_random(scenario, tmp_path):
         f"\n{scenario.task_id}: expert reward is {expert_reward:.3f} "
         f"(< {EXPERT_ABSOLUTE_MIN}). "
         f"\nReward components are returning near-zero — domain fill of "
-        f"_component_scores is incomplete. "
-        f"\nSee FINALE_GUIDE.md Step 4 + server/rewards/reward.py docstring "
+        f"_component_scores is incomplete. See server/rewards/reward.py "
         f"for formula menus per component type."
     )
 

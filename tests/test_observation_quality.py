@@ -11,9 +11,9 @@ What "strong" means here:
   3. Observation does NOT leak ground-truth values from `expected_findings`
   4. Changing the action between two steps produces a visible observation delta
 
-If any check fails after you rename your scenarios:
-    → go back to FINALE_GUIDE.md Step 5 (_build_observation)
-    → add real decision-relevant signal to `obs.latest_output`
+If any check fails after you rename your scenarios, revisit
+`server/environment.py::_build_observation` and add real decision-relevant
+signal to `obs.latest_output`.
 """
 
 from __future__ import annotations
@@ -58,13 +58,11 @@ def test_observation_latest_output_has_domain_signal(scenario):
         f"\n{scenario.task_id}: latest_output is None after step. "
         f"\nFix: override _build_observation in environment.py and set "
         f"obs.latest_output to a dict containing at least one domain-signal "
-        f"field (metrics, log excerpt, current state snapshot, etc.). "
-        f"\nSee FINALE_GUIDE.md Step 5d for the template."
+        f"field (metrics, log excerpt, current state snapshot, etc.)."
     )
     assert len(obs.latest_output) >= 1, (
         f"\n{scenario.task_id}: latest_output is an empty dict. "
-        f"\nAdd domain-specific fields — see FINALE_GUIDE.md Step 5b "
-        f"for a 7-domain cheatsheet of what belongs here."
+        f"\nAdd domain-specific fields (metrics, state snapshot, log excerpt, etc.)."
     )
 
 
@@ -89,8 +87,7 @@ def test_observation_summary_has_domain_context(scenario):
     assert not _MINIMAL_SUMMARY_RE.match(obs.summary), (
         f"\n{scenario.task_id}: summary is only 'Step N/M' (metadata). "
         f"\nAdd domain context — e.g. 'range=[1,16] last=lower' for guessing, "
-        f"'cpu=85% latency=300ms alerts=2' for SRE. "
-        f"\nSee FINALE_GUIDE.md Step 5d."
+        f"'cpu=85% latency=300ms alerts=2' for SRE."
     )
 
 
@@ -136,8 +133,7 @@ def test_observation_does_not_leak_ground_truth(scenario):
         assert v_str not in combined, (
             f"\n{scenario.task_id}: expected_findings['{key}'] value '{value}' "
             f"appears verbatim in an observation — this leaks ground truth. "
-            f"\nMove it to State.hidden_truth instead. "
-            f"\nSee FINALE_GUIDE.md Step 5c (POMDP discipline)."
+            f"\nMove it to State.hidden_truth instead (POMDP discipline)."
         )
 
 

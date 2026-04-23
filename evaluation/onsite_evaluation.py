@@ -36,6 +36,7 @@ try:
 except ImportError:
     Env = None  # type: ignore[assignment,misc]
     RobustEnvironment = None  # type: ignore[assignment,misc]
+    get_agent_optimizer = None  # type: ignore[assignment,misc]
 
 logger = logging.getLogger("evaluation.onsite_evaluation")
 
@@ -97,7 +98,7 @@ class OnsiteEvaluator:
     
     def __init__(self, env_url: str = "http://localhost:8000"):
         self.env_url = env_url
-        self.optimizer = get_agent_optimizer()
+        self.optimizer = get_agent_optimizer() if get_agent_optimizer is not None else None
         
         # Evaluation scenarios (representative sample)
         self.evaluation_scenarios = self._select_evaluation_scenarios()
