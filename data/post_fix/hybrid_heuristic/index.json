@@ -1,0 +1,42 @@
+[
+  {
+    "file": "trajectory_0000.json",
+    "task_id": "ou_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 20.33333333333333,
+    "success": true
+  },
+  {
+    "file": "trajectory_0001.json",
+    "task_id": "ou_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 20.33333333333333,
+    "success": true
+  },
+  {
+    "file": "trajectory_0002.json",
+    "task_id": "fi_easy_002",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 20.33333333333333,
+    "success": true
+  },
+  {
+    "file": "trajectory_0003.json",
+    "task_id": "da_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 20.33333333333333,
+    "success": true
+  },
+  {
+    "file": "trajectory_0004.json",
+    "task_id": "ou_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 20.33333333333333,
+    "success": true
+  }
+]

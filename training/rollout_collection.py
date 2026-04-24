@@ -17,7 +17,7 @@ import random
 from pathlib import Path
 from typing import Optional
 
-from models import Action, ActionCommand
+from models import Action, ActionCommand, RewardConfig, RewardMode
 from server.environment import Environment
 from training.trajectory import Trajectory, TrajectoryDataset, TrajectoryStep
 
@@ -155,6 +155,7 @@ def collect(
     seed: Optional[int] = None,
     domain_randomise: bool = True,
     curriculum_phase: Optional[int] = None,
+    reward_config: Optional[RewardConfig] = None,
 ) -> TrajectoryDataset:
     """Collect N episodes, save to output_dir as a TrajectoryDataset."""
     rng = random.Random(seed)
@@ -165,6 +166,7 @@ def collect(
             domain_randomise=domain_randomise,
             seed=rng.randint(0, 10_000_000),
             curriculum_phase=curriculum_phase or 1,
+            reward_config=reward_config,
         )
         traj = run_episode(env, policy, scenario_name=scenario_name, rng=rng)
         dataset.append(traj)
@@ -198,7 +200,17 @@ def main() -> None:
     parser.add_argument("--no-randomise", action="store_true")
     parser.add_argument("--curriculum-phase", type=int, default=None,
                         help="Curriculum phase (1-4) for task selection")
+    parser.add_argument("--reward-mode",
+                        choices=[m.value for m in RewardMode],
+                        default=None,
+                        help="Override reward mode (default: HYBRID). "
+                             "Use 'additive' to expose anti-hack penalty surface "
+                             "without gate masking.")
     args = parser.parse_args()
+
+    reward_config = None
+    if args.reward_mode is not None:
+        reward_config = RewardConfig(mode=RewardMode(args.reward_mode))
 
     collect(
         episodes=args.episodes,
@@ -208,6 +220,7 @@ def main() -> None:
         seed=args.seed,
         domain_randomise=not args.no_randomise,
         curriculum_phase=args.curriculum_phase,
+        reward_config=reward_config,
     )
 
 
