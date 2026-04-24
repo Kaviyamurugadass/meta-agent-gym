@@ -1,12 +1,25 @@
-"""Reward computer — multi-component rewards with RLVR approach.
+"""Reward computer — composable rubrics via `openenv.core.rubrics`.
 
-META-AGENT EXTENSION:
-    - Uses HYBRID mode with hard verifiers as gates
-    - Multiple independent reward functions (RLVR)
-    - Anti-hacking penalties for common exploits
-    - Decomposed reward breakdown for observation
+Implements the hackathon's "composable rubrics > monolithic scoring" guideline
+using native OpenEnv primitives: every reward component is a `Rubric` subclass
+in `rubric_reward.py`, composed here with `RubricDict`, `WeightedSum`, and
+`Gate` from `openenv.core.rubrics.containers`.
 
-The reward system tracks ALL components separately for GRPO variance.
+Internal composition (see `__init__` below):
+    - `_hard_rubrics`  : RubricDict of 5 hard-verifier Rubrics (yaml_valid, etc.)
+    - `_judge_rubrics` : dict of 6 judge Rubrics (skill_selection, etc.)
+    - `_judge_weighted`: WeightedSum aggregating judge Rubrics with config weights
+    - `_hard_weighted` : uniform-weighted sum of hard Rubrics
+    - `_hard_gate`     : Gate(hard_weighted, threshold=0.99) — HYBRID gating
+
+Public API unchanged: `compute()` returns a scalar; `last_breakdown` exposes
+the per-component dict the dashboard and GRPO trainer both consume.
+
+RLVR approach preserved:
+    1. Hard verifiers (100% of steps) — YAML, fields, format
+    2. Judge rewards (90% of steps) — quality scoring
+    3. Anti-hacking penalties — empty specs, over-engineering
+    4. Regression penalty — breaking previously passing checks
 """
 
 from __future__ import annotations
@@ -25,6 +38,18 @@ from models import (
     TaskSpec,
 )
 
+from server.rewards.rubric_reward import (
+    HARD_COMPONENT_KEYS,
+    JUDGE_COMPONENT_KEYS,
+    build_hard_gate,
+    build_hard_rubric_dict,
+    build_hard_rubrics,
+    build_hard_weighted,
+    build_judge_rubrics,
+    build_judge_weighted_sum,
+    pack_obs,
+)
+
 try:
     from server.verifiers import HardVerifiers
 except ImportError:
@@ -36,17 +61,34 @@ logger = logging.getLogger("server.rewards.reward")
 class MetaAgentRewardComputer:
     """Compute per-step scalar reward with multi-component breakdown.
 
-    RLVR Approach:
-        1. Hard verifiers (100% of steps, free) — YAML, fields, format
-        2. Judge rewards (90% of steps) — quality scoring
-        3. Anti-hacking penalties — empty specs, over-engineering
-        4. Regression penalty — breaking previously passing checks
+    Composes OpenEnv `Rubric` objects (`RubricDict`, `WeightedSum`, `Gate`)
+    to produce the breakdown. Scoring logic lives in `rubric_reward.py` —
+    this class orchestrates the composition and applies the domain-specific
+    penalties (anti-hacking, regression, soft violations) that aren't part
+    of the Rubric set.
     """
 
     def __init__(self, config: RewardConfig) -> None:
         self.config = config
         self._last_breakdown: dict[str, float] = {}
         self._previous_passing: set[str] = set()
+
+        # --- OpenEnv Rubric composition -----------------------------------
+        self._hard_rubrics = build_hard_rubrics()
+        self._judge_rubrics = build_judge_rubrics(
+            max_skills_limit=config.max_skills_limit,
+        )
+        # Containers (used for introspection + aggregate scoring)
+        self._hard_dict = build_hard_rubric_dict(self._hard_rubrics)
+        self._hard_weighted = build_hard_weighted(self._hard_rubrics)
+        self._hard_gate = build_hard_gate(
+            self._hard_weighted,
+            threshold=config.gate_threshold,
+        )
+        self._judge_weighted = build_judge_weighted_sum(
+            self._judge_rubrics,
+            config.component_weights,
+        )
 
     def compute(
         self,
@@ -131,12 +173,16 @@ class MetaAgentRewardComputer:
         return total
 
     def _hard_verifier_rewards(self, spec: dict) -> dict[str, float]:
-        """Run hard verifiers (free, 100% of steps)."""
-        if HardVerifiers is None:
-            return {"yaml_valid": 1.0, "has_required_fields": 1.0}
+        """Run hard-verifier Rubrics (free, 100% of steps).
 
-        results = HardVerifiers.verify_all(spec)
-        return {k: v.score for k, v in results.items()}
+        Each key comes from `HARD_COMPONENT_KEYS` — yaml_valid, has_required_fields,
+        prompt_length_ok, model_valid, skills_format_ok. Rubric objects call into
+        `HardVerifiers.verify_all()` internally, same logic as before.
+        """
+        obs = pack_obs(current_spec=spec, task=None, action=None)
+        # Direct call on each Rubric (bypasses container aggregation so we
+        # get per-key values for the breakdown dict the dashboard expects).
+        return {key: float(r(None, obs)) for key, r in self._hard_rubrics.items()}
 
     def _judge_component_rewards(
         self,
@@ -144,123 +190,19 @@ class MetaAgentRewardComputer:
         task: TaskSpec,
         action: Action,
     ) -> dict[str, float]:
-        """Compute judge-based component scores.
+        """Compute judge-based component scores via Rubric objects.
 
-        These are normally computed by Claude Sonnet (90% of steps).
-        For now, we use heuristic approximations.
+        Normally these would be scored by Claude Sonnet (90% of steps). The
+        current implementation uses heuristic Rubrics that produce identical
+        values to the pre-Rubric-refactor scoring; upgrading individual
+        Rubrics to call `openenv.core.rubrics.LLMJudge` is a drop-in change.
         """
-
-        # Skip judge on investigation commands
+        # Skip judge on investigation commands (unchanged from pre-refactor)
         if action.command in [ActionCommand.CHECK_SCORE, ActionCommand.INSPECT_EXAMPLE]:
             return {}
 
-        return {
-            "skill_selection": self._score_skill_selection(spec, task),
-            "description_quality": self._score_description(spec),
-            "workflow_clarity": self._score_workflow(spec),
-            "model_appropriateness": self._score_model(spec, task),
-            "best_practices": self._score_best_practices(spec),
-            "efficiency": self._score_efficiency(spec),
-        }
-
-    def _score_skill_selection(self, spec: dict, task: TaskSpec) -> float:
-        """Score: are skills appropriate for the task?"""
-        required = set(task.required_skills)
-        has = set(spec.get("skills", []))
-
-        if not required:
-            return 1.0  # No requirements = full credit
-
-        # Coverage: how many required skills are present
-        coverage = len(required & has) / len(required)
-
-        # Penalize extra skills (over-engineering)
-        extra = len(has - required)
-        extra_penalty = min(extra * 0.1, 0.3)
-
-        return max(0.0, coverage - extra_penalty)
-
-    def _score_description(self, spec: dict) -> float:
-        """Score: is description clear with delegation guidance?"""
-        desc = spec.get("description", "")
-
-        # Check for delegation keywords
-        delegation_words = ["proactively", "use", "when", "specialist", "expert", "handles"]
-        has_delegation = any(word in desc.lower() for word in delegation_words)
-
-        # Check length (should be substantive but not verbose)
-        good_length = 20 <= len(desc.split()) <= 100
-
-        return min(1.0, 0.3 * has_delegation + 0.4 * good_length + 0.3 * (len(desc) > 0))
-
-    def _score_workflow(self, spec: dict) -> float:
-        """Score: does the system prompt have clear workflow steps?"""
-        prompt = spec.get("system_prompt", "")
-
-        # Check for step indicators
-        step_patterns = ["1.", "2.", "step", "first", "then", "finally", "workflow"]
-        has_steps = sum(1 for p in step_patterns if p.lower() in prompt.lower())
-
-        # Normalize to 0-1
-        return min(1.0, has_steps / 3.0)
-
-    def _score_model(self, spec: dict, task: TaskSpec) -> float:
-        """Score: is model appropriate for task complexity?"""
-        model = spec.get("model", "sonnet")
-
-        # Map difficulty to recommended model
-        model_recommendations = {
-            "easy": ModelType.HAIKU,
-            "medium": ModelType.SONNET,
-            "hard": ModelType.SONNET,
-            "expert": ModelType.OPUS,
-        }
-
-        recommended = model_recommendations.get(task.difficulty, ModelType.SONNET)
-
-        # Exact match = 1.0
-        if model == recommended.value:
-            return 1.0
-
-        # Close enough (haiku for easy, sonnet for most) = 0.8
-        if model in [ModelType.HAIKU.value, ModelType.SONNET.value]:
-            return 0.8
-
-        # Overkill (opus for easy) = 0.5
-        return 0.5
-
-    def _score_best_practices(self, spec: dict) -> float:
-        """Score: does the spec follow domain best practices?"""
-        prompt = spec.get("system_prompt", "")
-
-        # Check for best practice keywords
-        practice_keywords = [
-            "handle error",
-            "validate",
-            "check",
-            "ensure",
-            "safely",
-            "gracefully",
-        ]
-
-        matches = sum(1 for kw in practice_keywords if kw.lower() in prompt.lower())
-
-        return min(1.0, matches / 3.0)
-
-    def _score_efficiency(self, spec: dict) -> float:
-        """Score: is the spec efficient (not over-engineered)?"""
-        skills = spec.get("skills", [])
-
-        # Penalize too many skills
-        skill_count = len(skills)
-        if skill_count <= 3:
-            return 1.0
-        elif skill_count <= 5:
-            return 0.8
-        elif skill_count <= self.config.max_skills_limit:
-            return 0.5
-        else:
-            return 0.2  # Too many skills
+        obs = pack_obs(current_spec=spec, task=task, action=action)
+        return {key: float(r(action, obs)) for key, r in self._judge_rubrics.items()}
 
     def _anti_hack_penalties(self, spec: dict, action: Action) -> dict[str, float]:
         """Detect and penalize reward hacking attempts."""
