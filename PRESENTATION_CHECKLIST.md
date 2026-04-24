@@ -55,7 +55,7 @@
 - [~] ~~Publish `HUGGINGFACE_BLOG.md` to HF~~ (skipped — needs HF Pro. Content is ready for HF Space README or slide deck handout)
 - [x] **Sanity-run HF Space end-to-end** — dashboard runs full 7-step episode, ends with "Agent Accepted (5.83)" banner, reward breakdown fully populated. Demo-ready.
 - [~] ~~Verify `ANTHROPIC_API_KEY` handling~~ (skipped — dashboard test showed hard verifiers + local rubric working without Claude API; judge tier's Claude scoring isn't invoked at runtime)
-- [x] Reward system uses **OpenEnv's native Rubric API** — 11 components implemented as `Rubric` subclasses in `server/rewards/rubric_reward.py`, composed via `RubricDict`, `WeightedSum`, and `Gate` from `openenv.core.rubrics.containers`. `Gate(hard_weighted, threshold=0.99)` gives the HYBRID hard-verifier gating natively. Full breakdown still exposed in `Observation.reward_breakdown` for GRPO variance. Scoring behaviour is bit-identical to pre-refactor. Commit: `6eb5a88`.
+- [ ] Confirm reward system uses OpenEnv's composable Rubric (vs. custom dict)
 - [ ] Rehearse pitch (at least twice, with stopwatch)
 
 ## Onsite (25–26 with HF credits)
