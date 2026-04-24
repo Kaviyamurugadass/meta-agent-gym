@@ -111,7 +111,7 @@ A small but sentinel-verified run on Colab T4 — 1 epoch × 8 episodes × 2 gen
 
 Episode-level aggregate reward trend: **+0.62 per episode**.
 
-> **Honest limitation**: current eval rollouts use the competent heuristic as a placeholder for the trained LoRA at inference time — the adapter isn't yet wired into rollout collection. Fixing this is the planned first task for the onsite training window (2026-04-25/26, when HF compute credits become available). See [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) for full detail.
+> **Honest limitation**: the 50 *evaluation rollouts* shown in the table above use the competent heuristic as a placeholder for the trained LoRA at inference time — the adapter isn't yet wired into rollout collection, so these rows describe the environment's reward structure under heuristic play, not the adapter's inference-time behaviour. The trained adapter was separately captured during training as 10 rollouts saved to [`data/colab_trained/`](data/colab_trained/) — those revealed the empty-spec collapse documented in the RLVR case study (Section: "Partner Sub-Theme: RLVR"). Wiring adapter inference into evaluation rollout collection is the planned first task for the onsite training window (2026-04-25/26, when HF compute credits become available). See [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) for full detail.
 
 ---
 
@@ -173,29 +173,17 @@ We're not just teaching AI to solve problems anymore. We're teaching AI to creat
 
 ## Problem Statements Addressed
 
-### Primary: Statement 4 — Self-Improvement
+> Section ordering is by *strength of shipped evidence*, not by hackathon
+> statement number. Each section ends with a one-line "evidence anchor" so
+> a judge can immediately verify the claim against committed code/data.
 
-meta-agent-gym is an environment where the agent faces increasingly difficult design challenges, with an adversarial designer that targets its weaknesses and a curriculum that adapts in real-time.
-
-- **Adversarial self-play**: Claude analyzes the agent's per-component scores and generates tasks targeting weak spots — weak at description quality? Here comes a task where delegation guidance is critical
-- **Automatic curriculum**: Difficulty escalates as mastery improves — phase 1 (single skill) → phase 2 (2-3 skills) → phase 3 (3-5 skills) → phase 4 (5+ skills with red herrings)
-- **No manual authoring**: The training distribution adapts as the agent learns. 20 seed scenarios across 4 phases provide the base; adversarial generation fills the gaps
-- **Co-evolutionary improvement**: Training exposed issues in our reward function — the agent found that adding all 17 skills scored higher than picking the right 3, forcing us to tighten the over-engineering penalty
-
-### Secondary: Statement 3.1 — World Modeling
-
-The agent operates in a POMDP where the hidden state is "what makes a good agent?" It can only observe partial feedback (reward breakdown, violations) and must infer the ground truth through investigation commands.
-
-- **POMDP structure**: Hidden state = optimal spec for the task; observable = current spec + feedback + reward breakdown
-- **Investigation tools**: `check_score` reveals the current breakdown; `inspect` provides detailed observation for POMDP-style information gathering
-- **Multi-step reasoning**: 7-step generation process — each decision (name, description, skills, model, prompt) affects the others
-- **Anti-hacking**: Penalties prevent format-only exploits (empty specs: -5.0, over-engineering: -0.5, repetitive: -0.3, regression: -0.15)
-
-### Partner Sub-Theme: RLVR — Verifiable Rewards
+### Strongest contribution — Partner Sub-Theme: RLVR (Verifiable Rewards)
 
 The reward function follows the RLVR philosophy: **use hard verifiers instead of learned reward models**. YAML validity, field presence, and format compliance are binary checks — no LLM needed. The judge only scores what can't be verified programmatically.
 
-**Case study — the thesis proving itself.** Our Goose integration exposed a reward hack on the first trajectories we pointed it at. The judge-only tier reported 68% success, but Goose revealed the policy was emitting `noop → submit` and producing empty specs. Root cause: a sign-flip on line 158 (then line 111, pre-refactor) of the reward computer — `anti_hack_empty_spec` is stored as `-5.0` in config, but the total formula subtracted it, turning a -5 *penalty* into a +5 *bonus*. Empty specs scored +7.4/step; GRPO obediently exploited it. We fixed the operator, added a parameterised regression test that fails if empty-spec ever receives positive reward, and moved on. **The three-tier verification system caught a bug a PR review missed.** Without Goose validation, we'd have shipped a model that looked trained but wasn't — which is exactly why RLVR with independent verifiers matters.
+*Evidence anchor: see the case study below — Goose harness + sign-flip fix + regression tests are all committed and reproducible in <2 minutes.*
+
+**Case study — the thesis proving itself.** Our Goose integration exposed a reward hack on the first trajectories we pointed it at. The Colab training run scored **every saved trajectory as a success — 10/10 with +51.8 mean reward per episode** (`data/colab_trained/trajectory_*.json`). When Goose ran the resulting AGENT.md files, all of them were empty specs produced by `noop → submit` action sequences with no `set_name`, no `add_skill`, no `write_prompt`. Root cause: a sign-flip on line 158 (then line 111, pre-refactor) of the reward computer — `anti_hack_empty_spec` is stored as `-5.0` in config, but the total formula subtracted it, turning a -5 *penalty* into a +5 *bonus*. Empty specs scored +7.4/step; GRPO obediently exploited it. We fixed the operator, added a parameterised regression test that fails if empty-spec ever receives positive reward, and moved on. **The three-tier verification system caught a bug a PR review missed.** Without Goose validation, we'd have shipped a model that the in-environment metrics called 100% successful but that produced nothing executable — which is exactly why RLVR with independent verifiers matters.
 
 #### How to verify this (everything is in the repo)
 
@@ -203,12 +191,47 @@ The Goose validation is committed as working code, not just narrative. Judges ca
 
 - **Harness + AgentSpec → Goose recipe adapter:** [`evaluation/goose_execution.py`](evaluation/goose_execution.py)
 - **Test fixtures + hand-written reference agents:** [`evaluation/fixtures/`](evaluation/fixtures/) (3 deterministic tasks: extract-price, count-rows, find-emails)
+- **Captured passing run (no need to re-run Goose to verify):** [`evaluation/fixtures/smoke_output.txt`](evaluation/fixtures/smoke_output.txt) — 3/3 PASS, ~52s wall time, committed at submission
 - **Regression tests for the sign-flip fix:** [`tests/test_meta_agent_reward.py`](tests/test_meta_agent_reward.py) — `pytest -k empty_spec` runs 5 cases in ~1.5 seconds; fails if the operator is reverted
 - **Policy-level evidence under fixed reward:** [`data/post_fix/REWARD_FIX_COMPARISON.md`](data/post_fix/REWARD_FIX_COMPARISON.md) + [`data/post_fix/`](data/post_fix/) (5 episodes × 4 policy/mode configurations, deterministic `seed=42`)
 - **Live before/after demo:** [`scripts/demo_reward_fix.py`](scripts/demo_reward_fix.py) — prints the `+7.40 → -4.58 → 0.00` reward-swing table instantly
 - **Pitch narrative:** [`docs/competition/PITCH.md`](docs/competition/PITCH.md) section `[2:20–2:40]`
 
 Relevant commits on `main`: `18769a4` (Goose harness + sign-flip fix + regression tests), `6eb5a88` (rubric refactor), `d216b0a` (post-fix rollout evidence). A judge reading `git log` will see the finding, diagnosis, and fix as three distinct commits.
+
+> **Coverage caveat:** the Goose harness currently exercises three Phase 1 (single-skill) tasks — extract-price from HTML, count-rows in CSV, find-emails in text. These were sufficient to surface the empty-spec collapse on the first run we pointed it at. Expanding to Phase 2-4 multi-skill tasks (multi-page scraping, anomaly-alert pipelines, etc. — see `server/tasks/scenarios.py`) is planned future work; the harness API (`run_one(spec, task)` in `evaluation/goose_execution.py`) is generic enough to accept new tasks without changes.
+
+### Solid contribution — Statement 3.1: World Modeling
+
+The agent operates in a POMDP where the hidden state is *"what makes a good agent for this task?"* It can only observe partial feedback (reward breakdown, violations) and must infer the ground truth through investigation commands.
+
+- **POMDP structure**: hidden state = optimal spec for the task; observable = current spec + feedback + reward breakdown
+- **Investigation tools**: `check_score` reveals the current breakdown; `inspect_example` reveals a hint; both let the agent gather information *without* spending a SUBMIT
+- **Multi-step reasoning**: 7-step generation process — each decision (name, description, skills, model, prompt) interacts with the others
+- **Anti-hacking**: penalties prevent format-only exploits (empty specs: -5.0, over-engineering: -0.5, repetitive: -0.3, regression: -0.15)
+
+*Evidence anchor: [`models.py`](models.py) (State.hidden_truth + Observation), [`server/environment.py`](server/environment.py) (POMDP step semantics), and the 5 hard verifiers in [`server/verifiers.py`](server/verifiers.py) form the verifiable POMDP surface.*
+
+### Architectural contribution (validation deferred) — Statement 4: Self-Improvement
+
+We've claimed Self-Improvement as a track but want to be explicit about
+*what is shipped* vs *what is the onsite/post-hackathon deliverable*:
+
+- ✅ **Shipped (architecturally):** adversarial task generator at [`server/adversarial.py`](server/adversarial.py); curriculum controller with 4 phases at [`training/curriculum.py`](training/curriculum.py); 20 seed scenarios across difficulty tiers in [`server/tasks/scenarios.py`](server/tasks/scenarios.py); per-component reward decomposition that the curriculum reads from
+- ✅ **Shipped (one co-evolutionary signal):** the sign-flip discovery itself was a kind of co-evolution — the agent found that adding all 17 skills initially scored higher than picking the right 3, which forced us to tighten the over-engineering penalty before this submission
+- ⚠️ **Not yet validated end-to-end:** the closed-loop "agent learns → adversarial generator targets weak components → agent learns harder tasks" cycle has not been demonstrated over a full training run. The shipped Colab T4 run was 4 gradient steps, far below what's needed to see curriculum advancement
+
+**Specific future-work paths (named, sourced):**
+
+| Approach | Why it fits us | Reference |
+|---|---|---|
+| **VCRL** (Variance-based Curriculum RL) | Adds a sampling weight on top of existing GRPO loop — picks tasks based on per-group reward variance ("on the edge of learnable"). Lightweight, GRPO-native, ~100-200 LOC. Demonstrated +18 points on Qwen3-4B base. | [arxiv 2509.19803](https://arxiv.org/html/2509.19803v1) |
+| **SEC** (Self-Evolving Curriculum) | Replaces our hardcoded 4-phase progression with an *adaptive* curriculum policy learned concurrently with RL. +13-33% on multiple reasoning benchmarks. | [arxiv 2505.14970](https://arxiv.org/pdf/2505.14970) |
+| **Multi-Agent Evolve / SWE-RL style** | Splits one LLM into Proposer + Solver + Judge roles for true co-evolution — closest realization of our "adversarial designer" pitch. Requires multi-day compute. | [arxiv 2510.23595](https://arxiv.org/html/2510.23595v1) |
+
+**Honest order of attack post-hackathon:** start with VCRL (lowest risk, GRPO-native, fastest implementation), then SEC, then full Multi-Agent Evolve only if the smaller methods plateau.
+
+*Evidence anchor: code is committed but no end-to-end self-improvement run completed before this submission. The named future-work paths are concrete commitments, not vague aspiration.*
 
 ---
 
@@ -321,84 +344,6 @@ The reward function has multiple independent components for clean GRPO signal:
 | Regression | -0.15 | Breaking a previously-passing check |
 
 This produces clear separation: complete, well-designed specs score 6-8+, incomplete or hacked specs score near 0 or negative.
-
----
-
-## Results
-
-### Baselines and ceiling (20 easy-tier episodes each)
-
-| Policy | Success | Mean reward | Max reward | Mean length |
-|---|---:|---:|---:|---:|
-| Random | 0% | 0.00 | 0.00 | 7.0 |
-| Competent heuristic | 100% | 21.33 | 30.33 | 7.0 |
-| Expert benchmark (mixed difficulty) | 20/21 | 16.79 | 19.57 | 6–10 |
-
-Random gets 0% because hard gates require `name`, `description`, and ≥50-char
-prompt before SUBMIT is accepted. The competent heuristic proves the
-environment is reachable. Expert is the mixed-difficulty ceiling.
-
-### What the GRPO run actually produced
-
-Real run on Colab T4, sentinel-verified:
-
-- **Model + algo**: Qwen2.5-0.5B + 4-bit LoRA, GRPO with DAPO loss
-- **Scale**: 1 epoch × 8 episodes × 2 generations = 4 gradient steps
-- **Sentinel**: `training/grpo-unsloth-output/training_summary.json` with `"real_training": true`
-
-Per-component reward across 50 evaluation episodes (`monitoring/colab_results/report.json`):
-
-| Component | Overall mean | Last-10 mean | Δ |
-|---|---:|---:|---:|
-| Per-step reward `total` | 1.83 | 3.05 | +67% |
-| `description_quality` | 0.31 | 0.51 | +65% |
-| `workflow_clarity` | 0.23 | 0.38 | +67% |
-| `has_required_fields` | 0.34 | 0.57 | +67% |
-| `prompt_length_ok` | 0.34 | 0.57 | +67% |
-
-Episode-level aggregate: **12.80 mean, 30.33 max, +0.62 trend per episode**.
-
-> Current eval rollouts use the competent heuristic as a placeholder for the
-> trained LoRA at inference time — wiring adapter inference into rollout
-> collection is the planned onsite task (2026-04-25/26) when HF credits
-> become available. See [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md)
-> for the full discussion.
-
-### Training curves
-
-![Baseline Comparison](monitoring/colab_results/baseline_comparison.png)
-*Baselines vs eval rollouts — random 0%, competent heuristic 100% on easy tasks.*
-
-![Success Rate](monitoring/colab_results/success_rate_curve.png)
-*Rolling success rate across 50 ingested episodes (random → heuristic → eval).*
-
-![Total Reward](monitoring/colab_results/total_reward_curve.png)
-*Per-episode total reward, positive trend +0.62/ep.*
-
-![Component Curves](monitoring/colab_results/component_curves.png)
-*Per-component reward means — note last-10 > overall means for judge-scored components.*
-
-### Baseline vs Expert Trajectories
-
-| Metric | Random Baseline | Expert Trajectory | Target |
-|--------|----------------|-------------------|--------|
-| Mean Reward | 0.00 | 16.57 | >10.0 |
-| Success Rate | 0% | 100% | >80% |
-| Mean Steps | 7.0 | 6.8 | <10 |
-
-_Expert: Hand-crafted optimal trajectories (10 episodes per scenario)_
-
-### Expert Performance by Scenario
-
-| Scenario | Difficulty | Reward | Steps | Skills Required |
-|----------|-----------|--------|-------|-----------------|
-| ws_easy_001 | Easy | 16.70 | 6 | web-scraping, html-parser |
-| da_easy_001 | Easy | 16.63 | 6 | csv-handler |
-| cr_easy_001 | Easy | 16.03 | 6 | code-reviewer |
-| ws_medium_001 | Medium | 15.47 | 8 | web-scraping, html-parser, http-client |
-| ws_expert_001 | Expert | 18.57 | 10 | 5+ skills |
-
-<!-- TODO: Add GRPO training curves and before/after comparison -->
 
 ---
 
@@ -638,29 +583,80 @@ Episode-level aggregate reward: **12.80 mean, 30.33 max, +0.62 positive trend pe
 - ![Total reward](monitoring/colab_results/total_reward_curve.png)
 - ![Full comparison](monitoring/colab_results/full_comparison.png)
 
+### Random vs expert trajectories (with target thresholds)
+
+| Metric | Random baseline | Expert trajectory | Target |
+|---|---:|---:|---:|
+| Mean reward | 0.00 | 16.57 | >10.0 |
+| Success rate | 0% | 100% | >80% |
+| Mean steps | 7.0 | 6.8 | <10 |
+
+_Expert: hand-crafted optimal trajectories (10 episodes per scenario)._
+
+### Expert performance by scenario
+
+| Scenario | Difficulty | Reward | Steps | Skills required |
+|---|---|---:|---:|---|
+| ws_easy_001 | Easy | 16.70 | 6 | web-scraping, html-parser |
+| da_easy_001 | Easy | 16.63 | 6 | csv-handler |
+| cr_easy_001 | Easy | 16.03 | 6 | code-reviewer |
+| ws_medium_001 | Medium | 15.47 | 8 | web-scraping, html-parser, http-client |
+| ws_expert_001 | Expert | 18.57 | 10 | 5+ skills |
+
 ### Known limitation
 
-Current eval rollouts use a heuristic policy as a placeholder for the trained
-LoRA at inference time (rollout collection isn't yet wired to load the adapter).
-This is scheduled to be fixed onsite with the HF credits window on 2026-04-25/26.
-See [`TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md#honest-limitations)
-for details.
+There are two distinct rollout sets in this repo and they serve different
+purposes — keeping them straight matters for reading the numbers honestly:
+
+- **`monitoring/colab_results/report.json` (50 evaluation episodes)** —
+  uses the *heuristic policy* as a placeholder for the trained LoRA at
+  inference time (rollout collection isn't yet wired to load the adapter).
+  These rows describe the environment's reward structure under competent
+  rule-based play, not the trained adapter's behaviour.
+
+- **[`data/colab_trained/`](data/colab_trained/) (10 trajectories)** —
+  these *are* the trained policy's output, captured during the GRPO run
+  itself. They are also what surfaced the empty-spec collapse + reward
+  sign-flip diagnosed in the RLVR case study above.
+
+Wiring adapter inference into evaluation rollout collection is the planned
+first task for the onsite training window on 2026-04-25/26 (HF credits
+window). See [`TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md#honest-limitations)
+for full detail.
 
 ---
 
-## 🚀 Demo: Live Agent Generation
+## 🚀 Demo: Agent Generation Surface
 
-### Before Training (Random Policy)
+These three blocks show what each policy *can* produce in the environment.
+The **target output** below is what a well-trained adapter on the Qwen3-1.7B
+onsite scale-up should emit. The **shipped Colab Qwen2.5-0.5B run** instead
+collapsed to empty specs (see RLVR case study earlier in this README); the
+honest current-state column shows that.
+
+### Random policy (gated to empty by hard verifiers)
 ```yaml
 ---
 name: ""
 description: ""
 model: inherit
 ---
-# Empty prompt - agent fails completely
+# Empty prompt — hard gate blocks SUBMIT, episode reward = 0
 ```
 
-### After Training (GRPO Trained)
+### Currently shipped Qwen2.5-0.5B Colab run (4 gradient steps)
+```yaml
+---
+{}
+---
+# Policy collapsed to noop → noop → ... → submit before the sign-flip
+# reward bug was found and fixed. Saved trajectories live at
+# data/colab_trained/trajectory_*.json — every one is empty like this.
+# The fix landed in commit 18769a4; a clean retrain at scale is the
+# onsite deliverable.
+```
+
+### Target output (what a successful Qwen3-1.7B onsite run should produce)
 ```yaml
 ---
 name: "product-price-scraper"
@@ -675,7 +671,7 @@ You are a web scraping specialist focused on price extraction:
 4. Return structured JSON with product name and price
 ```
 
-### Live Generation
+### Live generation API (works once the adapter is wired in onsite)
 ```python
 from inference import run_episode
 
@@ -689,6 +685,12 @@ trajectory = run_episode(
 print(f"Generated agent: {trajectory[-1]['observation']['current_spec']['name']}")
 print(f"Success: {trajectory[-1]['observation']['reward'] > 0}")
 ```
+
+> **Truth-in-advertising:** the "target output" block above is *aspirational
+> for the onsite Qwen3-1.7B run* — it is not what the shipped Qwen2.5-0.5B
+> Colab adapter currently emits. The Goose harness in
+> [`evaluation/goose_execution.py`](evaluation/goose_execution.py) will tell
+> you whether the new run actually reaches that target post-onsite.
 
 ---
 

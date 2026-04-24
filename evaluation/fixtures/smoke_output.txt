@@ -1,0 +1,15 @@
+Smoke test -- reference agents from C:\Users\Kaviya\Documents\Projects\OWN\OpenENV Hackathon\openenv-agent-gym\evaluation\fixtures\reference_agents
+
+Running extract_price with spec 'price-extractor' ...
+  -> PASS (21.5s)
+Running count_rows with spec 'csv-row-counter' ...
+  -> PASS (14.2s)
+Running find_emails with spec 'email-finder' ...
+  -> PASS (16.1s)
+
+============================================================
+RESULT: 3/3 tasks passed
+
+  [PASS] extract_price          21.5s  (price-extractor)
+  [PASS] count_rows             14.2s  (csv-row-counter)
+  [PASS] find_emails            16.1s  (email-finder)

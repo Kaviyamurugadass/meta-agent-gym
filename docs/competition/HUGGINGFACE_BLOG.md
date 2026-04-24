@@ -136,9 +136,12 @@ A few things that surprised us:
 
 **The judge got gamed — execution caught a sign-flip bug.** Our Goose
 integration exposed a reward hack on the first trajectories we pointed it at.
-The judge-only tier reported 68% success, but Goose revealed the policy was
-emitting `noop → submit` and producing empty specs. Digging in, we found the
-root cause: a sign-flip on line 111 of the reward computer. The
+The Colab training run scored every saved trajectory as a success — **10/10
+at +51.8 mean reward per episode** (verifiable in `data/colab_trained/`).
+When Goose ran the resulting AGENT.md files, every one was empty: a sequence
+of `noop` actions terminating in `submit` with no `set_name`, no `add_skill`,
+no `write_prompt`. Digging in, we found the root cause: a sign-flip on line
+158 of the reward computer (line 111 pre-refactor). The
 `anti_hack_empty_spec` value is stored as `-5.0` in config, but the total
 formula was `total = ... - sum(anti_hack_penalties.values())` — subtracting a
 negative, so a -5 *penalty* became a +5 *bonus*. Empty-spec trajectories
@@ -147,8 +150,8 @@ the operator to `+ sum(...)` (penalties are already signed), added a
 parameterised regression test (`tests/test_meta_agent_reward.py`) that fails
 if empty-spec ever receives positive reward under HYBRID or ADDITIVE mode,
 and the three-tier verification system caught a bug a PR review missed.
-Without Goose validation, we'd have shipped a model that looked trained but
-wasn't.
+Without Goose validation, we'd have shipped a 100%-success policy producing
+nothing executable.
 
 **The heuristic beats the expert on easy tasks.** Our expert benchmark uses
 "optimal" action sequences for each scenario but its mean reward is pulled

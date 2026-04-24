@@ -343,7 +343,7 @@ Push to a Space or run locally via container/Uvicorn so teammates can use the sa
 
 ### **Phase 5: Train small**
 
-Run a tiny TRL \+ Unsloth experiment first. Look at outputs, not just metrics.
+Run a tiny TRL \+ Unsloth experiment first. **Look at outputs, not just metrics.**
 
 ### **Phase 6: Inspect for hacking**
 
