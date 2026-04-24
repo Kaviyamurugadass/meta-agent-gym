@@ -230,3 +230,63 @@ def test_reward_breakdown_contains_all_components(reward_config, empty_state, ea
 
     # Check total exists
     assert "total" in breakdown
+
+
+# ---------------------------------------------------------------------------
+# Anti-hack regression tests — guard against the sign-flip bug where
+# `- sum(anti_hack_penalties.values())` turned a -5 penalty into a +5 bonus
+# and let the policy collapse to noop-submit during GRPO training.
+# ---------------------------------------------------------------------------
+
+def _make_empty_state(task_id: str = "t1") -> State:
+    return State(task_id=task_id, step=1, max_steps=5, current_spec={})
+
+
+@pytest.mark.parametrize("mode", [RewardMode.HYBRID, RewardMode.ADDITIVE])
+def test_empty_spec_never_rewarded(mode, easy_task):
+    """Empty spec + noop must never yield positive reward — under any mode.
+
+    Historical bug: sign flip on total-formula turned anti-hack penalty
+    into bonus, so empty-spec trajectories scored ~+7.4/step. GRPO policy
+    learned to emit `noop → submit` and produce empty agents.
+    """
+    cfg = RewardConfig(mode=mode)
+    state = _make_empty_state(easy_task.task_id)
+    action = Action(command=ActionCommand.NOOP)
+
+    computer = MetaAgentRewardComputer(cfg)
+    reward = computer.compute(action, state, easy_task, [])
+
+    assert reward <= 0.0, (
+        f"Empty spec must not receive positive reward in {mode.value} mode, "
+        f"got {reward}. Breakdown: {computer._last_breakdown}"
+    )
+
+
+def test_empty_spec_penalty_sign_is_negative():
+    """anti_hack_empty_spec must contribute negatively to total reward.
+
+    If a config bypasses hard gates, the anti-hack penalty is the last
+    line of defense against reward hacking. Ensure it's applied with the
+    right sign.
+    """
+    cfg = RewardConfig(mode=RewardMode.ADDITIVE)  # no gate — exposes the sign bug
+    task = TaskSpec(
+        task_id="t1", difficulty="easy", problem_statement="x",
+        max_steps=5, required_skills=["web-scraping"],
+    )
+    state = _make_empty_state()
+    action = Action(command=ActionCommand.NOOP)
+
+    computer = MetaAgentRewardComputer(cfg)
+    reward = computer.compute(action, state, task, [])
+    breakdown = computer._last_breakdown
+
+    assert breakdown.get("anti_hack_empty_spec") == cfg.anti_hack_empty_spec
+    # Reward must be less than a spec with no penalty would get:
+    # core + bonus + progress ≈ 0.22 + 0.1 + 0.1 = 0.42; penalty of -5
+    # should push total well below zero.
+    assert reward < 0.0, (
+        f"With ADDITIVE mode and no gate, empty-spec total must be negative. "
+        f"Got {reward}. Breakdown: {breakdown}"
+    )

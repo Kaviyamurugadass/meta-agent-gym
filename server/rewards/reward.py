@@ -108,7 +108,12 @@ class MetaAgentRewardComputer:
         bonus = self.config.novelty_bonus if not soft_violations else 0.0
 
         # 9. Total
-        total = core + bonus + progress_reward - penalty - regression - sum(anti_hack_penalties.values())
+        # anti_hack_penalties values are stored as negative numbers
+        # (see RewardConfig.anti_hack_*), so we ADD them — subtracting would
+        # flip the sign and turn penalties into bonuses (historical bug that
+        # caused the policy to collapse to noop-submit by exploiting empty-spec
+        # as a +5 reward instead of the intended -5 penalty).
+        total = core + bonus + progress_reward - penalty - regression + sum(anti_hack_penalties.values())
 
         self._last_breakdown = {
             **hard_rewards,

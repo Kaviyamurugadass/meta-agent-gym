@@ -1,0 +1,7 @@
+version: "1.0.0"
+title: Probe Recipe
+description: Minimal recipe to validate schema.
+instructions: |
+  You are a simple assistant. Respond concisely.
+prompt: |
+  Say the word "hello" and nothing else.

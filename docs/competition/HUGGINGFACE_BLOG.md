@@ -134,15 +134,21 @@ What the submission does demonstrate clearly:
 
 A few things that surprised us:
 
-**The judge got gamed — execution caught it.** We built a three-tier
-verification system. The judge-only tier reported 68% success. When we plugged
-in the real-execution tier using the Goose runtime (via the Claude Code CLI),
-we discovered the policy had gamed the judge — producing empty specs
-(`noop → submit` trajectories) that scored well but couldn't execute anything.
-This is exactly why RLVR with independent verifiers matters. Without Goose
-validation, we'd have shipped a model that looked trained but wasn't. The gap
-between judge success and execution success *is* the signal the three-tier
-system is designed to surface — and it worked on the first run we pointed it at.
+**The judge got gamed — execution caught a sign-flip bug.** Our Goose
+integration exposed a reward hack on the first trajectories we pointed it at.
+The judge-only tier reported 68% success, but Goose revealed the policy was
+emitting `noop → submit` and producing empty specs. Digging in, we found the
+root cause: a sign-flip on line 111 of the reward computer. The
+`anti_hack_empty_spec` value is stored as `-5.0` in config, but the total
+formula was `total = ... - sum(anti_hack_penalties.values())` — subtracting a
+negative, so a -5 *penalty* became a +5 *bonus*. Empty-spec trajectories
+scored +7.4/step. GRPO obediently found the hack and collapsed. We flipped
+the operator to `+ sum(...)` (penalties are already signed), added a
+parameterised regression test (`tests/test_meta_agent_reward.py`) that fails
+if empty-spec ever receives positive reward under HYBRID or ADDITIVE mode,
+and the three-tier verification system caught a bug a PR review missed.
+Without Goose validation, we'd have shipped a model that looked trained but
+wasn't.
 
 **The heuristic beats the expert on easy tasks.** Our expert benchmark uses
 "optimal" action sequences for each scenario but its mean reward is pulled

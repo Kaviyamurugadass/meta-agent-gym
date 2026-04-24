@@ -1,0 +1,3 @@
+Customer support inquiries: please contact alice@example.com during business hours.
+Technical issues? Reach bob@company.org between 9 AM and 5 PM.
+For urgent escalations only, please email charlie@test.io directly.

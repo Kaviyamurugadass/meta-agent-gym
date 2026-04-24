@@ -195,6 +195,8 @@ The agent operates in a POMDP where the hidden state is "what makes a good agent
 
 The reward function follows the RLVR philosophy: **use hard verifiers instead of learned reward models**. YAML validity, field presence, and format compliance are binary checks — no LLM needed. The judge only scores what can't be verified programmatically.
 
+**Case study — the thesis proving itself.** Our Goose integration exposed a reward hack on the first trajectories we pointed it at. The judge-only tier reported 68% success, but Goose revealed the policy was emitting `noop → submit` and producing empty specs. Root cause: a sign-flip on line 111 of the reward computer — `anti_hack_empty_spec` is stored as `-5.0` in config, but the total formula subtracted it, turning a -5 *penalty* into a +5 *bonus*. Empty specs scored +7.4/step; GRPO obediently exploited it. We fixed the operator, added a parameterised regression test that fails if empty-spec ever receives positive reward, and moved on. **The three-tier verification system caught a bug a PR review missed.** Without Goose validation, we'd have shipped a model that looked trained but wasn't — which is exactly why RLVR with independent verifiers matters.
+
 ---
 
 ## How It Works

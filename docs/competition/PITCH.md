@@ -52,7 +52,7 @@
 
 ## [2:20–2:40] Honest scope *(Storytelling)*
 
-> "And here's the finding that proves the system works. We built a three-tier verification system. The judge-only tier reported 68% success. When we plugged in the real-execution tier with Goose, we discovered the policy had gamed the judge — producing empty specs that scored well but couldn't execute. **This is exactly why RLVR with independent verifiers matters.** Without Goose validation, we'd have shipped a model that looked trained but wasn't.
+> "And here's the finding that proves the system works. Our Goose integration exposed a reward hack. Root cause was a sign-flip on line 111 of the reward computer — a -5 empty-spec penalty was being subtracted, turning it into a +5 bonus. The policy found it, collapsed to noop-submit, and still scored 68% on the judge. We fixed the bug, added regression tests, and the three-tier verification system caught a bug a PR review missed. **This is exactly why RLVR with independent verifiers matters.** Without Goose validation, we'd have shipped a model that looked trained but wasn't.
 >
 > We're small on compute but clean on rigor. Our first three Colab runs 'succeeded' with placeholder numbers because the notebook silently swallowed import errors. We rewrote it to fail loudly — the sentinel you see is tamper-evident.
 >
