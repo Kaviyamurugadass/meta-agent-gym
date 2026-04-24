@@ -29,7 +29,14 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); o=d['observation']; print\\('task_id:',o['task_id'],'step:',o['step'],'spec:',list\\(o['current_spec'].keys\\(\\)\\)\\)\")",
       "Bash(python -m evaluation.goose_execution --smoke)",
       "Bash(python -c ' *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:meta-pytorch.org)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git revert *)",
+      "Bash(curl -sS -m 30 -X POST \"https://kaviya-m-meta-agent-gym.hf.space/reset\" -H 'Content-Type: application/json' -d '{\"scenario_name\":\"ws_easy_001\"}')",
+      "Bash(curl -sS -m 30 -X POST \"https://kaviya-m-meta-agent-gym.hf.space/step\" -H 'Content-Type: application/json' -d '{\"action\":{\"command\":\"set_name\",\"args\":{\"name\":\"price-scraper\"}}}')"
     ]
   }
 }

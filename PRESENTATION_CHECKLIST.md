@@ -109,4 +109,64 @@ These are measured, not fabricated — safe to quote:
 
 ---
 
+## Live Demo Commands (pitch Q&A, PowerShell-safe)
+
+Keep this terminal open during the pitch. Copy-paste commands are Windows
+PowerShell 5.1 compatible (no `&&` -- use `;` or `if ($?)` instead).
+
+### Tier 1 -- "Show me the bug is fixed" (instant)
+
+```powershell
+python scripts/demo_reward_fix.py
+```
+
+Prints the `+7.40 -> -4.58` reward swing for an empty spec. One screen,
+no internet needed. **Primary Q&A demo.**
+
+### Tier 2 -- "Show me the regression tests" (~2 sec)
+
+```powershell
+python -m pytest tests/test_meta_agent_reward.py -q -k "empty_spec or sign"
+```
+
+5 tests pass in ~1.5 sec. Proves the fix is enforced.
+
+### Tier 3 -- "Run the Goose harness live" (~55 sec)
+
+```powershell
+python -m evaluation.goose_execution --smoke
+```
+
+Runs 3 hand-written AGENT.md files through the real Goose runtime (via
+Claude Code CLI -- no API key needed). Expected: `3/3 tasks passed`.
+Requires internet + the `GOOSE_PROVIDER=claude-code` env already
+persisted on this machine.
+
+### Tier 4 -- "Show me the policy-level evidence" (~30 sec)
+
+```powershell
+python -m training.rollout_collection --policy random --episodes 5 --reward-mode additive --seed 42 --output-dir /tmp/test_run
+```
+
+Reproduces the Option B result: `mean_reward=-32.196` for 5 random-policy
+episodes under ADDITIVE mode. Historical buggy value: +51.80.
+
+### Tier 5 -- "Show me the writeup"
+
+```powershell
+cat data/post_fix/REWARD_FIX_COMPARISON.md
+```
+
+Pre-rendered ASCII so raw `cat` renders cleanly in any terminal.
+
+### One-liner combo (PS 5.1 safe)
+
+```powershell
+python -m pytest tests/test_meta_agent_reward.py -q; if ($?) { python scripts/demo_reward_fix.py }
+```
+
+Runs tests; only runs the demo if tests pass.
+
+---
+
 *Judges' TL;DR:* "A messy but ambitious environment with real training evidence beats a polished but boring one."
