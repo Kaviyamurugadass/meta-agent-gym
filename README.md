@@ -195,7 +195,20 @@ The agent operates in a POMDP where the hidden state is "what makes a good agent
 
 The reward function follows the RLVR philosophy: **use hard verifiers instead of learned reward models**. YAML validity, field presence, and format compliance are binary checks — no LLM needed. The judge only scores what can't be verified programmatically.
 
-**Case study — the thesis proving itself.** Our Goose integration exposed a reward hack on the first trajectories we pointed it at. The judge-only tier reported 68% success, but Goose revealed the policy was emitting `noop → submit` and producing empty specs. Root cause: a sign-flip on line 111 of the reward computer — `anti_hack_empty_spec` is stored as `-5.0` in config, but the total formula subtracted it, turning a -5 *penalty* into a +5 *bonus*. Empty specs scored +7.4/step; GRPO obediently exploited it. We fixed the operator, added a parameterised regression test that fails if empty-spec ever receives positive reward, and moved on. **The three-tier verification system caught a bug a PR review missed.** Without Goose validation, we'd have shipped a model that looked trained but wasn't — which is exactly why RLVR with independent verifiers matters.
+**Case study — the thesis proving itself.** Our Goose integration exposed a reward hack on the first trajectories we pointed it at. The judge-only tier reported 68% success, but Goose revealed the policy was emitting `noop → submit` and producing empty specs. Root cause: a sign-flip on line 158 (then line 111, pre-refactor) of the reward computer — `anti_hack_empty_spec` is stored as `-5.0` in config, but the total formula subtracted it, turning a -5 *penalty* into a +5 *bonus*. Empty specs scored +7.4/step; GRPO obediently exploited it. We fixed the operator, added a parameterised regression test that fails if empty-spec ever receives positive reward, and moved on. **The three-tier verification system caught a bug a PR review missed.** Without Goose validation, we'd have shipped a model that looked trained but wasn't — which is exactly why RLVR with independent verifiers matters.
+
+#### How to verify this (everything is in the repo)
+
+The Goose validation is committed as working code, not just narrative. Judges can read or re-run any of the following:
+
+- **Harness + AgentSpec → Goose recipe adapter:** [`evaluation/goose_execution.py`](evaluation/goose_execution.py)
+- **Test fixtures + hand-written reference agents:** [`evaluation/fixtures/`](evaluation/fixtures/) (3 deterministic tasks: extract-price, count-rows, find-emails)
+- **Regression tests for the sign-flip fix:** [`tests/test_meta_agent_reward.py`](tests/test_meta_agent_reward.py) — `pytest -k empty_spec` runs 5 cases in ~1.5 seconds; fails if the operator is reverted
+- **Policy-level evidence under fixed reward:** [`data/post_fix/REWARD_FIX_COMPARISON.md`](data/post_fix/REWARD_FIX_COMPARISON.md) + [`data/post_fix/`](data/post_fix/) (5 episodes × 4 policy/mode configurations, deterministic `seed=42`)
+- **Live before/after demo:** [`scripts/demo_reward_fix.py`](scripts/demo_reward_fix.py) — prints the `+7.40 → -4.58 → 0.00` reward-swing table instantly
+- **Pitch narrative:** [`docs/competition/PITCH.md`](docs/competition/PITCH.md) section `[2:20–2:40]`
+
+Relevant commits on `main`: `18769a4` (Goose harness + sign-flip fix + regression tests), `6eb5a88` (rubric refactor), `d216b0a` (post-fix rollout evidence). A judge reading `git log` will see the finding, diagnosis, and fix as three distinct commits.
 
 ---
 
@@ -224,7 +237,7 @@ The reward function follows the RLVR philosophy: **use hard verifiers instead of
 
 1. **Task Bank** (20 scenarios + adversarial generation) provides a task description across 4 difficulty phases — from "extract prices from one page" (easy) to "full data pipeline with anomaly detection and alerts" (expert)
 2. **Environment** (OpenEnv) presents the task to the agent and tracks the evolving spec state through discrete commands — `set_name`, `set_description`, `add_skill`, `remove_skill`, `write_prompt`, `set_model`, `add_tools`, `set_memory`, `set_max_turns`, `submit`
-3. **Agent** (Qwen3-1.7B + LoRA) generates a sequence of commands to build the agent spec, with investigation tools (`check_score`, `inspect`) available for POMDP-style information gathering
+3. **Agent** (Qwen2.5-0.5B + 4-bit LoRA shipped on Colab T4; Qwen3-1.7B + LoRA targeted for the onsite scale-up window) generates a sequence of commands to build the agent spec, with investigation tools (`check_score`, `inspect`) available for POMDP-style information gathering
 4. **Three-Tier Verification** scores the output: hard verifiers (100%, free) → fast judge (90%, $0.01) → real execution (10%, ground truth)
 5. **Curriculum Controller** tracks per-component mastery and escalates difficulty — the agent gets harder tasks as it improves
 6. **GRPO** computes advantages across parallel rollouts and updates the policy
@@ -247,18 +260,37 @@ Training GPU (H100 / T4 Colab)                      HF Spaces (cpu-basic)
 │                                    │          │                             │
 │  GRPO Trainer (TRL 0.29.0)         │          │  OpenEnv Server :8000       │
 │  ├─ Qwen3-1.7B + LoRA (BF16)      │  HTTP/WS │  ├─ Environment (reset/step)│
-│  ├─ 8 rollouts per prompt          │◄────────►│  ├─ Hard Verifiers (100%)   │
-│  └─ Reward = weighted components   │          │  ├─ Fast Judge (Claude) 90% │
-│                                    │          │  ├─ Real Execution (Goose)  │
-│  OR                                │          │  │   at steps 3, 6, 9       │
-│                                    │          │  ├─ Curriculum Controller   │
-│  Unsloth 4-bit LoRA (T4/Colab)     │          │  ├─ Rule Engine             │
-│  ├─ Qwen3-0.6B                    │          │  └─ Task Bank (20+ scenarios)│
-│  ├─ r=16, target q/k/v/o          │          │                             │
-│  └─ Single GPU, ~4GB VRAM         │          │  Interactive Dashboard /web  │
+│  │  (onsite target, HF credits)    │          │  ├─ Hard Verifiers (100%)   │
+│  ├─ 8 rollouts per prompt          │◄────────►│  ├─ Fast Judge (Claude) 90% │
+│  └─ Reward = weighted components   │          │  ├─ Real Execution (Goose)  │
+│                                    │          │  │   at steps 3, 6, 9       │
+│  OR                                │          │  ├─ Curriculum Controller   │
+│                                    │          │  ├─ Rule Engine             │
+│  Unsloth 4-bit LoRA (T4/Colab)     │          │  └─ Task Bank (20+ scenarios)│
+│  ├─ Qwen2.5-0.5B (shipped)        │          │                             │
+│  ├─ r=16, target q/k/v/o          │          │  Interactive Dashboard /web  │
 │                                    │          │                             │
 └────────────────────────────────────┘          └─────────────────────────────┘
+
+                        ┌─────────────────────────────────────────┐
+                        │  Local laptop (developer machine)       │
+                        │                                         │
+                        │  Goose CLI 1.27 + Claude Code provider  │
+                        │  └─ evaluation/goose_execution.py       │
+                        │     ├─ 3 deterministic fixture tasks    │
+                        │     ├─ AgentSpec → Goose recipe adapter │
+                        │     └─ Grader vs expected output        │
+                        └─────────────────────────────────────────┘
 ```
+
+**On the "real execution" tier.** As of this submission, Goose is wired as an
+**offline evaluator** on the local laptop (shipped: `evaluation/goose_execution.py`
+with 3/3 passing reference agents). The original plan -- Goose called *inside*
+the training loop at steps 3, 6, 9 -- is deferred to the onsite window
+(2026-04-25/26) when HF credits allow a longer run. The stub at
+`server/runtime/goose.py` is the hook site for that integration. This is an
+honest scope cut: the real-execution tier *exists and caught a real bug*; it
+just hasn't been hot-wired into the GRPO reward signal yet.
 
 ---
 
@@ -427,17 +459,24 @@ Open `http://localhost:8000` for the interactive UI — pick a task, build an ag
 
 ## Training
 
-### H100 / A100 — Full GRPO
+### H100 / A100 / L4 — Full GRPO (onsite target with HF credits)
 
 ```bash
 python training/grpo_trl.py --model-id Qwen/Qwen3-1.7B
 ```
 
-### T4 / Colab — 4-bit LoRA
+Qwen3-1.7B is Apache-2.0 licensed, has dual-mode reasoning (thinking +
+non-thinking), explicit agent/tool-calling support, and a mature ecosystem
+(324 published fine-tunes, 452 LoRA adapters at submission time).
+
+### T4 / Colab free tier — 4-bit LoRA (currently shipped)
 
 ```bash
-python training/grpo_unsloth.py --model-id Qwen/Qwen3-0.6B
+python training/grpo_unsloth.py --model-id Qwen/Qwen2.5-0.5B
 ```
+
+This is the path the existing Colab run used (sentinel-verified
+`real_training: true`). Smaller and older, but proven on free-tier compute.
 
 <!-- TODO: Add Colab notebook link -->
 
@@ -494,9 +533,15 @@ meta-agent-gym/
 │   ├── curriculum.py            # Curriculum controller (phase progression)
 │   ├── evaluation.py            # Metrics + before/after comparison
 │   ├── benchmark.py             # Expert trajectory runner
-│   └── rollout_collection.py    # Data collection utilities
+│   └── rollout_collection.py    # Data collection (--reward-mode CLI flag)
+├── evaluation/
+│   ├── goose_execution.py       # Goose harness — offline real-execution tier
+│   └── fixtures/                # 3 deterministic tasks + reference AGENT.md files
+├── scripts/
+│   └── demo_reward_fix.py       # Live before/after reward-swing demo for pitch Q&A
 ├── data/
-│   └── baseline/                # Random + heuristic baseline trajectories
+│   ├── baseline/                # Random + heuristic baseline trajectories (pre-fix)
+│   └── post_fix/                # Post-fix rollouts + REWARD_FIX_COMPARISON.md
 ├── tests/
 │   ├── test_smoke.py            # Basic functionality
 │   ├── test_reward_quality.py   # Reward component validation

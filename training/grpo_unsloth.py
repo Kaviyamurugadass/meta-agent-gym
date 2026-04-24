@@ -10,14 +10,23 @@ efficiency on T4 (16GB) / RTX 4090 (24GB) / A10 (24GB).
     3. On T4 (16GB), use: batch=1, num_generations=2, grad_accum=4,
        max_seq_length=1024 (drop to 768 if OOM)
 
-CLI (T4 Colab):
+CLI (T4 Colab — shipped path):
     uv sync --extra train --extra unsloth
     uv run python training/grpo_unsloth.py \\
-        --model-id Qwen/Qwen3-0.6B \\
+        --model-id Qwen/Qwen2.5-0.5B \\
         --per-device-train-batch-size 1 \\
         --num-generations 2 \\
         --gradient-accumulation-steps 4 \\
         --max-seq-length 1024
+
+CLI (L4 / A100 — onsite scale-up target):
+    uv run python training/grpo_unsloth.py \\
+        --model-id Qwen/Qwen3-1.7B \\
+        --per-device-train-batch-size 2 \\
+        --num-generations 4 \\
+        --gradient-accumulation-steps 4 \\
+        --max-seq-length 2048 \\
+        --num-epochs 3
 
 CLI (dry-run, no GPU):
     uv run python training/grpo_unsloth.py --dry-run
@@ -37,7 +46,7 @@ if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
 
 
-DEFAULT_MODEL = "Qwen/Qwen3-0.6B"
+DEFAULT_MODEL = "Qwen/Qwen2.5-0.5B"  # shipped Colab T4 path; pass --model-id Qwen/Qwen3-1.7B onsite
 DEFAULT_OUTPUT = "training/grpo-unsloth-output"
 
 SYSTEM_PROMPT = """You are an agent interacting with an OpenEnv environment.
