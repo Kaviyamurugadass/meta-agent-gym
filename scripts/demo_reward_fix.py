@@ -78,7 +78,7 @@ def main() -> int:
     print(f"    reward = {hybrid_r:+8.2f}          gate fires, reward zeroed")
     print()
     print("-" * 70)
-    print("  Root cause: sign flip on server/rewards/reward.py:111")
+    print("  Root cause: sign flip on server/rewards/reward.py:158")
     print("    anti_hack_empty_spec is stored as -5.0 in config")
     print("    old formula SUBTRACTED it:   - (-5.0) = +5.0 bonus")
     print("    new formula ADDS it:         + (-5.0) = -5.0 penalty")
