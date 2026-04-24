@@ -1,10 +1,33 @@
 # Reward Logic & Training Pipeline Excellence
 
+## Built on OpenEnv's native Rubric system
+
+The reward pipeline uses `openenv.core.rubrics` primitives directly —
+`Rubric`, `RubricDict`, `WeightedSum`, and `Gate`. Every scoring component
+is a `Rubric` subclass in `server/rewards/rubric_reward.py`; the
+composition happens in `server/rewards/reward.py`:
+
+```python
+from openenv.core.rubrics.containers import Gate, RubricDict, WeightedSum
+
+self._hard_weighted  = WeightedSum([YamlValidRubric(), RequiredFieldsRubric(), ...], [1/5]*5)
+self._hard_gate      = Gate(self._hard_weighted, threshold=0.99)  # HYBRID gating
+self._judge_weighted = WeightedSum(
+    [SkillSelectionRubric(), DescriptionQualityRubric(), WorkflowClarityRubric(),
+     ModelAppropriatenessRubric(), BestPracticesRubric(), EfficiencyRubric()],
+    weights=[0.25, 0.20, 0.20, 0.15, 0.10, 0.10],
+)
+```
+
+This addresses the "composable rubrics > monolithic scoring" guideline
+from the hackathon judging doc using the same primitives the OpenEnv
+documentation ships.
+
 ## 🎯 Reward System Design Philosophy
 
-Our reward system follows **RLVR (Reinforcement Learning with Verifiable Rewards)** principles:
-- **Use hard verifiers** where possible (free, 100% accurate)
-- **Use LLM judges** where necessary (nuanced quality assessment)
+The reward system follows **RLVR (Reinforcement Learning with Verifiable Rewards)** principles:
+- **Use hard verifiers** where possible (free, 100% accurate) → `Gate` wrappers in HYBRID mode
+- **Use LLM judges** where necessary (nuanced quality assessment) → swappable with `openenv.core.rubrics.LLMJudge`
 - **Use real execution** for calibration (ground truth validation)
 - **Never trust single evaluation layer** (prevent exploitation)
 
