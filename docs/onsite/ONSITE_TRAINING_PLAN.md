@@ -9,6 +9,7 @@ What to do tomorrow when HF compute credits become available.
 - Scale to **3 epochs x 50 episodes x 4 generations** (~600 gradient steps)
 - Expected runtime: **1-2 hours on A100**
 - Sentinel-verify, then re-run the Goose harness on the new model
+- **After training finishes**: follow [`docs/competition/ONSITE_PLAN.md`](../competition/ONSITE_PLAN.md) Phases 2 & 3 — wire the adapter into the HF Space `/generate` endpoint and update the pitch docs. Do NOT skip this; the pitch references the live Generate flow.
 
 ## Cost summary (so there are no surprises)
 
@@ -75,6 +76,29 @@ Skip cell 3 (baseline collection) and cell 4 (expert benchmark) if those are alr
 
 Expected runtime on A100: **1-2 hours**.
 
+### Step 4-alt -- CLI path (if you don't want the notebook)
+
+If the onsite GPU is a local Linux box (not Colab) and you'd rather run training directly, `training/grpo_unsloth.py` now ships an L4 / A100 scale-up command in its module docstring:
+
+```bash
+uv sync --extra train --extra unsloth
+
+uv run python training/grpo_unsloth.py \
+    --model-id Qwen/Qwen3-1.7B \
+    --per-device-train-batch-size 2 \
+    --num-generations 4 \
+    --gradient-accumulation-steps 4 \
+    --max-seq-length 2048 \
+    --num-epochs 3 \
+    --dataset-episodes 50
+```
+
+Notes:
+- `--per-device-train-batch-size 2` and `--max-seq-length 2048` are the A100-friendly bumps over the Colab T4 defaults (batch 1, seq 1024). Drop them back down if you hit OOM on L4.
+- `--loss-type dapo` is the default already — don't override unless you know why.
+- The script writes the same sentinel (`training/grpo-unsloth-output/training_summary.json` with `real_training: true`) so Step 5 verification works identically.
+- For a dry run without a GPU: `--dry-run`.
+
 ### Step 5 -- verify the sentinel
 
 After cell 5 finishes, open `training/grpo-unsloth-output/training_summary.json`. It must show:
@@ -133,3 +157,28 @@ If the trained run fails or produces weak results: do NOTHING to the README. The
 The pitch already works without the onsite training succeeding. Anything from
 onsite is upside, not load-bearing. Treat it that way. Do not over-promise
 during the pitch on the back of an unfinished run.
+
+---
+
+## After training finishes — don't miss these pieces
+
+The training step is ~30% of the onsite work. The rest is in
+[`docs/competition/ONSITE_PLAN.md`](../competition/ONSITE_PLAN.md):
+
+| Phase | What | Why you can't skip it |
+|---|---|---|
+| **Phase 2.1** — Add deps to Space | Edit `pyproject.toml` to include `transformers`, `peft`, `torch` in core deps | `/generate` endpoint is wired but Space doesn't have these installed yet — endpoint will keep returning `deps_missing` until you fix this |
+| **Phase 2.2** — Push adapter | Either commit the adapter into the repo (if <50MB) OR push to HF Model Hub as `Kaviya-M/meta-agent-gym-grpo-qwen3-1.7b` and have the Space download it at boot | Without this, the "Generate with Trained Model" button never turns green |
+| **Phase 2.3** — Smoke-test `/generate` | `curl` the endpoint + open the dashboard, click Generate, verify a full replay works | The pitch's slide 6-7 story depends on this flow working during the demo |
+| **Phase 3** — Update docs | `README.md`, `TRAINING_EVIDENCE.md`, `HUGGINGFACE_BLOG.md`, `PITCH.md` all need updating with the real trained-model numbers | If numbers in docs contradict what's in the repo, judges mark it as fabricated |
+
+**Total additional time after training: ~2 hours.** Don't let training eat the whole 48h window — budget for deploy + verify + doc update from Day 2 afternoon onwards.
+
+---
+
+## Related onsite docs
+
+- [`COMPLETE_TESTING_GUIDE.md`](COMPLETE_TESTING_GUIDE.md) — pre-onsite validation checklist
+- [`RESULTS_GUIDE.md`](RESULTS_GUIDE.md) — how to read + report the trained-model results
+- [`../competition/ONSITE_PLAN.md`](../competition/ONSITE_PLAN.md) — full deploy pipeline (training → Space → docs)
+- [`../competition/PITCH.md`](../competition/PITCH.md) — spoken script the trained-model output needs to back up
