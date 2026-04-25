@@ -67,7 +67,9 @@ Each action must be minimal JSON:
   {"command": "<cmd>", "args": {...}}
 
 Do NOT include justification/confidence. Do NOT wrap in markdown fences.
-"""
+Do NOT think out loud or explain. Output the JSON array directly.
+
+/no_think"""
 
 
 def parse_args() -> argparse.Namespace:
