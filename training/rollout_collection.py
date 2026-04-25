@@ -128,6 +128,12 @@ def make_adapter_policy(
         tokenizer = tok
         print(f"[adapter_policy] Loaded {'Unsloth' if used_unsloth else 'transformers'} model + adapter")
 
+    # Debug-print counter (module-local to this policy instance)
+    _debug_state = {"printed": 0}
+    import os as _os
+    _DEBUG_LIMIT = int(_os.environ.get("SHOW_ADAPTER_COMPLETIONS_LIMIT", "5"))
+    _DEBUG_ON = _os.environ.get("SHOW_ADAPTER_COMPLETIONS", "0") not in ("0", "", "false", "False")
+
     def policy(observation_dict: dict, rng: random.Random) -> Action:  # noqa: ARG001
         _ensure_loaded()
         assert model is not None and tokenizer is not None
@@ -162,7 +168,21 @@ def make_adapter_policy(
             out[0][inputs["input_ids"].shape[1]:],
             skip_special_tokens=True,
         ).strip()
-        return parse_action(response)
+        action = parse_action(response)
+
+        # Debug print — show what the trained model is actually generating, so we
+        # can diagnose reward=0 (e.g. is the output JSON arrays vs single objects?
+        # is it still emitting <think> blocks? is it complete or truncated?)
+        if _DEBUG_ON and _debug_state["printed"] < _DEBUG_LIMIT:
+            _debug_state["printed"] += 1
+            print("=" * 30 + f" ADAPTER COMPLETION #{_debug_state['printed']} " + "=" * 30)
+            print(f"[adapter] task={observation_dict.get('task_id')} step={observation_dict.get('step')}")
+            print(f"[adapter] raw_response (len={len(response)}):")
+            print(response[:1500])
+            print(f"[adapter] parsed_action.command={action.command.value} args={action.args}")
+            print("=" * 90)
+
+        return action
 
     return policy
 
