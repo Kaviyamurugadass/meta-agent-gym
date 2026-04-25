@@ -249,27 +249,31 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
         ],
     ),
     TaskSpec(
-        task_id="ou_easy_001",
-        domain="output",
+        task_id="cr_easy_002",
+        domain="code",
         difficulty="easy",
         problem_statement=(
-            "Build an agent that generates a markdown summary report "
-            "from structured data. The report should include headers, tables, and key metrics."
+            "Build an agent that reviews a pull request diff for security issues "
+            "like SQL injection, XSS, hard-coded secrets, and unsafe deserialisation. "
+            "Output: a list of findings with file:line references and severity."
         ),
         max_steps=7,
-        required_skills=["report-generator"],
+        required_skills=["code-reviewer", "pattern-matcher"],
         recommended_skills=[],
         user_preferences={
             "language": "python",
-            "output_format": "markdown",
+            "scope": "diff_only",
         },
-        citations=["https://www.markdownguide.org/"],
+        citations=[
+            "https://owasp.org/www-project-top-ten/",
+            "https://cwe.mitre.org/",
+        ],
         expected_findings={
-            "skill_count": 1,
+            "skill_count": 2,
         },
         red_herrings=[
-            "Don't add data aggregation unless explicitly requested",
-            "Focus on report formatting, not data processing",
+            "Don't review files unchanged by the diff",
+            "Don't propose architectural rewrites for a single PR",
         ],
     ),
 ]
