@@ -149,6 +149,19 @@ body{overflow:hidden}
 
 /* ─── Responsive ─── */
 @media(max-width:900px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:50vh}}
+
+/* ─── Tabs ─── */
+.tab-strip{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.tab-btn{padding:14px 22px;background:transparent;border:none;color:var(--muted);font-size:0.9rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-family:inherit}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.tab-subtitle{padding:14px 24px 4px;color:var(--muted);font-size:0.78rem;line-height:1.5;background:var(--bg-page)}
+.suggest-list{margin:8px 0 0 0;padding:0;list-style:none}
+.suggest-list li{padding:6px 0}
+.suggest-list a{color:var(--accent);text-decoration:none;font-size:0.78rem;cursor:pointer;border-bottom:1px dashed transparent;transition:border 0.15s}
+.suggest-list a:hover{border-bottom-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -158,6 +171,17 @@ body{overflow:hidden}
     <span class="subtitle">RL Environment for Agent Design</span>
     <div class="conn"><span class="conn-dot" id="connDot"></span><span id="connText">Checking...</span></div>
 </div>
+
+<div class="tab-strip">
+    <button class="tab-btn active" data-tab="build" onclick="switchTab('build')">🛠 Build Step-by-Step</button>
+    <button class="tab-btn" data-tab="generate" onclick="switchTab('generate')">✨ Generate from Description</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 1 — Build Step-by-Step (training/eval surface)                       -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-build" class="tab-content active">
+<div class="tab-subtitle">Watch the multi-component reward signal in real time. Pick a task, issue commands, see the score evolve. <strong>This is what GRPO has to learn.</strong></div>
 
 <div class="layout">
     <!-- ─── Sidebar ─── -->
@@ -179,27 +203,14 @@ body{overflow:hidden}
             </div>
         </div>
 
-        <!-- Generate with Trained Model -->
-        <div class="card">
-            <div class="card-head">
-                <span class="card-title">Generate with Trained Model</span>
-                <span class="badge" id="genStatusBadge" style="background:rgba(251,191,36,0.1);color:var(--yellow)">Checking...</span>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Task description</label>
-                <textarea class="form-textarea" id="genTaskDesc" rows="3" placeholder="Build an agent that scrapes product prices from e-commerce pages"></textarea>
-            </div>
-            <div class="btn-row" style="margin-top:4px">
-                <button class="btn btn-primary" id="btnGenerate" disabled>Generate Agent</button>
-            </div>
-            <div id="genStatusMsg" style="margin-top:10px;font-size:0.75rem;color:var(--muted);display:none"></div>
-        </div>
-
         <!-- Agent Builder (Accordion) -->
         <div class="card" style="padding:12px">
             <div class="card-head" style="margin-bottom:8px;padding:0 8px">
                 <span class="card-title">Agent Builder</span>
                 <span class="badge" id="stepBadge">0 / 7</span>
+            </div>
+            <div style="font-size:0.7rem;color:var(--muted);margin:0 8px 8px;line-height:1.4">
+                Fields marked <span style="color:#f87171;font-weight:700">*</span> are required by the hard-verifier gate. Without all three, total reward is 0.
             </div>
 
             <!-- Identity -->
@@ -211,14 +222,14 @@ body{overflow:hidden}
                 </div>
                 <div class="acc-body open">
                     <div class="form-group">
-                        <label class="form-label">set_name</label>
+                        <label class="form-label">set_name <span style="color:#f87171" title="Required by hard-verifier gate">*</span></label>
                         <div class="form-row">
                             <input class="form-input" id="cmdName" placeholder="price-scraper">
                             <button class="btn btn-sm btn-ghost" onclick="exec('set_name',{name:$('cmdName').value})">Set</button>
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label">set_description</label>
+                        <label class="form-label">set_description <span style="color:#f87171" title="Required by hard-verifier gate">*</span></label>
                         <div class="form-row">
                             <input class="form-input" id="cmdDesc" placeholder="What this agent does and when to use it">
                             <button class="btn btn-sm btn-ghost" onclick="exec('set_description',{description:$('cmdDesc').value})">Set</button>
@@ -256,7 +267,7 @@ body{overflow:hidden}
                 </div>
                 <div class="acc-body">
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label">write_prompt</label>
+                        <label class="form-label">write_prompt <span style="color:#f87171" title="Required by hard-verifier gate; must be at least 50 characters">*</span> <span style="color:var(--muted);font-size:0.7rem">(≥50 chars)</span></label>
                         <textarea class="form-textarea" id="cmdPrompt" rows="4" placeholder="You are a specialist agent that..."></textarea>
                         <button class="btn btn-sm btn-ghost" style="margin-top:8px;width:100%" onclick="exec('write_prompt',{prompt:$('cmdPrompt').value})">Write Prompt</button>
                     </div>
@@ -360,6 +371,68 @@ body{overflow:hidden}
     </div>
 </div>
 
+</div><!-- /#tab-build -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TAB 2 — Generate from Description (end-user surface)                    -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="tab-generate" class="tab-content">
+<div class="tab-subtitle">Describe what kind of agent you need. The trained model emits the commands; you don't touch the builder. <strong>This is what end-users see post-training.</strong></div>
+
+<div class="layout">
+    <!-- ─── Sidebar (input side) ─── -->
+    <div class="sidebar">
+
+        <!-- Generate panel -->
+        <div class="card">
+            <div class="card-head">
+                <span class="card-title">Describe what you need</span>
+                <span class="badge" id="genStatusBadge" style="background:rgba(251,191,36,0.1);color:var(--yellow)">Checking...</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Task description</label>
+                <textarea class="form-textarea" id="genTaskDesc" rows="6" placeholder="Build an agent that reviews pull requests for security issues like SQL injection, XSS, and hard-coded secrets."></textarea>
+            </div>
+            <div class="btn-row" style="margin-top:4px">
+                <button class="btn btn-primary" id="btnGenerate" disabled style="width:100%">✨ Generate Agent</button>
+            </div>
+            <div id="genStatusMsg" style="margin-top:10px;font-size:0.75rem;color:var(--muted);display:none"></div>
+
+            <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="font-size:0.78rem;color:var(--muted);font-weight:600;margin-bottom:4px">💡 Try one of these</div>
+                <ul class="suggest-list">
+                    <li><a onclick="setGenSuggestion('Build an agent that reviews pull requests for security issues like SQL injection, XSS, and hard-coded secrets.')">Review PRs for security</a></li>
+                    <li><a onclick="setGenSuggestion('Build an agent that generates pytest cases for a function, covering happy path and edge cases.')">Generate pytest cases</a></li>
+                    <li><a onclick="setGenSuggestion('Build an agent that debugs a failing test by inspecting the stack trace and logs to identify the root cause.')">Debug a failing test</a></li>
+                    <li><a onclick="setGenSuggestion('Build an agent that refactors a long Python function: extract helpers, add type hints, keep behaviour.')">Refactor a long function</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Generation summary (appears after Generate) -->
+        <div class="card" id="genResultSummary" style="display:none">
+            <div class="card-head"><span class="card-title">Generation summary</span></div>
+            <div id="genResultBody" style="font-size:0.82rem;line-height:1.7"></div>
+        </div>
+    </div>
+
+    <!-- ─── Main (output side) ─── -->
+    <div class="main">
+        <div class="card" style="flex:1;display:flex;flex-direction:column">
+            <div class="card-head">
+                <span class="card-title">Generated AGENT.md</span>
+                <div class="btn-row" style="margin:0">
+                    <button class="btn btn-sm btn-ghost" onclick="copyAgent()">Copy</button>
+                    <button class="btn btn-sm btn-ghost" onclick="downloadAgent()">Download</button>
+                </div>
+            </div>
+            <div class="preview" id="agentPreviewGen" style="min-height:420px">Type a task description on the left, then click <strong>Generate Agent</strong>.</div>
+        </div>
+    </div>
+</div>
+
+</div><!-- /#tab-generate -->
+
 <script>
 const $=id=>document.getElementById(id);
 const TASKS=[
@@ -391,6 +464,17 @@ const SKILLS=["web-scraping","http-client","html-parser","json-parser","csv-hand
 
 let ws=null,wsOk=false,pending=null,spec={},active=false,step=0,maxStep=7;
 
+// ─── Tabs ───
+function switchTab(name){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));
+    if(name==='build'){history.replaceState(null,'','/web/')}else{history.replaceState(null,'','#'+name)}
+}
+function setGenSuggestion(text){
+    $("genTaskDesc").value=text;
+    $("genTaskDesc").focus();
+}
+
 // ─── Init ───
 (function(){
     const sel=$("taskSelect");
@@ -413,6 +497,8 @@ let ws=null,wsOk=false,pending=null,spec={},active=false,step=0,maxStep=7;
     $("btnGenerate").onclick=generateWithModel;
     fetch("/health").then(r=>{setConn(r.ok)}).catch(()=>setConn(false));
     checkGenerateStatus();
+    // Deep-link to Tab 2 via #generate
+    if(location.hash==='#generate')switchTab('generate');
 })();
 
 // ─── Trained-model Generation ───
@@ -422,13 +508,21 @@ async function checkGenerateStatus(){
         const r=await fetch("/generate/status");
         const d=await r.json();
         if(d.available&&d.adapter_available&&d.deps_available){
-            badge.textContent="Ready";
-            badge.style.background="rgba(52,211,153,0.1)";
-            badge.style.color="var(--green)";
+            // Adapter loads, but the currently-shipped one is the pre-sign-flip-fix
+            // Colab adapter that learned to emit noop->submit (empty specs).
+            // Be honest: amber badge, not green; keep the button enabled so the
+            // empty-spec output can be demoed as a teaching moment for the
+            // RLVR / Goose case study.
+            badge.textContent="Pre-fix adapter loaded";
+            badge.title="The loaded adapter is the pre-sign-flip-fix Colab run that collapsed to noop->submit (see RLVR case study in README). Onsite Qwen3-1.7B retrain replaces it.";
+            badge.style.background="rgba(251,191,36,0.12)";
+            badge.style.color="#fbbf24";
             btn.disabled=false;
-            msg.style.display="none";
+            msg.style.display="block";
+            msg.textContent="⚠ Loaded adapter is the pre-fix Colab run (empty-spec collapse, see Goose case study). Onsite Qwen3-1.7B retrain will replace it. Click Generate to see the bug live.";
         }else{
             badge.textContent="Not Deployed";
+            badge.title="Inference is unavailable in this deployment.";
             badge.style.background="rgba(248,113,113,0.1)";
             badge.style.color="var(--red)";
             btn.disabled=true;
@@ -438,6 +532,7 @@ async function checkGenerateStatus(){
         }
     }catch(e){
         badge.textContent="Error";
+        badge.title=String(e);
         badge.style.background="rgba(248,113,113,0.1)";
         badge.style.color="var(--red)";
         btn.disabled=true;
@@ -447,12 +542,28 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function generateWithModel(){
     const task=$("genTaskDesc").value.trim();
     if(!task){alert("Enter a task description first");return}
-    const btn=$("btnGenerate");btn.disabled=true;btn.textContent="Generating...";
+    const btn=$("btnGenerate");
+    const orig=btn.textContent;
+    btn.disabled=true;btn.textContent="Generating...";
+    const previewGen=$("agentPreviewGen");
+    if(previewGen)previewGen.textContent="⏳ Calling trained model...";
+    const summary=$("genResultSummary"),sumBody=$("genResultBody");
+    if(summary)summary.style.display="none";
+    const t0=Date.now();
     try{
-        // Auto-start episode if not active
+        // Auto-start episode if not active. In Tab 2 the dropdown may be empty;
+        // pick a sensible default so the user doesn't have to switch tabs.
         if(!active){
             const sel=$("taskSelect");
-            if(!sel.value){alert("Pick a scenario first so the env has a task ID");btn.disabled=false;btn.textContent="Generate Agent";return}
+            if(!sel.value){
+                const fallback=Array.from(sel.options).find(o=>o.value==='cr_easy_002')||
+                               Array.from(sel.options).find(o=>o.value==='cr_easy_001')||
+                               Array.from(sel.options).find(o=>o.value);
+                if(fallback)sel.value=fallback.value;else{
+                    alert("No scenarios available. Refresh the page.");return;
+                }
+                showTask();
+            }
             await startEp();
             if(!active){throw new Error("Could not start episode")}
         }
@@ -460,7 +571,9 @@ async function generateWithModel(){
         const r=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_description:task})});
         const d=await r.json();
         if(d.status!=="ok"){
-            alert((d.message||"Generate failed")+"\n\nStatus: "+d.status);
+            const msg=(d.message||"Generate failed")+"\n\nStatus: "+d.status;
+            if(previewGen)previewGen.textContent="❌ "+msg;
+            alert(msg);
             return;
         }
         // Replay actions via existing /step pipeline so reward scoring works the same
@@ -468,10 +581,30 @@ async function generateWithModel(){
         for(const a of d.actions){
             if(!active)break; // stop if episode ended early
             await exec(a.command,a.args);
-            await sleep(500);
+            await sleep(300);
         }
-    }catch(e){alert("Generate failed: "+e.message)}
-    finally{btn.disabled=false;btn.textContent="Generate Agent"}
+        // Mirror the final AGENT.md into Tab 2's preview pane
+        if(previewGen){
+            const src=$("agentPreview");
+            previewGen.textContent=(src?src.textContent:"")||"(empty spec)";
+        }
+        // Show a compact generation summary
+        if(summary&&sumBody){
+            const elapsed=((Date.now()-t0)/1000).toFixed(1);
+            const rb=$("rewardBadge");
+            const score=rb?rb.textContent:"--";
+            sumBody.innerHTML=
+                '<div>Score: <strong style="color:var(--accent)">'+score+'</strong></div>'+
+                '<div>Generated in <strong>'+elapsed+'s</strong></div>'+
+                '<div>Commands emitted: <strong>'+d.actions.length+'</strong></div>'+
+                '<div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Reward bars + violations live in the Build tab.</div>';
+            summary.style.display="block";
+        }
+    }catch(e){
+        if(previewGen)previewGen.textContent="❌ Generate failed: "+e.message;
+        alert("Generate failed: "+e.message);
+    }
+    finally{btn.disabled=false;btn.textContent=orig||"✨ Generate Agent"}
 }
 
 function setConn(ok){wsOk=ok;$("connDot").className="conn-dot"+(ok?"":" off");$("connText").textContent=ok?"Connected":"Offline"}
