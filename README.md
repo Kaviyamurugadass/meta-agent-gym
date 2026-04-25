@@ -18,11 +18,29 @@ tags:
 
 > Can a 0.5B language model learn to design AI agents — by getting graded on the ones it builds?
 
-An OpenEnv environment where a small language model issues structured commands (`set_name`, `add_skill`, `write_prompt`, `submit`...) to assemble an `AGENT.md` spec, and gets scored on it across multiple independent reward dimensions. GRPO closes the loop.
+## Submission links
 
-I built this for the OpenEnv Hackathon 2026 to explore the meta-skill that developers using Cursor and Claude rely on every day: deciding *what an agent should be* before you train it.
+| Resource | Link |
+|---|---|
+| 🤗 HF Space (live environment) | https://huggingface.co/spaces/Kaviya-M/meta-agent-gym |
+| 📓 Colab training notebook | https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb |
+| 💻 GitHub repository | https://github.com/Kaviyamurugadass/meta-agent-gym |
+| 📝 Blog post | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
+| 🎤 3-min pitch script | [`docs/competition/PITCH.md`](docs/competition/PITCH.md) |
 
-**Live demo:** [huggingface.co/spaces/Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
+---
+
+## The problem I started with
+
+I'm a software developer. I use Cursor every day. I use Claude Code every day. Both of them are **agents under the hood** — not a single LLM call but a system: a system prompt, a tool list, a model choice, a memory scope. When the agent is well-designed, it solves my task in one shot. When it isn't, I'm debugging the agent before I can debug my code.
+
+So I started asking: **are we creating these agents correctly?**
+
+Anthropic's [Agent Skills Open Standard](https://skills.sh) gives us the *schema* — name, description, skills, model, system prompt — but the *content* is still a craft. What skills should this agent have? Which model tier? How do you write a system prompt that actually scopes the work? Most of us answer those questions by hand, by guesswork, and by iteration. **A better-designed agent solves tasks better. A worse-designed one wastes tokens and produces noise.**
+
+That's the meta-skill. And it's the one I wanted to see if RL could teach a tiny model.
+
+This OpenEnv environment grades AGENT.md specifications across multiple independent reward dimensions. A small language model issues structured commands (`set_name`, `add_skill`, `write_prompt`, `submit`...) to assemble a spec, GRPO updates the policy on the resulting reward, and the third verification tier (Goose) actually runs the AGENT.md to make sure the model isn't gaming the score.
 
 ---
 
@@ -120,6 +138,37 @@ The first three hard verifiers (`yaml_valid`, `has_required_fields`, `prompt_len
 | over_engineered | −0.5 | More than 10 skills, or `opus` when `sonnet` suffices |
 | repetitive | −0.3 | Same action twice consecutively |
 | regression | −0.15 | Breaking a previously-passing check |
+
+---
+
+## Problem statements addressed
+
+### Primary: Statement 4 — Self-Improvement
+
+meta-agent-gym is an environment where the agent faces increasingly difficult agent-design challenges, with an adversarial designer that targets its weaknesses and a curriculum that adapts in real time — the recursive skill amplification described in Statement 4.
+
+- **Adversarial self-play:** Claude analyses the agent's per-component scores and generates new tasks targeting weak spots — weak at description quality? Here comes a task where delegation guidance is critical (code in [`server/adversarial.py`](server/adversarial.py))
+- **Automatic curriculum:** Difficulty escalates as mastery improves — phase 1 (single skill) → phase 2 (2-3 skills) → phase 3 (3-5 skills) → phase 4 (5+ skills with red herrings)
+- **No manual authoring:** The training distribution adapts as the agent learns. 24 seed scenarios across 4 phases provide the base; the adversarial generator fills the gaps
+- **Co-evolutionary improvement (real, not theoretical):** Training exposed a sign-flip bug in our own reward function — the agent found that `noop → submit` empty-spec play scored higher than honest play, which forced us to fix the reward computer (the bug-hunt story above is exactly this co-evolution between agent and environment design)
+
+### Secondary: Statement 3.1 — World Modeling / Professional Tasks
+
+The agent operates in a POMDP where the hidden state is *"what makes a good agent for this task?"* It can't see the optimal spec — it can only observe partial feedback (reward breakdown, violations) and must infer ground truth through investigation commands.
+
+- **POMDP structure:** Hidden state = optimal spec for the task; observable = current spec + per-component reward breakdown + rule violations
+- **Investigation tools:** `check_score` reveals the current breakdown without consuming a `submit`; `inspect_example` reveals a hint — POMDP-style information gathering before commitment
+- **Multi-step reasoning:** A 7-step generation process where each decision (name, description, skills, model, prompt) interacts with the others
+- **Real artifact output:** The generated `AGENT.md` is a real file in the [Agent Skills Open Standard](https://skills.sh) format — runnable in Claude Code, Goose, Copilot, or any framework that follows the spec
+
+### Partner Sub-Theme: RLVR — Verifiable Rewards
+
+The reward function follows the RLVR philosophy: **use hard verifiers instead of learned reward models**. YAML validity, field presence, and format compliance are binary checks — no LLM needed. The judge only scores what can't be verified programmatically. Goose runs the resulting `AGENT.md` as the third tier — independent execution, ground truth, no judge can fake it.
+
+- **5 hard verifiers run on every step** (yaml_valid, has_required_fields, prompt_length_ok, model_valid, skills_format_ok). Three of them act as **gates** that zero the entire step reward if they fail.
+- **6 judge dimensions** for what hard checks can't capture: skill_selection, description_quality, workflow_clarity, model_appropriateness, best_practices, efficiency
+- **Goose offline harness** at [`evaluation/goose_execution.py`](evaluation/goose_execution.py) — captured 3/3 PASS run committed at [`evaluation/fixtures/smoke_output.txt`](evaluation/fixtures/smoke_output.txt)
+- **Caught a real bug.** The Goose tier exposed the sign-flip in our anti-hack penalty math that the in-environment metrics couldn't see (the case study at the top of this README). Without Goose validation, we'd have shipped a 100%-success policy producing nothing executable. That's exactly why RLVR with independent verifiers matters.
 
 ---
 
