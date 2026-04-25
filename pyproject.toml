@@ -18,6 +18,9 @@ dependencies = [
     "uvicorn[standard]",
     "httpx",
     "websockets",
+    "torch",
+    "transformers",
+    "peft",
 ]
 
 [project.optional-dependencies]
