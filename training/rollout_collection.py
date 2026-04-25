@@ -66,16 +66,11 @@ def make_adapter_policy(
 
         import torch
         from peft import PeftModel
-        from transformers import AutoModelForCausalLM, AutoTokenizer
 
         if not (adapter_path / "adapter_config.json").exists():
             raise FileNotFoundError(
                 f"No LoRA adapter found at {adapter_path}. Expected adapter_config.json."
             )
-
-        tok = AutoTokenizer.from_pretrained(base_model)
-        if tok.pad_token is None:
-            tok.pad_token = tok.eos_token
 
         # Prefer GPU if available; fall back to CPU for correctness.
         if device is None:
@@ -83,25 +78,52 @@ def make_adapter_policy(
         else:
             device_ = device
 
-        # Try 4-bit on CUDA if bitsandbytes is available; otherwise use fp16/bf16.
-        load_kwargs: dict = {}
+        # Try Unsloth first on CUDA — required because the adapter was trained
+        # against Unsloth-patched attention layers (Qwen3Attention.apply_qkv etc.)
+        # and won't bind cleanly to vanilla transformers. Fall back to vanilla
+        # transformers + bf16/fp32 on CPU or if Unsloth import fails.
+        m = None
+        tok = None
+        used_unsloth = False
         if device_ == "cuda":
-            dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-            load_kwargs.update({"torch_dtype": dtype, "device_map": "auto"})
             try:
-                import bitsandbytes  # noqa: F401
-                load_kwargs["load_in_4bit"] = True
+                from unsloth import FastLanguageModel
+                m, tok = FastLanguageModel.from_pretrained(
+                    model_name=base_model,
+                    max_seq_length=768,
+                    load_in_4bit=True,
+                )
+                m = PeftModel.from_pretrained(m, str(adapter_path))
+                FastLanguageModel.for_inference(m)
+                used_unsloth = True
             except Exception:
-                pass
-        else:
-            load_kwargs.update({"torch_dtype": torch.float32, "device_map": None})
+                m = None  # fall through to vanilla path
 
-        base = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
-        m = PeftModel.from_pretrained(base, str(adapter_path))
+        if m is None:
+            # Vanilla transformers fallback (CPU path or no Unsloth)
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            tok = AutoTokenizer.from_pretrained(base_model)
+            load_kwargs: dict = {}
+            if device_ == "cuda":
+                dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+                load_kwargs.update({"torch_dtype": dtype, "device_map": "auto"})
+                try:
+                    import bitsandbytes  # noqa: F401
+                    load_kwargs["load_in_4bit"] = True
+                except Exception:
+                    pass
+            else:
+                load_kwargs.update({"torch_dtype": torch.float32, "device_map": None})
+            base = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
+            m = PeftModel.from_pretrained(base, str(adapter_path))
+
+        if tok.pad_token is None:
+            tok.pad_token = tok.eos_token
         m.eval()
 
         model = m
         tokenizer = tok
+        print(f"[adapter_policy] Loaded {'Unsloth' if used_unsloth else 'transformers'} model + adapter")
 
     def policy(observation_dict: dict, rng: random.Random) -> Action:  # noqa: ARG001
         _ensure_loaded()
