@@ -113,6 +113,37 @@ One operator. Then a parameterised regression test in `tests/test_meta_agent_rew
 
 The size of the fix, in numbers: the same empty-spec-submitting policy went from **+51.80 per episode to −32.20 per episode**. An 84-point swing. On a reward surface where a competent heuristic scores +21.33, the bug had been paying empty-spec play more than honest play.
 
+## Onsite postscript — and then it broke again
+
+Apr 25, hackathon onsite. I had HF compute, the fixed reward function, regression tests, and a few hours before the mentor round. Plenty of time to retrain at proper scale and have a working adapter to demo.
+
+First retrain: `reward = 0.0` across every step. Loss = 0.0. No gradient signal at all.
+
+I added debug printing to `reward_fn` and saw what the model was actually generating:
+
+```
+<think>
+Okay, let's tackle this problem step by step. To generate a valid agent spec,
+I need to emit six actions: set_name, set_description, add_skill, write_prompt,
+set_model, submit. First, the agent's name. Since the domain is analysis...
+[256 tokens of correct reasoning, then truncated]
+```
+
+Qwen3 has a dual-mode chat template — a "thinking" mode that emits `<think>...</think>` reasoning blocks, and a "fast" mode that goes straight to output. The default is thinking mode, and the model was using the entire 256-token completion budget on chain-of-thought before ever reaching the JSON. The system prompt's *"respond ONLY with the JSON"* was being ignored because Qwen3's reasoning mode is sticky.
+
+Fix: append `/no_think` to the system prompt. Qwen3 recognizes it as a control token that disables reasoning for the request.
+
+After the fix:
+
+| Step | Reward | Notes |
+|---|---:|---|
+| 1 | **8.55** | Some completions valid, others fail |
+| 2 | **17.55** | Almost approaching the heuristic baseline of 21.33 |
+
+Empty `<think></think>` blocks at the start of each completion (the model still emits the tags, just nothing inside), then a clean JSON array of six actions. Reward signal flowing for the first time.
+
+Same methodology as the sign-flip discovery: when reward is mysteriously zero, **print what the model is actually generating**. The fix is usually a small token away — but you have to look first.
+
 ## Results
 
 ### Baselines (20 easy-tier episodes each)
