@@ -26,7 +26,6 @@ tags:
 | 📓 Colab training notebook | https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb |
 | 💻 GitHub repository | https://github.com/Kaviyamurugadass/meta-agent-gym |
 | 📝 Blog post | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
-| 🎤 3-min pitch script | [`docs/competition/PITCH.md`](docs/competition/PITCH.md) |
 
 ---
 
@@ -143,32 +142,45 @@ The first three hard verifiers (`yaml_valid`, `has_required_fields`, `prompt_len
 
 ## Problem statements addressed
 
-### Primary: Statement 4 — Self-Improvement
+### Primary: Theme #5 — Wild Card
 
-meta-agent-gym is an environment where the agent faces increasingly difficult agent-design challenges, with an adversarial designer that targets its weaknesses and a curriculum that adapts in real time — the recursive skill amplification described in Statement 4.
+Meta-agent design doesn't fit cleanly into the other themes — it's not multi-agent (one agent), not long-horizon (7-step episodes), not professional tool-use (no browser/API ecosystem the agent operates inside), and not personalized. So I'm claiming Wild Card for what it was designed for: an out-of-box submission that meaningfully adds value to LLM training on a task that hasn't been explored before.
 
-- **Adversarial self-play:** Claude analyses the agent's per-component scores and generates new tasks targeting weak spots — weak at description quality? Here comes a task where delegation guidance is critical (code in [`server/adversarial.py`](server/adversarial.py))
-- **Automatic curriculum:** Difficulty escalates as mastery improves — phase 1 (single skill) → phase 2 (2-3 skills) → phase 3 (3-5 skills) → phase 4 (5+ skills with red herrings)
-- **No manual authoring:** The training distribution adapts as the agent learns. 24 seed scenarios across 4 phases provide the base; the adversarial generator fills the gaps
-- **Co-evolutionary improvement (real, not theoretical):** Training exposed a sign-flip bug in our own reward function — the agent found that `noop → submit` empty-spec play scored higher than honest play, which forced us to fix the reward computer (the bug-hunt story above is exactly this co-evolution between agent and environment design)
+The capability gap I'm targeting: every developer using Cursor, Claude Code, or similar agent frameworks is implicitly designing agents — choosing skills, model tiers, system prompts. That's a meta-skill. Nobody is training small LLMs to do it. This is the environment that makes it trainable.
 
-### Secondary: Statement 3.1 — World Modeling / Professional Tasks
+- **Underexplored RL target:** AGENT.md generation as a craft, framed as a multi-step decision problem with verifiable rewards
+- **Real artifact output:** the generated spec runs in Claude Code, Goose, Copilot, and anything else following the [Agent Skills Open Standard](https://skills.sh)
+- **Methodological contribution:** three-tier RLVR caught a real reward-hack bug on the first training run we pointed Goose at (see *The story → Act 3* above)
 
-The agent operates in a POMDP where the hidden state is *"what makes a good agent for this task?"* It can't see the optimal spec — it can only observe partial feedback (reward breakdown, violations) and must infer ground truth through investigation commands.
+### Secondary alignment: Theme #3 — World Modeling (broadly)
 
-- **POMDP structure:** Hidden state = optimal spec for the task; observable = current spec + per-component reward breakdown + rule violations
-- **Investigation tools:** `check_score` reveals the current breakdown without consuming a `submit`; `inspect_example` reveals a hint — POMDP-style information gathering before commitment
-- **Multi-step reasoning:** A 7-step generation process where each decision (name, description, skills, model, prompt) interacts with the others
-- **Real artifact output:** The generated `AGENT.md` is a real file in the [Agent Skills Open Standard](https://skills.sh) format — runnable in Claude Code, Goose, Copilot, or any framework that follows the spec
+Some structural parts of the env genuinely fit Theme #3:
 
-### Partner Sub-Theme: RLVR — Verifiable Rewards
+- **POMDP structure:** the hidden state is *"what makes a good spec for this task?"* — the agent observes per-component reward + violations and infers ground truth across multiple steps
+- **Investigation tools:** `check_score` and `inspect_example` let the agent gather information before committing — classic POMDP belief-update pattern
+- **Persistent state across the 7-step episode:** each command updates the spec dict; the agent has to reason about what's already there before adding more
 
-The reward function follows the RLVR philosophy: **use hard verifiers instead of learned reward models**. YAML validity, field presence, and format compliance are binary checks — no LLM needed. The judge only scores what can't be verified programmatically. Goose runs the resulting `AGENT.md` as the third tier — independent execution, ground truth, no judge can fake it.
+Note: this is the broader Theme #3 fit, **not** the #3.1 Professional Tasks sub-theme — that sub-theme's examples are direct tool/API ecosystems (browsers, enterprise apps), which our agent doesn't operate inside.
 
-- **5 hard verifiers run on every step** (yaml_valid, has_required_fields, prompt_length_ok, model_valid, skills_format_ok). Three of them act as **gates** that zero the entire step reward if they fail.
+### Architectural ambition: Theme #4 — Self-Improvement (built, not yet demonstrated at scale)
+
+The closed-loop self-improvement design — adversarial task generator + adaptive curriculum — is wired in code ([`server/adversarial.py`](server/adversarial.py), [`training/curriculum.py`](training/curriculum.py)) but the shipped Colab run was 4 gradient steps, far below what's needed to demonstrate curriculum escalation or recursive skill amplification.
+
+I'm flagging this as honest future direction, not a current claim. Specific post-hackathon paths I'd attempt next:
+
+- **VCRL** (Variance-based Curriculum RL) — adds a sampling weight on top of GRPO based on per-group reward variance. Lightweight, GRPO-native. Reported +18 points on Qwen3-4B baseline. ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1))
+- **SEC** (Self-Evolving Curriculum) — replaces hardcoded phase progression with an adaptive curriculum policy learned alongside RL. ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970))
+
+There is one *genuine* form of self-improvement that already happened: the bug-hunt was real co-evolution between agent and environment design. The agent found the empty-spec reward hack; I fixed the reward function. That's not the recursive skill amplification Theme #4 describes (which is about agents improving themselves), but it is one valid form of agent/environment co-evolution.
+
+### Underlying technique: RLVR — Verifiable Rewards
+
+The reward design uses **verifiable rewards instead of a learned reward model**, throughout:
+
+- **5 hard verifiers** run on every step (yaml_valid, has_required_fields, prompt_length_ok, model_valid, skills_format_ok). Three of them act as **gates** that zero the entire step reward if they fail.
 - **6 judge dimensions** for what hard checks can't capture: skill_selection, description_quality, workflow_clarity, model_appropriateness, best_practices, efficiency
-- **Goose offline harness** at [`evaluation/goose_execution.py`](evaluation/goose_execution.py) — captured 3/3 PASS run committed at [`evaluation/fixtures/smoke_output.txt`](evaluation/fixtures/smoke_output.txt)
-- **Caught a real bug.** The Goose tier exposed the sign-flip in our anti-hack penalty math that the in-environment metrics couldn't see (the case study at the top of this README). Without Goose validation, we'd have shipped a 100%-success policy producing nothing executable. That's exactly why RLVR with independent verifiers matters.
+- **Goose offline harness** at [`evaluation/goose_execution.py`](evaluation/goose_execution.py) — independent execution as the third tier, ground truth no judge can fake. Captured 3/3 PASS run committed at [`evaluation/fixtures/smoke_output.txt`](evaluation/fixtures/smoke_output.txt).
+- **Caught a real bug.** The Goose tier exposed the sign-flip in the anti-hack penalty math that the in-environment metrics couldn't see. Without it, we'd have shipped a 100%-success policy producing nothing executable. That's exactly why RLVR with independent verifiers matters.
 
 ---
 
@@ -342,7 +354,7 @@ meta-agent-gym/
 ├── scripts/demo_reward_fix.py    # live before/after reward demo
 ├── static/index.html             # 2-tab dashboard
 ├── docs/
-│   ├── competition/              # PITCH.md, HUGGINGFACE_BLOG.md, TRAINING_EVIDENCE.md
+│   ├── competition/              # HUGGINGFACE_BLOG.md, TRAINING_EVIDENCE.md
 │   └── onsite/                   # ONSITE_TRAINING_PLAN.md
 ├── openenv.yaml
 └── Dockerfile
@@ -355,7 +367,6 @@ meta-agent-gym/
 | What | Where |
 |---|---|
 | Mini-blog | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
-| 3-min pitch script | [`docs/competition/PITCH.md`](docs/competition/PITCH.md) |
 | Training evidence + honest limitations | [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) |
 | Onsite training plan | [`docs/onsite/ONSITE_TRAINING_PLAN.md`](docs/onsite/ONSITE_TRAINING_PLAN.md) |
 | Sign-flip fix evidence | [`data/post_fix/REWARD_FIX_COMPARISON.md`](data/post_fix/REWARD_FIX_COMPARISON.md) |

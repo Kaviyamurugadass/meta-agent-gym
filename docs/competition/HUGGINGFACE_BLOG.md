@@ -1,173 +1,197 @@
-# Meta-Agent Gym: An OpenEnv Environment for Teaching LLMs to Design Agents
+# Meta-Agent Gym: I trained a model to design AI agents — and Goose caught it cheating
 
-**OpenEnv Hackathon 2026 submission — [Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)**
+**OpenEnv Hackathon 2026 submission · [Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)**
 
-## The idea
+---
 
-Most RL environments for LLMs test a model's ability to *solve* tasks.
-Meta-Agent Gym tests a different skill: can a small LLM learn to *design agents
-that solve tasks*?
+The numbers came back gorgeous. **10/10 successful trajectories. +51.80 mean reward per episode.** I almost shipped it.
 
-The policy takes a natural-language task description ("Build an agent that
-scrapes product prices from e-commerce sites") and emits a complete AGENT.md
-specification — name, description, skills, model choice, system prompt — that
-runs across Claude Code, Goose, Copilot, and any framework following the
-[Agent Skills Open Standard](https://anthropic.com).
+Then I plugged in Goose — the open-source agent runtime — to actually *run* the AGENT.md files my trained model was producing. Every single one was empty. Pure `noop → submit` with no name, no skills, no prompt. The "100% successful" model had learned to do nothing.
 
-It's meta-learning at small scale: teaching an LLM to write the instructions
-that instruct other LLMs.
+I spent that evening reading `server/rewards/reward.py` line by line. The bug was on line 158, one operator wrong, that turned a -5 penalty into a +5 bonus. GRPO had exploited it within four gradient steps. I fixed it, added a regression test, and kept building.
+
+**The point of this post isn't the bug.** The point is: my in-environment metrics couldn't see what was happening. Goose could. That's the whole reason RLVR with independent verifiers exists — and it justified the entire three-tier architecture in one shot.
+
+---
+
+## Why I built it
+
+I'm a developer. I use Cursor. I use Claude Code. Under the hood, those are agents. And the gap between a useful agent and a useless one is mostly *design choices* — what skills it has, which model tier it runs on, what its system prompt actually says.
+
+Most RL-for-LLM work is about teaching a model to *solve* tasks. I wanted to teach a model to **design the agents that solve tasks**. That's the meta-skill, and it's the one I do every day at work.
+
+So: an OpenEnv environment where a small language model picks structured commands to assemble an `AGENT.md` spec, and gets graded on it.
 
 ## How it works
 
-### The action space
+### The action space — 12 commands, not free text
 
-We chose a **command-based action space** rather than free-form text:
+Free-form generation was tempting (it's how humans write `AGENT.md` by hand), but credit assignment for GRPO is brutal on long token sequences. I went with discrete commands:
 
 ```
-SET_NAME, SET_DESCRIPTION, ADD_SKILL, WRITE_PROMPT, SET_MODEL,
-ADD_TOOLS, CHECK_SCORE, INSPECT_EXAMPLE, SUBMIT, NOOP
+set_name · set_description · add_skill · remove_skill · set_model
+write_prompt · add_tools · set_memory · set_max_turns
+check_score · inspect_example · submit
 ```
 
-Token-efficient, grader-friendly, easy to validate. Each step the agent picks
-one command and fills in its arguments. A typical successful trajectory:
-`SET_NAME → SET_DESCRIPTION → ADD_SKILL → WRITE_PROMPT → SET_MODEL → SUBMIT`.
+Each command has clean semantics. The reward responds per step. The agent can investigate (`check_score`) before committing (`submit`). A typical complete trajectory is six commands ending in submit.
 
-### Three-tier verification (RLVR)
+### Three-tier verification
 
-The reward function composes three layers, each catching different failure modes:
+| Tier | What it catches | Cost |
+|---|---|---|
+| Hard verifiers (5; 3 are gates) | YAML structure, required fields, prompt length, model name, skills format | $0 |
+| Judge (6 dimensions) | Skill selection, description quality, workflow clarity, model fit, best practices, efficiency | ~$0.01 / step (Claude Sonnet in prod, heuristic in dev) |
+| Goose runtime (offline harness) | Whether the resulting AGENT.md actually executes | ~$0 (Claude Code CLI provider) |
 
-| Tier | What | Frequency | Cost |
-|---|---|---|---|
-| Hard verifiers | YAML parse, required fields, format | Every step (100%) | ~$0 |
-| Fast judge | Claude Sonnet quality scoring (5 dims) | 90% of steps | ~$0.01 |
-| Real execution | Goose runtime actual test | Steps 3, 6, 9 (10%) | ~$1–10 |
+The first three hard verifiers act as **gates** — fail any one and the entire step reward zeroes. Defense in depth, in case the judge gets gamed (which, as it turned out, mattered).
 
-Hard gates prevent format hacks. Fast judge provides quality signal. Real
-execution validates that the judge isn't getting gamed.
+### Anti-hack penalties
 
-### Anti-hacking penalties
+The policy *will* try to game the reward. Four explicit deterrents:
 
-Reward hacking is the first thing the policy tries. We ship with four explicit
-deterrents:
+| Penalty | Value | When |
+|---|---:|---|
+| empty_spec | −5.0 | Prompt < 50 chars or required fields missing |
+| over_engineered | −0.5 | More than 10 skills, or `opus` for a task that needs `sonnet` |
+| repetitive | −0.3 | Same action twice in a row |
+| regression | −0.15 | Breaking a previously-passing check |
 
-- `empty_spec`: **−5.0** (harshest, discourages the NOOP → SUBMIT shortcut)
-- `over_engineered`: **−0.5** (> difficulty-appropriate skill count)
-- `repetitive`: **−0.3** (same command twice)
-- `regression`: **−0.15** (undoing a passing check)
+(The `−5.0` here is exactly the value the sign-flip bug turned into a `+5.0` bonus. Hold that thought.)
 
-## What we trained
+## What I trained
 
-- **Base model**: `Qwen/Qwen2.5-0.5B`
-- **Adapter**: LoRA r=16, 8.8M of 502M params trainable (1.75%)
-- **Quantization**: 4-bit NF4 via Unsloth
-- **Loss**: DAPO (asymmetric clipping — outperforms vanilla GRPO per the DAPO paper)
-- **Hardware**: Google Colab T4 (15.6 GB VRAM)
-- **Scale**: 1 epoch × 8 episodes × 2 generations = 4 gradient steps
+- **Base model:** `Qwen/Qwen2.5-0.5B`
+- **Adapter:** LoRA r=16, 8.8M of 502M params trainable (1.75%)
+- **Quantization:** 4-bit NF4 via Unsloth
+- **Loss:** DAPO (asymmetric clipping, outperforms vanilla GRPO per the DAPO paper)
+- **Hardware:** Google Colab T4 (15.6 GB VRAM)
+- **Scale:** 1 epoch × 8 episodes × 2 generations = 4 gradient steps
 
-A sentinel file `training/grpo-unsloth-output/training_summary.json` with
-`"real_training": true` is written only after `trainer.train()` returns, giving
-judges a tamper-evident signal that the run actually happened. The
-[Colab notebook](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
-is deliberately structured to fail loudly on any dependency or training error,
-rather than silently generating placeholder output.
+A sentinel file `training/grpo-unsloth-output/training_summary.json` with `"real_training": true` is written **only after `trainer.train()` returns**. So judges have a tamper-evident signal that training actually ran. The Colab notebook is structured to fail loudly on any dependency error, rather than silently writing mock output (which my first three runs did, before I rewrote it).
 
-The scale here is small but real. Onsite HF compute credits at the hackathon
-finale will extend the step count without changing the pipeline.
+The scale here is small. Onsite HF compute credits at the hackathon finale (Apr 25-26) extend the step count without changing the pipeline.
+
+## The bug hunt, in detail
+
+After training, my saved trajectories looked like this:
+
+```json
+{
+  "task_id": "cr_easy_001",
+  "success": true,
+  "total_reward": 51.80,
+  "steps": [
+    {"action": {"command": "noop"}, "reward": 7.40},
+    {"action": {"command": "noop"}, "reward": 7.40},
+    ...
+    {"action": {"command": "submit"}, "reward": 7.40}
+  ]
+}
+```
+
+Every one of the 10 saved trajectories was identical: noop seven times, submit, +7.40 per step. Total +51.80. The environment was reporting these as 100% successful.
+
+I wired up Goose, gave it the resulting `AGENT.md` files, and pointed it at concrete tasks (extract a price from an HTML page, count rows in a CSV, find emails in text). All three failed instantly. There was nothing in the AGENT.md files to execute.
+
+Reading the reward code, line 158:
+
+```python
+total = core + bonus + progress - penalty - regression - sum(anti_hack_penalties.values())
+```
+
+The `anti_hack_penalties` dict contains values like `{"empty_spec": -5.0}` — stored as **negative** numbers in config because they represent a deduction. The intent: subtract −5.0 from total. The code: `total - (−5.0) = total + 5.0`. The minus sign in front of `sum(...)` flipped the whole thing. Empty specs were worth +5 per step.
+
+The fix:
+
+```diff
+- total = ... - sum(anti_hack_penalties.values())
++ total = ... + sum(anti_hack_penalties.values())
+```
+
+One operator. Then a parameterised regression test in `tests/test_meta_agent_reward.py` so the gate fires under either HYBRID or ADDITIVE mode if empty-spec ever scores positive again.
+
+The size of the fix, in numbers: the same empty-spec-submitting policy went from **+51.80 per episode to −32.20 per episode**. An 84-point swing. On a reward surface where a competent heuristic scores +21.33, the bug had been paying empty-spec play more than honest play.
 
 ## Results
 
-### Baselines
-
-We compared three policies across 20 easy-tier episodes each:
+### Baselines (20 easy-tier episodes each)
 
 | Policy | Success | Mean reward |
 |---|---:|---:|
-| Random (uniform over action space) | 0% | 0.00 |
-| Competent heuristic (fills each field then submits) | 100% | 21.33 |
+| Random (uniform over commands) | 0% | 0.00 |
+| Competent heuristic (fills each field, then submits) | 100% | 21.33 |
 | Expert benchmark (mixed difficulty) | 20/21 | 16.79 |
 
-The random baseline at 0% is instructive: hard-verifier gates genuinely prevent
-reward hacking, so random actions can't bluff their way through. The competent
-heuristic proves the environment is reachable with >0 reward, so GRPO has
-learning signal to bootstrap from.
+Random at 0% is the load-bearing result: the hard-verifier gates genuinely prevent reward hacking by chance — random actions can't bluff their way through. The competent heuristic proves the environment is *reachable* with positive reward, the necessary precondition for GRPO to learn anything.
 
-### Per-component learning signal (50 eval episodes)
+### Per-component reward signal (50 evaluation episodes)
 
-Over 50 evaluation episodes, later-episode per-component means exceed overall
-means — a positive signal that the environment's decomposed reward produces
-learnable gradient across multiple dimensions:
+Across 50 evaluation episodes (`monitoring/colab_results/report.json`), per-component last-10 means consistently exceed the overall means:
 
-| Component | Overall mean | Last-10 mean |
-|---|---:|---:|
-| Per-step reward `total` | 1.83 | 3.05 (+67%) |
-| `description_quality` | 0.31 | 0.51 (+65%) |
-| `workflow_clarity` | 0.23 | 0.38 (+67%) |
-| `has_required_fields` | 0.34 | 0.57 (+67%) |
+| Component | Overall mean | Last-10 mean | Δ |
+|---|---:|---:|---:|
+| Per-step reward `total` | 1.83 | 3.05 | +67% |
+| `description_quality` | 0.31 | 0.51 | +65% |
+| `workflow_clarity` | 0.23 | 0.38 | +67% |
+| `has_required_fields` | 0.34 | 0.57 | +67% |
 
-Episode-level aggregate reward trend: **+0.62 per episode**.
+Episode-level aggregate trend: **+0.62 reward per episode**. The decomposed reward produces learnable signal across multiple dimensions — the necessary structure for GRPO to compute meaningful per-dimension advantage.
 
-### Honest limitation
+## What I learned
 
-This submission's evaluation rollouts use the heuristic policy as a placeholder
-for the trained LoRA at inference time — we didn't finish wiring adapter
-loading into rollout collection before the submission window. This means the
-*improvement curves above reflect the environment's reward structure applied to
-a competent heuristic*, not the trained Qwen2.5-0.5B adapter's inference-time
-behaviour. Wiring adapter inference is the planned first task for the onsite
-training window (2026-04-25/26).
+**Goose validated the whole architecture in one shot.** The three-tier RLVR design wasn't just elegant on paper — it caught a real reward hack that the judge tier (Sonnet, scoring 6 quality dimensions) had no way to see. Independent execution is non-negotiable for any RL system that uses an LLM as part of its reward.
 
-What the submission does demonstrate clearly:
+**Silent fallbacks are worse than failures.** My first three Colab runs "succeeded" with placeholder numbers because the notebook swallowed dependency errors and wrote mock output. I rewrote it to fail loudly on any setup or training error; the resulting real run immediately exposed two genuine bugs (an `Observation.done` AttributeError and a ChatML template issue on Unsloth 4-bit tokenizers) that the silent path had been hiding for days.
 
-1. A working end-to-end OpenEnv environment with 20+ scenarios across 4 difficulty tiers
-2. A real GRPO run (sentinel-proven) on Qwen2.5-0.5B + 4-bit LoRA
-3. A non-trivial reward surface: random fails completely, competent rule-based play succeeds, expert benchmark exists as a ceiling
-4. A three-tier RLVR verification system with hard gates, fast judge, and real execution calibration
-5. Anti-hacking penalties that shape policy toward the intended task
+**The heuristic beats the expert on easy tasks.** My expert benchmark uses hand-crafted optimal trajectories per scenario, but its mean reward is pulled down by harder tiers. On easy-only, a simple field-filling heuristic scores higher. This reframes "expert" as a *mixed-difficulty ceiling*, not a per-scenario ceiling — useful signal for curriculum design.
+
+**Compute credit windows matter for hackathons.** A free Colab T4 trains a 0.5B model in about 20 minutes — enough to validate the pipeline, not enough for capability gains. Concentrating compute credits in the final 48 hours of a hackathon (as this one does) is the right incentive: build real infrastructure first, train at scale last. That's why I'm holding the bigger Qwen3-1.7B run for onsite.
+
+## Hackathon theme alignment
+
+The official OpenEnv Hackathon themes are: #1 Multi-Agent, #2 Long-Horizon Planning, #3 World Modeling (with #3.1 Professional Tasks and #3.2 Personalized Tasks sub-themes), #4 Self-Improvement, and #5 Wild Card. Here's where I think this work honestly fits:
+
+- **Primary: Theme #5 — Wild Card.** Meta-agent design doesn't fit cleanly into themes 1-4 (one agent, 7-step episodes, no browser/API tool ecosystem, not personalized). Theme #5 was designed for out-of-box submissions that meaningfully add value to LLM training on a task that hasn't been explored, and that's exactly what this is.
+- **Secondary alignment: Theme #3 — World Modeling (broadly).** The env has a real POMDP structure (hidden state = "what's a good spec for this task") and investigation commands (`check_score`, `inspect_example`) for belief-updating. This is the broader Theme #3 fit; **not** the #3.1 Professional Tasks sub-theme, whose examples are direct tool/API ecosystems we don't operate in.
+- **Architectural ambition: Theme #4 — Self-Improvement** (built, not yet demonstrated at scale). The adversarial generator and curriculum controller exist in code (`server/adversarial.py`, `training/curriculum.py`), but the 4-step Colab run is far below what's needed to show recursive skill amplification. Future-work paths: VCRL ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1)) and Self-Evolving Curriculum ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970)).
+- **Underlying technique:** RLVR throughout — hard verifiers as gates, judge components for what hard checks miss, Goose as the third independent tier.
+
+I'm flagging the Self-Improvement framing as "ambition, not current claim" deliberately. Calling it primary would overclaim.
+
+## Honest scope
+
+There are two distinct rollout sets in this repo and they describe different things:
+
+- [`data/colab_trained/`](https://github.com/Kaviyamurugadass/meta-agent-gym/tree/main/data/colab_trained) (10 trajectories) — the actual trained LoRA's output during the Colab run. These are what showed the empty-spec collapse.
+- [`monitoring/colab_results/report.json`](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/monitoring/colab_results/report.json) (50 evaluation episodes) — uses the heuristic policy as a placeholder for the trained adapter at inference time. Wiring adapter inference into evaluation rollout collection is the planned first task for the onsite training window.
+
+Other things to be straight about:
+
+- **The Goose harness covers 3 Phase 1 (single-skill) tasks.** Expanding to Phase 2-4 multi-skill tasks is future work; the harness API is generic enough to accept new tasks without changes.
+- **The trained adapter on disk is the pre-fix one** — it learned to emit empty specs because that's what scored well at the time. The "Generate" tab in the dashboard reproduces this behaviour live; I left it enabled deliberately so judges can see the bug.
+- **The "self-improvement" track** (adversarial task generation, curriculum auto-escalation) exists in code but hasn't been demonstrated end-to-end. The 4-step Colab run is far below what's needed to see curriculum escalate. Specific future-work paths I'd attempt next: VCRL ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1)) and Self-Evolving Curriculum ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970)).
 
 ## Try it
 
-- 🚀 [Live demo on HF Spaces](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
-- 📓 [Colab training notebook](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
-- 💻 [GitHub repo](https://github.com/Kaviyamurugadass/meta-agent-gym)
+- **Live demo:** [huggingface.co/spaces/Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
+- **Colab notebook:** [`notebooks/train_colab.ipynb`](https://github.com/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
+- **GitHub repo:** [github.com/Kaviyamurugadass/meta-agent-gym](https://github.com/Kaviyamurugadass/meta-agent-gym)
 
-## What we learned
+The dashboard has two tabs:
+- **Build Step-by-Step** — pick a scenario, issue commands manually, watch the multi-component reward update live
+- **Generate from Description** — type a task, the trained model emits commands. Currently the pre-fix adapter, so you'll see the empty-spec collapse for yourself
 
-A few things that surprised us:
+Reproduce the bug locally in 10 seconds:
 
-**The judge got gamed — execution caught a sign-flip bug.** Our Goose
-integration exposed a reward hack on the first trajectories we pointed it at.
-The Colab training run scored every saved trajectory as a success — **10/10
-at +51.8 mean reward per episode** (verifiable in `data/colab_trained/`).
-When Goose ran the resulting AGENT.md files, every one was empty: a sequence
-of `noop` actions terminating in `submit` with no `set_name`, no `add_skill`,
-no `write_prompt`. Digging in, we found the root cause: a sign-flip on line
-158 of the reward computer (line 111 pre-refactor). The
-`anti_hack_empty_spec` value is stored as `-5.0` in config, but the total
-formula was `total = ... - sum(anti_hack_penalties.values())` — subtracting a
-negative, so a -5 *penalty* became a +5 *bonus*. Empty-spec trajectories
-scored +7.4/step. GRPO obediently found the hack and collapsed. We flipped
-the operator to `+ sum(...)` (penalties are already signed), added a
-parameterised regression test (`tests/test_meta_agent_reward.py`) that fails
-if empty-spec ever receives positive reward under HYBRID or ADDITIVE mode,
-and the three-tier verification system caught a bug a PR review missed.
-Without Goose validation, we'd have shipped a 100%-success policy producing
-nothing executable.
+```bash
+git clone https://github.com/Kaviyamurugadass/meta-agent-gym
+cd meta-agent-gym
+python scripts/demo_reward_fix.py
+```
 
-**The heuristic beats the expert on easy tasks.** Our expert benchmark uses
-"optimal" action sequences for each scenario but its mean reward is pulled
-down by harder tiers. On easy-only, a simple field-filling heuristic scores
-higher. This reframes "expert" as a mixed-difficulty ceiling, not a
-per-scenario ceiling — useful signal for curriculum design.
+You'll see the +7.40 → −4.58 → 0.00 reward swing for an empty spec across the buggy / fixed-additive / fixed-hybrid configs.
 
-**Silent fallbacks are the real enemy.** Our first three Colab runs "succeeded"
-with placeholder numbers because the notebook swallowed dependency errors and
-wrote mock output files. We rewrote it to fail loudly on any setup or training
-error; the resulting real run exposed two actual bugs (an
-`Observation.done` AttributeError and a ChatML template issue on Unsloth 4-bit
-tokenizers) that the silent path had been hiding.
+---
 
-**Compute credit windows matter.** A free-tier T4 trains this model in ~20
-minutes — enough to validate the pipeline but not enough for capability gains
-on a model this small. Allocating compute credits to the final 48h of a
-hackathon (as this one does) is the right incentive for teams to build real
-infrastructure first and train at scale last.
+Built for the OpenEnv Hackathon 2026.
