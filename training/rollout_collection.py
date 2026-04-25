@@ -90,7 +90,10 @@ def make_adapter_policy(
                 from unsloth import FastLanguageModel
                 m, tok = FastLanguageModel.from_pretrained(
                     model_name=base_model,
-                    max_seq_length=768,
+                    # Eval prompts (Qwen3 chat template + JSON observation) hit
+                    # 800-940 tokens; 768 caused truncation -> garbled actions
+                    # -> reward 0. 2048 fits comfortably even on T4 4-bit.
+                    max_seq_length=2048,
                     load_in_4bit=True,
                 )
                 m = PeftModel.from_pretrained(m, str(adapter_path))
@@ -254,9 +257,16 @@ def run_episode(
     rng: Optional[random.Random] = None,
     adapter_path: Optional[str | Path] = None,
     base_model: Optional[str] = None,
+    cached_policy: Optional[Callable[[dict, random.Random], Action]] = None,
 ) -> Trajectory:
-    """Run one episode to completion, return a Trajectory."""
-    if policy_name == "adapter":
+    """Run one episode to completion, return a Trajectory.
+
+    If `cached_policy` is provided, it is used directly (avoids re-creating
+    the adapter policy per episode, which would re-load the model each call).
+    """
+    if cached_policy is not None:
+        policy = cached_policy
+    elif policy_name == "adapter":
         if adapter_path is None or base_model is None:
             raise ValueError("policy='adapter' requires adapter_path and base_model")
         policy = make_adapter_policy(adapter_path=adapter_path, base_model=base_model)
@@ -307,6 +317,18 @@ def collect(
     rng = random.Random(seed)
     dataset = TrajectoryDataset()
 
+    # Build adapter policy ONCE before the episode loop. This avoids reloading
+    # the LoRA-adapted model from scratch on every episode (which would add
+    # ~1-2 minutes per episode and make eval impractically slow).
+    cached_policy: Optional[Callable[[dict, random.Random], Action]] = None
+    if policy == "adapter":
+        if adapter_path is None or base_model is None:
+            raise ValueError("policy='adapter' requires adapter_path and base_model")
+        cached_policy = make_adapter_policy(
+            adapter_path=adapter_path,
+            base_model=base_model,
+        )
+
     for i in range(episodes):
         env = Environment(
             domain_randomise=domain_randomise,
@@ -321,6 +343,7 @@ def collect(
             rng=rng,
             adapter_path=adapter_path,
             base_model=base_model,
+            cached_policy=cached_policy,
         )
         dataset.append(traj)
         print(
