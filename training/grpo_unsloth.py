@@ -52,22 +52,21 @@ DEFAULT_OUTPUT = "training/grpo-unsloth-output"
 
 SYSTEM_PROMPT = """You are an agent interacting with an OpenEnv environment.
 
-The environment requires MULTI-STEP trajectories to build a complete agent spec.
-For each turn, you will receive an Observation (JSON). You must respond with a
-JSON ARRAY of Actions to execute in order in a fresh episode.
+Goal: emit ONE complete trajectory that builds a valid agent spec and submits it.
 
-Each Action must match the Action schema:
-  {"command": "<cmd>", "args": {...}, "justification": "...", "confidence": 0.0-1.0}
-
-Your action array should generally:
+Input: a small JSON Observation.
+Output: a JSON ARRAY of EXACTLY 6 Actions (no extra text):
   1) set_name
   2) set_description
-  3) add_skill (1-3)
-  4) write_prompt (>= 50 chars)
-  5) set_model (usually sonnet)
+  3) add_skill   (pick ONE from required_skills if present)
+  4) write_prompt (>= 80 chars, concise workflow)
+  5) set_model   ("sonnet" unless expert)
   6) submit
 
-Respond ONLY with the JSON array. No explanation, no prose, no markdown fences.
+Each action must be minimal JSON:
+  {"command": "<cmd>", "args": {...}}
+
+Do NOT include justification/confidence. Do NOT wrap in markdown fences.
 """
 
 
@@ -194,10 +193,8 @@ def _build_prompt_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
             "max_steps": obs.max_steps,
             "domain": getattr(task, "domain", None),
             "difficulty": getattr(task, "difficulty", None),
-            "problem_statement": getattr(task, "problem_statement", None),
             "required_skills": getattr(task, "required_skills", None),
             "recommended_skills": getattr(task, "recommended_skills", None),
-            "available_skills": list(getattr(env, "_task", None).required_skills or []) + list(getattr(env, "_task", None).recommended_skills or []),
             "current_spec": obs.current_spec,
         }
         prompts.append({
@@ -233,6 +230,9 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
         rewards = []
         printed = 0
         fail_fast = os.getenv("REWARD_FN_FAIL_FAST", "0") == "1"
+        show_completions = os.getenv("SHOW_COMPLETIONS", "0") == "1"
+        show_limit = int(os.getenv("SHOW_COMPLETIONS_LIMIT", "2"))
+        shown = 0
         for completion, scenario in zip(completions, scenarios):
             try:
                 # TRL/Unsloth can pass completions as:
@@ -243,6 +243,13 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
                     completion_text = "".join(str(x) for x in completion)
                 else:
                     completion_text = str(completion)
+
+                if show_completions and shown < show_limit:
+                    print("\n" + "=" * 30 + " MODEL COMPLETION " + "=" * 30)
+                    print(f"[completion] scenario={scenario!r}")
+                    print(completion_text[:1200])
+                    print("=" * 78 + "\n")
+                    shown += 1
 
                 actions = parse_actions(completion_text)
                 r, _ = backend.score(actions, scenario_name=scenario)
