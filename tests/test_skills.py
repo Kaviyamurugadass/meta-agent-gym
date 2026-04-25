@@ -6,22 +6,22 @@ from server import skills
 
 
 def test_available_skills_not_empty():
-    """Test that available skills are defined."""
+    """Test that available skills are defined (skills.sh registry)."""
     assert len(skills.AVAILABLE_SKILLS) > 0
-    assert "web-scraping" in skills.AVAILABLE_SKILLS
-    assert "csv-handler" in skills.AVAILABLE_SKILLS
-    assert "code-reviewer" in skills.AVAILABLE_SKILLS
+    assert "firecrawl" in skills.AVAILABLE_SKILLS
+    assert "xlsx" in skills.AVAILABLE_SKILLS
+    assert "systematic-debugging" in skills.AVAILABLE_SKILLS
 
 
 def test_skill_categories():
     """Test skill categories are defined."""
     assert "web" in skills.SKILL_CATEGORIES
-    assert "data" in skills.SKILL_CATEGORIES
+    assert "documents" in skills.SKILL_CATEGORIES
     assert "code" in skills.SKILL_CATEGORIES
 
-    # Check web category has expected skills
-    assert "web-scraping" in skills.SKILL_CATEGORIES["web"]
-    assert "http-client" in skills.SKILL_CATEGORIES["web"]
+    # Check web category has expected skills.sh entries
+    assert "firecrawl" in skills.SKILL_CATEGORIES["web"]
+    assert "browser-use" in skills.SKILL_CATEGORIES["web"]
 
 
 def test_task_skill_map():
@@ -31,14 +31,15 @@ def test_task_skill_map():
     assert "code_review" in skills.TASK_SKILL_MAP
 
     web_skills = skills.TASK_SKILL_MAP["web_scraping"]
-    assert "web-scraping" in web_skills
+    assert "firecrawl" in web_skills
 
 
 def test_agent_templates():
     """Test agent templates are defined."""
     assert "web-scraper" in skills.AGENT_TEMPLATES
-    assert "data-analyst" in skills.AGENT_TEMPLATES
+    assert "frontend" in skills.AGENT_TEMPLATES
     assert "code-reviewer" in skills.AGENT_TEMPLATES
+    assert "agent-builder" in skills.AGENT_TEMPLATES
 
     # Template is non-empty
     assert len(skills.AGENT_TEMPLATES["web-scraper"]) > 0
@@ -49,7 +50,7 @@ def test_get_skills_for_domain():
     web_skills = skills.get_skills_for_domain("web")
     assert isinstance(web_skills, list)
     assert len(web_skills) > 0
-    assert "web-scraping" in web_skills
+    assert "firecrawl" in web_skills
 
 
 def test_get_skills_for_domain_unknown():
@@ -62,7 +63,7 @@ def test_get_skills_for_task_type():
     """Test getting skills for a task type."""
     ws_skills = skills.get_skills_for_task_type("web_scraping")
     assert isinstance(ws_skills, list)
-    assert "web-scraping" in ws_skills
+    assert "firecrawl" in ws_skills
 
 
 def test_get_template_for_domain():
@@ -83,13 +84,13 @@ def test_get_curriculum_skills_phase_1():
     phase_skills = skills.get_curriculum_skills(1)
 
     assert "web" in phase_skills
-    assert "data" in phase_skills
+    assert "documents" in phase_skills
     assert "code" in phase_skills
 
     # Phase 1 should have single skill tasks
     web_skills = phase_skills["web"]
     assert len(web_skills) == 1
-    assert web_skills == ["web-scraping"]
+    assert web_skills == ["firecrawl"]
 
 
 def test_get_curriculum_skills_phase_2():
@@ -98,8 +99,8 @@ def test_get_curriculum_skills_phase_2():
 
     web_skills = phase_skills["web"]
     assert len(web_skills) >= 2
-    assert "web-scraping" in web_skills
-    assert "html-parser" in web_skills
+    assert "firecrawl" in web_skills
+    assert "browser-use" in web_skills
 
 
 def test_get_curriculum_skills_phase_4():

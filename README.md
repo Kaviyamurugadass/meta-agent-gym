@@ -257,7 +257,8 @@ Same empty-spec-submitting policy, before vs after the sign-flip fix:
 There are two distinct rollout sets in this repo and they describe different things:
 
 - **[`data/colab_trained/`](data/colab_trained/) — 10 trajectories.** The actual trained LoRA's output during the Colab run. These showed the empty-spec collapse and triggered the Goose investigation.
-- **[`monitoring/colab_results/report.json`](monitoring/colab_results/report.json) — 50 evaluation episodes.** Uses the heuristic policy as a placeholder for the trained adapter at inference time. The rows describe the environment's reward structure under heuristic play, not the adapter's inference behaviour. Wiring adapter inference into evaluation rollout collection is the planned first onsite task (2026-04-25/26).
+- **[`monitoring/colab_results/report.json`](monitoring/colab_results/report.json) — 50 evaluation episodes.** Uses the heuristic policy as a placeholder for the trained adapter at inference time. The rows describe the environment's reward structure under heuristic play, not the adapter's inference behaviour.
+- **[`monitoring/colab_results_qwen3_1.7b/`](monitoring/colab_results_qwen3_1.7b/) + [`data/colab_trained_qwen3_1.7b/`](data/colab_trained_qwen3_1.7b/) — Qwen3-1.7B run with real adapter inference (2026-04-25).** 25 dataset episodes, 2 epochs, 2 generations. 10 trained-policy evaluation rollouts: **8/10 success, mean reward 7.68**. The two failures (`an_easy_001`) write a 49-char prompt and miss the 50-char gate; the model also picks `web-scraping` for every task regardless of `required_skills`. Structure learned, content-conditioning on the task did not — expected at this episode budget.
 
 Other things to be straight about:
 
@@ -371,6 +372,7 @@ meta-agent-gym/
 | Onsite training plan | [`docs/onsite/ONSITE_TRAINING_PLAN.md`](docs/onsite/ONSITE_TRAINING_PLAN.md) |
 | Sign-flip fix evidence | [`data/post_fix/REWARD_FIX_COMPARISON.md`](data/post_fix/REWARD_FIX_COMPARISON.md) |
 | Real plots + report.json | [`monitoring/colab_results/`](monitoring/colab_results/) |
+| Qwen3-1.7B run (real adapter inference) | [`monitoring/colab_results_qwen3_1.7b/`](monitoring/colab_results_qwen3_1.7b/), [`data/colab_trained_qwen3_1.7b/`](data/colab_trained_qwen3_1.7b/) |
 
 ---
 

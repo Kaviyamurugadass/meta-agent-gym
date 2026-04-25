@@ -297,7 +297,14 @@ class Environment(_OpenEnvBase):
         elif cmd == ActionCommand.SET_DESCRIPTION:
             spec["description"] = args.get("description", "")
         elif cmd == ActionCommand.ADD_SKILL:
+            # Accept both {"skill": "x"} and {"skills": ["x", ...]} from the model
             skill = args.get("skill")
+            if skill is None:
+                skills_val = args.get("skills")
+                if isinstance(skills_val, list) and skills_val:
+                    skill = skills_val[0]  # take the first one
+                elif isinstance(skills_val, str):
+                    skill = skills_val
             if skill:
                 spec.setdefault("skills", []).append(skill)
                 # Dedupe

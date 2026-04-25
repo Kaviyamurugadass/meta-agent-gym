@@ -17,6 +17,7 @@ Plus:
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 from typing import Any
@@ -31,6 +32,23 @@ from server.environment import Environment
 # ---------------------------------------------------------------------------
 
 MAX_CONCURRENT_ENVS = int(os.getenv("MAX_CONCURRENT_ENVS", "4"))
+# Set to "0" to disable background warm-up (e.g. CPU-constrained dev machines)
+WARMUP_MODEL = os.getenv("WARMUP_MODEL", "1") != "0"
+
+
+def _background_warmup() -> None:
+    """Kick off model loading in a thread so the event loop stays free."""
+    try:
+        from server.inference_service import get_service
+        svc = get_service()
+        if svc.adapter_available and svc.deps_available:
+            import logging
+            logging.getLogger(__name__).info("Starting background model warm-up…")
+            svc._ensure_loaded()
+            logging.getLogger(__name__).info("Model warm-up complete.")
+    except Exception:
+        pass  # warm-up is best-effort; real errors surface on /generate
+
 
 try:
     from openenv.core import create_app  # type: ignore[import-not-found]
@@ -53,6 +71,14 @@ except ImportError:
     from fastapi import FastAPI, HTTPException
 
     app = FastAPI(title="openenv-r2-kit (fallback mode)")
+
+
+# Attach background warm-up after app is created (works with both code paths)
+@app.on_event("startup")
+async def _startup_warmup() -> None:
+    if WARMUP_MODEL:
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, _background_warmup)
     _env = Environment()
     _USING_OPENENV = False
 
@@ -161,7 +187,12 @@ async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dic
         return {"status": "error", "message": "task_description is required"}
 
     try:
-        from server.inference_service import get_service, spec_to_actions
+        from server.inference_service import (
+            fallback_spec,
+            get_service,
+            is_memory_load_error,
+            spec_to_actions,
+        )
     except ImportError as e:
         return {"status": "deps_missing", "message": f"Failed to import inference module: {e}"}
 
@@ -186,10 +217,28 @@ async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dic
         }
 
     try:
-        spec = svc.generate_spec(task)
+        # Run the blocking model inference in a thread pool so the event loop
+        # (and WebSocket heartbeats) stay alive during the 30-60s load time.
+        loop = asyncio.get_event_loop()
+        spec = await loop.run_in_executor(None, svc.generate_spec, task)
         actions = spec_to_actions(spec)
         return {"status": "ok", "spec": spec, "actions": actions}
     except Exception as e:
+        if svc.allow_heuristic_fallback and is_memory_load_error(e):
+            spec = fallback_spec(task)
+            actions = spec_to_actions(spec)
+            return {
+                "status": "ok",
+                "spec": spec,
+                "actions": actions,
+                "backend": "heuristic_fallback",
+                "warning": (
+                    "Local machine could not load the trained model because RAM/pagefile "
+                    "was too small. Returned a deterministic fallback spec so the UI can "
+                    "continue; HF/GPU deployment should use the trained adapter."
+                ),
+                "model_error": f"{type(e).__name__}: {e}",
+            }
         return {"status": "error", "message": f"{type(e).__name__}: {e}"}
 
 

@@ -508,18 +508,13 @@ async function checkGenerateStatus(){
         const r=await fetch("/generate/status");
         const d=await r.json();
         if(d.available&&d.adapter_available&&d.deps_available){
-            // Adapter loads, but the currently-shipped one is the pre-sign-flip-fix
-            // Colab adapter that learned to emit noop->submit (empty specs).
-            // Be honest: amber badge, not green; keep the button enabled so the
-            // empty-spec output can be demoed as a teaching moment for the
-            // RLVR / Goose case study.
-            badge.textContent="Pre-fix adapter loaded";
-            badge.title="The loaded adapter is the pre-sign-flip-fix Colab run that collapsed to noop->submit (see RLVR case study in README). Onsite Qwen3-1.7B retrain replaces it.";
-            badge.style.background="rgba(251,191,36,0.12)";
-            badge.style.color="#fbbf24";
+            badge.textContent=d.loaded?"Model ready":"Adapter found";
+            badge.title="Adapter: "+(d.adapter_path||"training/grpo-unsloth-output/")+" · Base: "+(d.base_model||"auto");
+            badge.style.background=d.loaded?"rgba(52,211,153,0.12)":"rgba(96,165,250,0.12)";
+            badge.style.color=d.loaded?"var(--green)":"var(--accent)";
             btn.disabled=false;
             msg.style.display="block";
-            msg.textContent="⚠ Loaded adapter is the pre-fix Colab run (empty-spec collapse, see Goose case study). Onsite Qwen3-1.7B retrain will replace it. Click Generate to see the bug live.";
+            msg.textContent="Ready to generate with "+(d.base_model||"the trained base model")+". First local call may take a minute while the model loads.";
         }else{
             badge.textContent="Not Deployed";
             badge.title="Inference is unavailable in this deployment.";
@@ -550,6 +545,10 @@ async function generateWithModel(){
     const summary=$("genResultSummary"),sumBody=$("genResultBody");
     if(summary)summary.style.display="none";
     const t0=Date.now();
+    // Check if model is already loaded — if not, warn user that first call is slow
+    try{const st=await fetch("/generate/status");const sd=await st.json();
+        if(sd.available&&!sd.loaded){btn.textContent="⏳ Warming up model (30-60s first time)…";}
+    }catch(_){}
     try{
         // Auto-start episode if not active. In Tab 2 the dropdown may be empty;
         // pick a sensible default so the user doesn't have to switch tabs.
@@ -567,8 +566,11 @@ async function generateWithModel(){
             await startEp();
             if(!active){throw new Error("Could not start episode")}
         }
-        // Call the trained model
-        const r=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_description:task})});
+        // Call the trained model — first call may be slow (model cold-start)
+        btn.textContent="⏳ Generating… (may take 30-60s on first call)";
+        const ctrl=new AbortController();const tid2=setTimeout(()=>ctrl.abort(),180000);
+        const r=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_description:task}),signal:ctrl.signal});
+        clearTimeout(tid2);
         const d=await r.json();
         if(d.status!=="ok"){
             const msg=(d.message||"Generate failed")+"\n\nStatus: "+d.status;
@@ -597,6 +599,7 @@ async function generateWithModel(){
                 '<div>Score: <strong style="color:var(--accent)">'+score+'</strong></div>'+
                 '<div>Generated in <strong>'+elapsed+'s</strong></div>'+
                 '<div>Commands emitted: <strong>'+d.actions.length+'</strong></div>'+
+                (d.warning?'<div style="margin-top:8px;color:var(--yellow)">'+d.warning+'</div>':'')+
                 '<div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Reward bars + violations live in the Build tab.</div>';
             summary.style.display="block";
         }
@@ -625,7 +628,7 @@ function toggleAcc(h){
 // ─── WebSocket ───
 function wsUrl(){return(location.protocol==="https:"?"wss:":"ws:")+"//"+location.host+"/ws"}
 function connectWS(){return new Promise((res,rej)=>{ws=new WebSocket(wsUrl());ws.onopen=()=>{setConn(true);res()};ws.onerror=rej;ws.onclose=()=>{setConn(false);if(active)setTimeout(()=>connectWS().catch(()=>{}),2000)};ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}const d=m.data;if(pending){pending(d);pending=null}}})}
-function wsSend(type,data){return new Promise((res,rej)=>{if(!ws||ws.readyState!==1){rej(new Error("Not connected"));return}pending=res;ws.send(JSON.stringify({type,data}));setTimeout(()=>{if(pending===res){pending=null;rej(new Error("Timeout"))}},15000)})}
+function wsSend(type,data){return new Promise((res,rej)=>{if(!ws||ws.readyState!==1){rej(new Error("Not connected"));return}pending=res;ws.send(JSON.stringify({type,data}));const ms=type==="reset"?45000:20000;setTimeout(()=>{if(pending===res){pending=null;rej(new Error("Timeout"))}},ms)})}
 
 // ─── Episode ───
 async function startEp(){

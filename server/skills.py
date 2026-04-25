@@ -1,129 +1,253 @@
 """Skill registry for meta-agent environment.
 
-Defines available skills, their categories, and mappings to task types.
-Used for curriculum progression (1 skill → 2-3 skills → 3-5 skills → 5+ skills).
+Skills are sourced from the Agent Skills Open Standard at https://skills.sh/ —
+the real ecosystem used by Claude Code, Goose, Cursor, Copilot, and others.
+Each skill maps to a real installable package: `npx skills add <owner/repo>`.
+
+This means every AGENT.md our model generates contains REAL, deployable skills
+that users can install and use immediately.
 """
 
 from __future__ import annotations
 
-# Common skills from skills.sh + categorization
+
+# ---------------------------------------------------------------------------
+# Real skills from skills.sh (https://skills.sh/)
+# Format: "skill-id": "description  [owner/repo]"
+# The model learns to pick these; the output AGENT.md is immediately deployable.
+# ---------------------------------------------------------------------------
+
 AVAILABLE_SKILLS: dict[str, str] = {
-    # Web & Data
-    "web-scraping": "Extract data from websites",
-    "http-client": "Make HTTP requests",
-    "html-parser": "Parse HTML content",
-    "json-parser": "Parse JSON data",
-    "csv-handler": "Handle CSV files",
+    # --- Web & Scraping ---
+    "browser-use": "Control a real browser to interact with any website [browser-use/browser-use]",
+    "firecrawl": "Scrape and crawl websites into clean markdown [firecrawl/cli]",
+    "firecrawl-scrape": "Scrape a single URL into structured data [firecrawl/cli]",
+    "firecrawl-search": "Search the web and return structured results [firecrawl/cli]",
+    "firecrawl-crawl": "Crawl entire sites and return all pages [firecrawl/cli]",
+    "web-design-guidelines": "Apply best-practice web design patterns [vercel-labs/agent-skills]",
 
-    # Data Processing
-    "data-transformer": "Transform data structures",
-    "data-validator": "Validate data against schemas",
-    "data-aggregator": "Aggregate and summarize data",
+    # --- Frontend & UI ---
+    "frontend-design": "Build production-grade UI components and pages [anthropics/skills]",
+    "ui-ux-pro-max": "Apply advanced UI/UX principles and patterns [nextlevelbuilder/ui-ux-pro-max-skill]",
+    "react:components": "Generate and manage React components [google-labs-code/stitch-skills]",
+    "shadcn": "Use shadcn/ui component library [shadcn/ui]",
+    "sleek-design-mobile-apps": "Design polished mobile app interfaces [sleekdotdesign/agent-skills]",
 
-    # Code
-    "code-reviewer": "Review code for quality",
-    "code-fixer": "Fix common code issues",
-    "test-generator": "Generate test cases",
+    # --- Backend & APIs ---
+    "vercel-react-best-practices": "Follow Vercel + React production patterns [vercel-labs/agent-skills]",
+    "supabase-postgres-best-practices": "Use Supabase with Postgres correctly [supabase/agent-skills]",
+    "supabase": "Integrate Supabase auth, DB, and storage [supabase/agent-skills]",
+    "neon-postgres": "Connect and query Neon serverless Postgres [neondatabase/agent-skills]",
+    "firebase-basics": "Set up and use Firebase services [firebase/agent-skills]",
+    "convex-quickstart": "Build with Convex reactive backend [get-convex/agent-skills]",
 
-    # Files
-    "file-reader": "Read file contents",
-    "file-writer": "Write file contents",
+    # --- Code Quality & Review ---
+    "systematic-debugging": "Debug issues step-by-step with root cause analysis [obra/superpowers]",
+    "test-driven-development": "Write tests before code, TDD workflow [obra/superpowers]",
+    "requesting-code-review": "Prepare and request effective code reviews [obra/superpowers]",
+    "receiving-code-review": "Process and apply code review feedback [obra/superpowers]",
+    "playwright-best-practices": "Write robust Playwright end-to-end tests [currents-dev/playwright-cli]",
+    "webapp-testing": "Test web applications thoroughly [anthropics/skills]",
 
-    # Analysis
-    "log-analyzer": "Analyze log files",
-    "pattern-matcher": "Match patterns in data",
+    # --- Documents & Files ---
+    "pdf": "Read, parse and generate PDF documents [anthropics/skills]",
+    "docx": "Create and edit Word documents [anthropics/skills]",
+    "xlsx": "Read and write Excel spreadsheets [anthropics/skills]",
+    "pptx": "Generate PowerPoint presentations [anthropics/skills]",
 
-    # Output
-    "report-generator": "Generate reports",
-    "notifier": "Send notifications",
+    # --- AI & Agents ---
+    "mcp-builder": "Build Model Context Protocol servers [anthropics/skills]",
+    "self-improving-agent": "Agent that critiques and improves its own outputs [charon-fan/agent-playbook]",
+    "subagent-driven-development": "Break tasks into parallel subagents [obra/superpowers]",
+    "dispatching-parallel-agents": "Coordinate multiple agents concurrently [obra/superpowers]",
+    "skill-creator": "Create new Agent Skills for the skills.sh ecosystem [anthropics/skills]",
+
+    # --- Planning & Writing ---
+    "brainstorming": "Generate and explore creative ideas [obra/superpowers]",
+    "writing-plans": "Create structured plans before executing [obra/superpowers]",
+    "executing-plans": "Follow through on structured plans reliably [obra/superpowers]",
+    "writing-skills": "Write clear, effective prose and documentation [obra/superpowers]",
+    "doc-coauthoring": "Collaboratively write and edit documents [anthropics/skills]",
+
+    # --- DevOps & Infrastructure ---
+    "github-actions-docs": "Write and debug GitHub Actions workflows [xixu-me/skills]",
+    "sentry-cli": "Monitor errors and performance with Sentry [sentry/dev]",
+    "deploy-to-vercel": "Deploy projects to Vercel [vercel-labs/agent-skills]",
+
+    # --- Marketing & SEO ---
+    "seo-audit": "Audit and improve site SEO [coreyhaines31/marketingskills]",
+    "copywriting": "Write compelling marketing copy [coreyhaines31/marketingskills]",
+    "social-content": "Create social media content [coreyhaines31/marketingskills]",
+
+    # --- Productivity ---
+    "obsidian-markdown": "Manage knowledge in Obsidian vaults [kepano/obsidian-skills]",
+    "lark-doc": "Create and manage Lark/Feishu documents [larksuite/cli]",
+    "gws-gmail": "Read and send Gmail messages [googleworkspace/cli]",
+    "gws-drive": "Manage Google Drive files [googleworkspace/cli]",
 }
 
 
+# ---------------------------------------------------------------------------
+# Skill → skills.sh install reference (for AGENT.md output)
+# ---------------------------------------------------------------------------
+
+SKILL_INSTALL_MAP: dict[str, str] = {
+    "browser-use": "browser-use/browser-use",
+    "firecrawl": "firecrawl/cli",
+    "firecrawl-scrape": "firecrawl/cli",
+    "firecrawl-search": "firecrawl/cli",
+    "firecrawl-crawl": "firecrawl/cli",
+    "web-design-guidelines": "vercel-labs/agent-skills",
+    "frontend-design": "anthropics/skills",
+    "ui-ux-pro-max": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "react:components": "google-labs-code/stitch-skills",
+    "shadcn": "shadcn/ui",
+    "sleek-design-mobile-apps": "sleekdotdesign/agent-skills",
+    "vercel-react-best-practices": "vercel-labs/agent-skills",
+    "supabase-postgres-best-practices": "supabase/agent-skills",
+    "supabase": "supabase/agent-skills",
+    "neon-postgres": "neondatabase/agent-skills",
+    "firebase-basics": "firebase/agent-skills",
+    "convex-quickstart": "get-convex/agent-skills",
+    "systematic-debugging": "obra/superpowers",
+    "test-driven-development": "obra/superpowers",
+    "requesting-code-review": "obra/superpowers",
+    "receiving-code-review": "obra/superpowers",
+    "playwright-best-practices": "currents-dev/playwright-cli",
+    "webapp-testing": "anthropics/skills",
+    "pdf": "anthropics/skills",
+    "docx": "anthropics/skills",
+    "xlsx": "anthropics/skills",
+    "pptx": "anthropics/skills",
+    "mcp-builder": "anthropics/skills",
+    "self-improving-agent": "charon-fan/agent-playbook",
+    "subagent-driven-development": "obra/superpowers",
+    "dispatching-parallel-agents": "obra/superpowers",
+    "skill-creator": "anthropics/skills",
+    "brainstorming": "obra/superpowers",
+    "writing-plans": "obra/superpowers",
+    "executing-plans": "obra/superpowers",
+    "writing-skills": "obra/superpowers",
+    "doc-coauthoring": "anthropics/skills",
+    "github-actions-docs": "xixu-me/skills",
+    "sentry-cli": "sentry/dev",
+    "deploy-to-vercel": "vercel-labs/agent-skills",
+    "seo-audit": "coreyhaines31/marketingskills",
+    "copywriting": "coreyhaines31/marketingskills",
+    "social-content": "coreyhaines31/marketingskills",
+    "obsidian-markdown": "kepano/obsidian-skills",
+    "lark-doc": "larksuite/cli",
+    "gws-gmail": "googleworkspace/cli",
+    "gws-drive": "googleworkspace/cli",
+}
+
+
+# ---------------------------------------------------------------------------
 # Skill categories for curriculum progression
+# ---------------------------------------------------------------------------
+
 SKILL_CATEGORIES: dict[str, list[str]] = {
-    "web": ["web-scraping", "http-client", "html-parser"],
-    "data": ["json-parser", "csv-handler", "data-transformer", "data-validator"],
-    "code": ["code-reviewer", "code-fixer", "test-generator"],
-    "files": ["file-reader", "file-writer"],
-    "analysis": ["log-analyzer", "pattern-matcher"],
-    "output": ["report-generator", "notifier"],
+    "web": ["browser-use", "firecrawl", "firecrawl-scrape", "firecrawl-search", "firecrawl-crawl", "web-design-guidelines"],
+    "frontend": ["frontend-design", "ui-ux-pro-max", "react:components", "shadcn", "sleek-design-mobile-apps"],
+    "backend": ["supabase", "supabase-postgres-best-practices", "neon-postgres", "firebase-basics", "convex-quickstart"],
+    "code": ["systematic-debugging", "test-driven-development", "requesting-code-review", "playwright-best-practices", "webapp-testing"],
+    "documents": ["pdf", "docx", "xlsx", "pptx", "doc-coauthoring"],
+    "agents": ["mcp-builder", "self-improving-agent", "subagent-driven-development", "skill-creator"],
+    "planning": ["brainstorming", "writing-plans", "executing-plans", "writing-skills"],
+    "devops": ["github-actions-docs", "sentry-cli", "deploy-to-vercel"],
+    "marketing": ["seo-audit", "copywriting", "social-content"],
+    "productivity": ["obsidian-markdown", "lark-doc", "gws-gmail", "gws-drive"],
 }
 
 
-# Suggest skills for task types (for curriculum)
+# ---------------------------------------------------------------------------
+# Task-type → real skill suggestions
+# ---------------------------------------------------------------------------
+
 TASK_SKILL_MAP: dict[str, list[str]] = {
-    "web_scraping": ["web-scraping", "html-parser", "http-client"],
-    "data_analysis": ["csv-handler", "data-transformer", "data-validator"],
-    "code_review": ["code-reviewer", "file-reader", "pattern-matcher"],
-    "testing": ["test-generator", "code-fixer", "file-reader"],
-    "log_analysis": ["log-analyzer", "pattern-matcher", "file-reader"],
-    "reporting": ["report-generator", "data-aggregator", "csv-handler"],
+    "web_scraping": ["firecrawl", "browser-use", "firecrawl-crawl"],
+    "web_search": ["firecrawl-search", "browser-use"],
+    "frontend": ["frontend-design", "react:components", "shadcn"],
+    "data_analysis": ["xlsx", "pdf", "doc-coauthoring"],
+    "code_review": ["systematic-debugging", "requesting-code-review", "webapp-testing"],
+    "testing": ["test-driven-development", "playwright-best-practices", "webapp-testing"],
+    "documentation": ["writing-plans", "writing-skills", "doc-coauthoring"],
+    "deployment": ["deploy-to-vercel", "github-actions-docs", "sentry-cli"],
+    "backend": ["supabase", "neon-postgres", "convex-quickstart"],
+    "agents": ["mcp-builder", "skill-creator", "self-improving-agent"],
 }
 
 
+# ---------------------------------------------------------------------------
 # Domain templates for generating system prompts
+# ---------------------------------------------------------------------------
+
 AGENT_TEMPLATES: dict[str, str] = {
-    "web-scraper": """You are a web scraping specialist.
+    "web-scraper": """You are a web data extraction specialist using browser-use and firecrawl.
 
 Best practices:
-- Always check robots.txt
-- Implement rate limiting
-- Handle errors gracefully
-- Validate extracted data
-- Store results in structured format
+- Use firecrawl for fast structured extraction
+- Use browser-use when JavaScript rendering is required
+- Respect robots.txt and rate limits
+- Return clean, structured JSON
 
-When scraping:
-1. Identify target structure
-2. Select appropriate extraction method
-3. Handle pagination
-4. Store results
+Workflow:
+1. Determine if JS rendering is needed
+2. Select firecrawl-scrape (static) or browser-use (dynamic)
+3. Extract and validate the data
+4. Return structured results
 """,
 
-    "data-analyst": """You are a data analysis specialist.
+    "frontend": """You are a frontend engineering specialist.
 
 Best practices:
-- Validate data before analysis
-- Document assumptions
-- Handle missing data
-- Provide actionable insights
+- Use shadcn/ui components for consistent design
+- Follow React best practices for performance
+- Ensure accessibility (WCAG 2.1)
+- Mobile-first responsive design
 
-When analyzing:
-1. Understand data structure
-2. Clean and validate
-3. Explore patterns
-4. Generate insights
+Workflow:
+1. Understand design requirements
+2. Select appropriate components from shadcn
+3. Implement with proper TypeScript types
+4. Validate accessibility and responsiveness
 """,
 
-    "code-reviewer": """You are a code review specialist.
+    "code-reviewer": """You are a code quality specialist with systematic debugging skills.
 
 Best practices:
-- Focus on code quality
-- Check for security issues
-- Verify error handling
-- Assess performance
+- Follow TDD principles: test before fixing
+- Root-cause analysis before patching
+- Check security vulnerabilities (OWASP top 10)
+- Verify error handling completeness
 
-Review checklist:
-- Code is clear and readable
-- Proper error handling
-- No security vulnerabilities
-- Good test coverage
+Workflow:
+1. Read and understand the code context
+2. Identify issues systematically
+3. Propose minimal, targeted fixes
+4. Write regression tests for found bugs
 """,
 
-    "api-integrator": """You are an API integration specialist.
+    "agent-builder": """You are an AI agent design specialist.
 
 Best practices:
-- Validate inputs
-- Handle API errors
-- Implement retry logic
-- Cache responses
+- Use the Agent Skills Open Standard (skills.sh)
+- Choose the minimal set of skills needed
+- Write clear, step-by-step system prompts
+- Select the right model tier for the task
 
-When integrating:
-1. Read API documentation
-2. Design error handling
-3. Implement retry logic
-4. Add caching
+Workflow:
+1. Understand the task requirements
+2. Identify required skills from skills.sh
+3. Design the system prompt with clear workflow
+4. Validate against the task's success criteria
 """,
 }
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def get_skills_for_domain(domain: str) -> list[str]:
@@ -138,15 +262,22 @@ def get_skills_for_task_type(task_type: str) -> list[str]:
 
 def get_template_for_domain(domain: str) -> str | None:
     """Get system prompt template for a domain."""
-    # Map domain to template key
     template_map = {
         "web": "web-scraper",
-        "data": "data-analyst",
+        "frontend": "frontend",
         "code": "code-reviewer",
-        "api": "api-integrator",
+        "agents": "agent-builder",
     }
     key = template_map.get(domain)
     return AGENT_TEMPLATES.get(key) if key else None
+
+
+def get_install_command(skill_id: str) -> str | None:
+    """Return the `npx skills add` command for a skill."""
+    repo = SKILL_INSTALL_MAP.get(skill_id)
+    if repo:
+        return f"npx skills add {repo}"
+    return None
 
 
 def get_curriculum_skills(phase: int) -> dict[str, list[str]]:
@@ -154,35 +285,32 @@ def get_curriculum_skills(phase: int) -> dict[str, list[str]]:
 
     Args:
         phase: 1 (1 skill), 2 (2-3 skills), 3 (3-5 skills), 4 (5+ skills)
-
-    Returns:
-        dict mapping domain to list of skills for that phase
     """
     if phase == 1:
-        # Single skill tasks
         return {
-            "web": ["web-scraping"],
-            "data": ["csv-handler"],
-            "code": ["code-reviewer"],
+            "web": ["firecrawl"],
+            "frontend": ["frontend-design"],
+            "code": ["systematic-debugging"],
+            "documents": ["pdf"],
         }
     elif phase == 2:
-        # 2-3 skills
         return {
-            "web": ["web-scraping", "html-parser", "http-client"],
-            "data": ["csv-handler", "data-transformer"],
-            "code": ["code-reviewer", "pattern-matcher"],
+            "web": ["firecrawl", "browser-use"],
+            "frontend": ["frontend-design", "shadcn"],
+            "code": ["systematic-debugging", "test-driven-development"],
+            "documents": ["pdf", "xlsx"],
         }
     elif phase == 3:
-        # 3-5 skills
         return {
-            "web": ["web-scraping", "html-parser", "http-client", "json-parser"],
-            "data": ["csv-handler", "data-transformer", "data-validator", "report-generator"],
-            "code": ["code-reviewer", "pattern-matcher", "file-reader", "test-generator"],
+            "web": ["firecrawl", "browser-use", "firecrawl-search"],
+            "frontend": ["frontend-design", "shadcn", "react:components"],
+            "code": ["systematic-debugging", "test-driven-development", "playwright-best-practices"],
+            "backend": ["supabase", "neon-postgres", "convex-quickstart"],
         }
     else:
-        # 5+ skills
         return {
-            "web": list(SKILL_CATEGORIES["web"]) + ["json-parser"],
-            "data": list(SKILL_CATEGORIES["data"]) + ["file-reader", "report-generator"],
-            "code": list(SKILL_CATEGORIES["code"]) + ["log-analyzer"],
+            "web": list(SKILL_CATEGORIES["web"]),
+            "frontend": list(SKILL_CATEGORIES["frontend"]),
+            "code": list(SKILL_CATEGORIES["code"]),
+            "agents": list(SKILL_CATEGORIES["agents"]),
         }

@@ -1,0 +1,15 @@
+{
+  "notebook": "train_colab.ipynb",
+  "training_sentinel": {
+    "real_training": true,
+    "model": "Qwen/Qwen3-1.7B",
+    "dataset_episodes": 25,
+    "num_epochs": 2,
+    "num_generations": 2
+  },
+  "zips": [
+    "results/meta-agent-gym-results.zip",
+    "results/meta-agent-gym-trained.zip",
+    "results/meta-agent-gym-model.zip"
+  ]
+}

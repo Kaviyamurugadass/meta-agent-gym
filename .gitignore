@@ -17,6 +17,7 @@ env/
 outputs/
 training/grpo-output/
 training/grpo-unsloth-output/
+training/grpo-unsloth-output_*/
 .ipynb_checkpoints/
 *.pt
 *.safetensors

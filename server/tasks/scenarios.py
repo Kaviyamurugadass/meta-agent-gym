@@ -42,8 +42,8 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
             "The agent should identify the price element and return the price value."
         ),
         max_steps=7,
-        required_skills=["web-scraping"],
-        recommended_skills=[],
+        required_skills=["firecrawl-scrape"],
+        recommended_skills=["firecrawl"],
         user_preferences={
             "language": "python",
             "constraints": ["must_handle_errors", "respect_rate_limits"],
@@ -65,8 +65,8 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
             "Build an agent that reads a CSV file and counts the number of rows."
         ),
         max_steps=7,
-        required_skills=["csv-handler"],
-        recommended_skills=[],
+        required_skills=["xlsx"],
+        recommended_skills=["pdf"],
         user_preferences={
             "language": "python",
         },
@@ -87,8 +87,8 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
             "Build an agent that reviews a Python function for missing error handling."
         ),
         max_steps=7,
-        required_skills=["code-reviewer"],
-        recommended_skills=[],
+        required_skills=["systematic-debugging"],
+        recommended_skills=["requesting-code-review"],
         user_preferences={
             "focus": "error_handling",
         },
@@ -111,8 +111,8 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
             "type errors). Output should be runnable pytest code."
         ),
         max_steps=7,
-        required_skills=["test-generator"],
-        recommended_skills=[],
+        required_skills=["test-driven-development"],
+        recommended_skills=["playwright-best-practices"],
         user_preferences={
             "language": "python",
             "test_framework": "pytest",

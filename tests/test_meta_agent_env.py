@@ -197,13 +197,15 @@ def test_environment_truncation(env):
 
 
 def test_environment_available_skills(env):
-    """Test that available skills are populated."""
+    """Test that available skills are populated and resolve to known skill IDs."""
     from server.skills import AVAILABLE_SKILLS
 
     obs = env.reset()
 
     assert len(obs.available_skills) > 0
-    assert "web-scraping" in obs.available_skills
+    # Every advertised skill should be a valid entry in the skills.sh registry
+    for skill_id in obs.available_skills:
+        assert skill_id in AVAILABLE_SKILLS, f"unknown skill in observation: {skill_id}"
 
 
 def test_environment_feedback(env):

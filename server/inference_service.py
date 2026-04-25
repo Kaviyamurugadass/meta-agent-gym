@@ -21,13 +21,16 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 from pathlib import Path
 from typing import Any, Optional
 
 
 DEFAULT_ADAPTER_PATH = Path(os.getenv("META_ADAPTER_PATH", "training/grpo-unsloth-output"))
-DEFAULT_BASE_MODEL = os.getenv("META_BASE_MODEL", "Qwen/Qwen2.5-0.5B")
+DEFAULT_BASE_MODEL = "Qwen/Qwen2.5-0.5B"
+DEFAULT_INFERENCE_DTYPE = os.getenv("META_INFERENCE_DTYPE", "auto")
+DEFAULT_ALLOW_HEURISTIC_FALLBACK = os.getenv("META_ALLOW_HEURISTIC_FALLBACK", "1") != "0"
 
 # Qwen2.5 uses ChatML; unsloth 4-bit variants sometimes ship without the template.
 _CHATML_TEMPLATE = (
@@ -65,10 +68,12 @@ class InferenceService:
     def __init__(
         self,
         adapter_path: Path = DEFAULT_ADAPTER_PATH,
-        base_model: str = DEFAULT_BASE_MODEL,
+        base_model: Optional[str] = None,
     ) -> None:
         self.adapter_path = Path(adapter_path)
-        self.base_model = base_model
+        self.base_model, self.base_model_source = _resolve_base_model(self.adapter_path, base_model)
+        self.inference_dtype = DEFAULT_INFERENCE_DTYPE
+        self.allow_heuristic_fallback = DEFAULT_ALLOW_HEURISTIC_FALLBACK
         self._model = None
         self._tokenizer = None
         self._lock = threading.Lock()
@@ -98,6 +103,9 @@ class InferenceService:
             "loaded": self._model is not None,
             "load_error": self._load_error,
             "base_model": self.base_model,
+            "base_model_source": self.base_model_source,
+            "inference_dtype": self.inference_dtype,
+            "allow_heuristic_fallback": self.allow_heuristic_fallback,
         }
 
     # ---------------------------------------------------------------- loading
@@ -115,7 +123,7 @@ class InferenceService:
 
         base = AutoModelForCausalLM.from_pretrained(
             self.base_model,
-            torch_dtype=torch.float32,  # cpu-basic → fp32 is fine, bf16 not supported on some CPUs
+            torch_dtype=_resolve_torch_dtype(torch, self.inference_dtype),
             low_cpu_mem_usage=True,
         )
         model = PeftModel.from_pretrained(base, str(self.adapter_path))
@@ -187,6 +195,136 @@ def get_service() -> InferenceService:
 
 
 # --------------------------------------------------------------------- helpers
+
+
+def _resolve_base_model(adapter_path: Path, explicit_base_model: Optional[str]) -> tuple[str, str]:
+    """Choose the base model that matches the adapter on disk.
+
+    Local demos often swap adapters without setting META_BASE_MODEL. Prefer an
+    explicit env/argument, then the training sentinel, then PEFT metadata.
+    """
+    env_model = os.getenv("META_BASE_MODEL")
+    if explicit_base_model:
+        return explicit_base_model, "argument"
+    if env_model:
+        return env_model, "META_BASE_MODEL"
+
+    summary_path = adapter_path / "training_summary.json"
+    try:
+        if summary_path.exists():
+            model = json.loads(summary_path.read_text(encoding="utf-8")).get("model")
+            if isinstance(model, str) and model.strip():
+                return model.strip(), "training_summary.json"
+    except Exception:
+        pass
+
+    config_path = adapter_path / "adapter_config.json"
+    try:
+        if config_path.exists():
+            raw_model = json.loads(config_path.read_text(encoding="utf-8")).get(
+                "base_model_name_or_path"
+            )
+            if isinstance(raw_model, str) and raw_model.strip():
+                return _normalise_adapter_base_model(raw_model.strip()), "adapter_config.json"
+    except Exception:
+        pass
+
+    return DEFAULT_BASE_MODEL, "default"
+
+
+def _normalise_adapter_base_model(model_name: str) -> str:
+    """Convert common Unsloth 4-bit adapter bases to plain HF model IDs."""
+    lower = model_name.lower()
+    if lower.startswith("unsloth/"):
+        match = re.search(r"qwen(?P<major>3|2(?:\.5)?)-(?P<size>[0-9.]+b)", lower)
+        if match:
+            major = match.group("major")
+            size = match.group("size").upper()
+            return f"Qwen/Qwen{major}-{size}"
+    return model_name
+
+
+def _resolve_torch_dtype(torch_module: Any, dtype_name: str) -> Any:
+    """Resolve an env-friendly dtype name for Transformers loading."""
+    dtype = dtype_name.strip().lower()
+    if dtype in {"", "auto"}:
+        return "auto"
+    if dtype in {"fp32", "float32"}:
+        return torch_module.float32
+    if dtype in {"fp16", "float16"}:
+        return torch_module.float16
+    if dtype in {"bf16", "bfloat16"}:
+        return torch_module.bfloat16
+    raise ValueError(
+        f"Unsupported META_INFERENCE_DTYPE={dtype_name!r}. "
+        "Use one of: auto, float32, float16, bfloat16."
+    )
+
+
+def is_memory_load_error(exc: Exception) -> bool:
+    """Detect local OOM/pagefile failures from model loading."""
+    text = f"{type(exc).__name__}: {exc}".lower()
+    return any(
+        marker in text
+        for marker in (
+            "paging file is too small",
+            "os error 1455",
+            "out of memory",
+            "cannot allocate memory",
+        )
+    )
+
+
+def fallback_spec(task_description: str) -> dict[str, Any]:
+    """Small deterministic local fallback when the model cannot fit in memory."""
+    text = task_description.lower()
+    skills: list[str] = []
+
+    keyword_skills = [
+        (("scrape", "web", "html", "page", "site"), ["web-scraping", "html-parser"]),
+        (("api", "http", "request"), ["http-client"]),
+        (("csv", "spreadsheet"), ["csv-handler"]),
+        (("json",), ["json-parser"]),
+        (("data", "pipeline", "transform", "clean"), ["data-transformer"]),
+        (("validate", "schema"), ["data-validator"]),
+        (("aggregate", "summary", "statistics", "count"), ["data-aggregator"]),
+        (("review", "pull request", "security", "sql injection", "xss", "secret"), ["code-reviewer", "pattern-matcher"]),
+        (("fix", "bug", "refactor"), ["code-fixer"]),
+        (("test", "pytest", "unit"), ["test-generator"]),
+        (("file", "read"), ["file-reader"]),
+        (("write", "save"), ["file-writer"]),
+        (("log", "debug", "trace", "error"), ["log-analyzer"]),
+        (("report", "dashboard"), ["report-generator"]),
+        (("alert", "notify"), ["notifier"]),
+    ]
+
+    for keywords, candidates in keyword_skills:
+        if any(keyword in text for keyword in keywords):
+            for skill in candidates:
+                if skill not in skills:
+                    skills.append(skill)
+
+    if not skills:
+        skills = ["code-reviewer"]
+    skills = skills[:3]
+
+    name_words = re.findall(r"[a-z0-9]+", text)[:4] or ["generated", "agent"]
+    name = "-".join(name_words)
+    if len(name) < 3:
+        name = "generated-agent"
+
+    return {
+        "name": name,
+        "description": f"Use this agent to handle: {task_description[:120]}",
+        "skills": skills,
+        "model": "sonnet",
+        "system_prompt": (
+            f"You are a focused specialist for this task: {task_description}. "
+            "First inspect the available context, then identify the relevant inputs, risks, "
+            "and expected output. Use the selected skills to produce a concise, correct result, "
+            "and call out assumptions or safety concerns before finalizing."
+        ),
+    }
 
 
 def spec_to_actions(spec: dict[str, Any]) -> list[dict[str, Any]]:

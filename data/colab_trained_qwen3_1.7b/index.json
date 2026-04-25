@@ -1,0 +1,82 @@
+[
+  {
+    "file": "trajectory_0000.json",
+    "task_id": "an_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 0.0,
+    "success": false
+  },
+  {
+    "file": "trajectory_0001.json",
+    "task_id": "te_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0002.json",
+    "task_id": "db_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0003.json",
+    "task_id": "ws_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0004.json",
+    "task_id": "fi_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0005.json",
+    "task_id": "an_easy_001",
+    "difficulty": "easy",
+    "length": 7,
+    "total_reward": 0.0,
+    "success": false
+  },
+  {
+    "file": "trajectory_0006.json",
+    "task_id": "fi_easy_002",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0007.json",
+    "task_id": "te_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0008.json",
+    "task_id": "fi_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  },
+  {
+    "file": "trajectory_0009.json",
+    "task_id": "db_easy_001",
+    "difficulty": "easy",
+    "length": 6,
+    "total_reward": 9.600000000000001,
+    "success": true
+  }
+]
