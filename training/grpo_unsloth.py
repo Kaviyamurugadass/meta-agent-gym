@@ -295,20 +295,19 @@ def launch_training(args: argparse.Namespace) -> None:  # pragma: no cover — n
         trust_remote_code=args.trust_remote_code,
     )
 
-    # Unsloth's 4-bit variants sometimes ship without a chat_template.
-    # TRL's GRPOTrainer calls tokenizer.apply_chat_template on the prompt dataset
-    # and crashes if chat_template is unset. Apply Qwen's ChatML template as a
-    # safe default (compatible with Qwen2.5 / Qwen3 / any ChatML-trained model).
-    if getattr(tokenizer, "chat_template", None) is None:
-        tokenizer.chat_template = (
-            "{% for message in messages %}"
-            "{{ '<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n' }}"
-            "{% endfor %}"
-            "{% if add_generation_prompt %}"
-            "{{ '<|im_start|>assistant\n' }}"
-            "{% endif %}"
-        )
-        print("[setup] Applied ChatML chat_template (tokenizer had none)")
+    # Qwen3 ships with a thinking-enabled chat_template by default.
+    # Override it with a non-thinking template so the model outputs the JSON
+    # array directly instead of burning all completion tokens on <think> blocks.
+    # (Without this, 256 tokens of thinking → 0 tokens for JSON → reward = 0 always.)
+    tokenizer.chat_template = (
+        "{% for message in messages %}"
+        "{{ '<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n' }}"
+        "{% endfor %}"
+        "{% if add_generation_prompt %}"
+        "{{ '<|im_start|>assistant\n' }}"
+        "{% endif %}"
+    )
+    print("[setup] Applied non-thinking ChatML template (suppresses Qwen3 <think> blocks)")
 
     # Attach LoRA adapters
     model = FastLanguageModel.get_peft_model(
