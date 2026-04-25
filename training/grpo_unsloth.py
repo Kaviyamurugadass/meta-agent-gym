@@ -238,9 +238,17 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
                 # TRL/Unsloth can pass completions as:
                 #   - a string
                 #   - a list[str] of token-chunks
-                # Normalize to a single string before parsing.
-                if isinstance(completion, list):
-                    completion_text = "".join(str(x) for x in completion)
+                #   - a dict like {"role": "...", "content": "..."}
+                #   - a list[dict] of chat messages
+                # Normalize to the assistant "content" string before parsing.
+                completion_text = ""
+                if isinstance(completion, dict):
+                    completion_text = str(completion.get("content", completion))
+                elif isinstance(completion, list):
+                    if completion and isinstance(completion[0], dict):
+                        completion_text = "\n".join(str(m.get("content", "")) for m in completion)
+                    else:
+                        completion_text = "".join(str(x) for x in completion)
                 else:
                     completion_text = str(completion)
 

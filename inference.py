@@ -157,6 +157,14 @@ def parse_actions(text: str) -> list[Action]:
     Falls back to [NOOP] if parsing/validation fails.
     """
     s = text.strip()
+    # Strip model "thinking" blocks (Qwen-style). These often appear before the
+    # actual JSON and break parsing.
+    if "<think>" in s:
+        # Remove well-formed <think>...</think>
+        s = re.sub(r"<think>[\s\S]*?</think>", "", s, flags=re.IGNORECASE).strip()
+        # If truncated and </think> is missing, drop everything from <think> onward.
+        if "<think>" in s.lower():
+            s = re.split(r"<think>", s, flags=re.IGNORECASE)[0].strip()
     try:
         data = json.loads(s)
     except json.JSONDecodeError:
