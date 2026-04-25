@@ -16,19 +16,24 @@ tags:
 
 # meta-agent-gym
 
-**We taught AI to design other AI systems. Here's how it happened.**
+**An OpenEnv RL environment that teaches a small LLM to design AI agents.**
 
 ---
 
-## 🎯 The Problem: AI Can't Build Tools
+## 🎯 Why This Exists
 
-Imagine you're a small business owner who needs an AI agent to analyze customer reviews and alert you when sentiment turns negative. 
+As software developers, we've all started using AI tools like **Cursor** and **Claude Code**. But under the hood, what we're really using are **agents** — small specifications that bundle a system prompt, a model choice, a set of tools, and the rules for when to use each.
 
-**Today's reality**: You'd need to hire a developer who understands prompt engineering, agent frameworks, and system design. Most businesses are stuck with generic AI tools that don't solve their specific problems.
+**Better agents solve tasks better.** A code-review agent with the right skills (security scanner, style checker, test generator) handles a PR ten times better than a generic assistant. A debugging agent with the right prompt structure (read logs → reproduce → isolate → fix → write regression test) outperforms one that just fires queries.
 
-**The capability gap**: AI can solve problems, but AI can't create the tools that solve problems. We're missing the "AI architects" that bridge ideas and working solutions.
+So we asked the next question:
 
-**What if**: You could just describe your need and get a complete, production-ready AI agent in seconds?
+> **Can we train a small language model to design better agents — choosing the right skills, tools, and model tier for each task?**
+
+Most RL environments ask: *can an LLM solve this task?*
+We built one that asks a harder question: *can an LLM learn to design the agent that solves the task?*
+
+That's meta-learning at small scale — teaching a model to write the instructions that instruct other models.
 
 ---
 
@@ -151,13 +156,24 @@ We're democratizing AI creation the same way spreadsheets democratized data anal
 
 ## 🚀 Try It Yourself
 
-**[🤖 Interactive Demo on Hugging Face Spaces](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)**
+**[🤖 Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)** — interactive dashboard, runs full episodes step-by-step.
 
-Experience the breakthrough in action. Watch the AI design agents step-by-step.
+**[📓 Training Notebook on Colab](https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)** — runnable end-to-end on free-tier T4. Same notebook the sentinel-verified run used.
 
-**[🎥 Watch Our 1:45 Minute Video](competition/_posts/2025-04-23-meta-agent-gym-video-script.md)**
+## 📝 Submission Materials
 
-See the complete story from empty prompt to expert agent designer.
+All hackathon deliverables live in [`docs/competition/`](docs/competition/) and [`docs/onsite/`](docs/onsite/):
+
+| Material | Location |
+|---|---|
+| Mini-blog (markdown) | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
+| 3-min pitch script | [`docs/competition/PITCH.md`](docs/competition/PITCH.md) |
+| Slide outline | [`docs/competition/SLIDES.md`](docs/competition/SLIDES.md) |
+| Training evidence write-up | [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) |
+| Reward pipeline detail | [`docs/competition/REWARD_PIPELINE_EXCELLENCE.md`](docs/competition/REWARD_PIPELINE_EXCELLENCE.md) |
+| Video script (1:45) | [`docs/competition/_posts/2025-04-23-meta-agent-gym-video-script.md`](docs/competition/_posts/2025-04-23-meta-agent-gym-video-script.md) |
+| Onsite training plan | [`docs/onsite/ONSITE_TRAINING_PLAN.md`](docs/onsite/ONSITE_TRAINING_PLAN.md) |
+| Real plots + report.json | [`monitoring/colab_results/`](monitoring/colab_results/) |
 
 ---
 
@@ -423,7 +439,14 @@ python training/grpo_unsloth.py --model-id Qwen/Qwen2.5-0.5B
 This is the path the existing Colab run used (sentinel-verified
 `real_training: true`). Smaller and older, but proven on free-tier compute.
 
-<!-- TODO: Add Colab notebook link -->
+**Open the training notebook in Colab:**
+
+▶ [`notebooks/train_colab.ipynb` — Open in Colab](https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb)
+
+The notebook clones this repo, installs Unsloth + TRL with the dependency pins
+verified to work on Colab T4 (April 2026), runs the GRPO training loop, and
+produces the sentinel-verified `training_summary.json`. End-to-end runtime on
+free-tier T4: ~20-30 minutes.
 
 ---
 
