@@ -149,8 +149,22 @@ def make_adapter_policy(
         ]
 
         # Use chat template when available; otherwise plain concatenation.
+        # For Qwen3-style models, enable_thinking=False is the official, reliable
+        # way to disable <think>...</think> chain-of-thought. The /no_think
+        # directive in the system prompt is a soft fallback. Some tokenizers
+        # don't accept enable_thinking — fall back gracefully.
         if getattr(tokenizer, "chat_template", None) is not None:
-            prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            try:
+                prompt = tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                    enable_thinking=False,
+                )
+            except TypeError:
+                prompt = tokenizer.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True,
+                )
         else:
             prompt = system_prompt + "\n\nObservation:\n" + messages[1]["content"] + "\n\nAction JSON:"
 
