@@ -94,6 +94,7 @@ def call_openai_compatible(
 
 _JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
 _JSON_OBJECT_RE = re.compile(r"\{.*?\}", re.DOTALL)
+_JSON_ARRAY_RE = re.compile(r"\[.*\]", re.DOTALL)
 
 
 def parse_action_json(text: str) -> dict[str, Any]:
@@ -144,6 +145,54 @@ def parse_action(text: str) -> Action:
             justification="Fallback: LLM output could not be parsed as Action.",
             confidence=0.0,
         )
+
+
+def parse_actions(text: str) -> list[Action]:
+    """Parse an LLM output into a list[Action].
+
+    Accepts either:
+      - a single Action JSON object
+      - a JSON array of Action objects
+
+    Falls back to [NOOP] if parsing/validation fails.
+    """
+    s = text.strip()
+    try:
+        data = json.loads(s)
+    except json.JSONDecodeError:
+        # Strip common markdown fences and retry
+        if s.startswith("```"):
+            s2 = s.split("```", 2)[1] if "```" in s[3:] else s[3:]
+            if s2.startswith("json"):
+                s2 = s2[4:]
+            s = s2.strip().rstrip("`").strip()
+        try:
+            data = json.loads(s)
+        except json.JSONDecodeError:
+            # Try to extract first [...] block
+            m = _JSON_ARRAY_RE.search(s)
+            if m:
+                try:
+                    data = json.loads(m.group(0))
+                except json.JSONDecodeError:
+                    data = None
+            else:
+                # Fallback: parse first object and treat as single action
+                try:
+                    return [parse_action(s)]
+                except Exception:
+                    data = None
+
+    try:
+        if isinstance(data, list):
+            actions = [Action.model_validate(item) for item in data]
+        elif isinstance(data, dict):
+            actions = [Action.model_validate(data)]
+        else:
+            raise ValueError("Parsed JSON was neither list nor dict.")
+        return actions if actions else [Action(command=ActionCommand.NOOP)]
+    except Exception:
+        return [Action(command=ActionCommand.NOOP, justification="Fallback: could not parse actions.", confidence=0.0)]
 
 
 # ---------------------------------------------------------------------------

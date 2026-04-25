@@ -51,10 +51,22 @@ DEFAULT_OUTPUT = "training/grpo-unsloth-output"
 
 SYSTEM_PROMPT = """You are an agent interacting with an OpenEnv environment.
 
-Respond with a single JSON object matching the Action schema:
+The environment requires MULTI-STEP trajectories to build a complete agent spec.
+For each turn, you will receive an Observation (JSON). You must respond with a
+JSON ARRAY of Actions to execute in order in a fresh episode.
+
+Each Action must match the Action schema:
   {"command": "<cmd>", "args": {...}, "justification": "...", "confidence": 0.0-1.0}
 
-Respond ONLY with the JSON object. No explanation, no prose.
+Your action array should generally:
+  1) set_name
+  2) set_description
+  3) add_skill (1-3)
+  4) write_prompt (>= 50 chars)
+  5) set_model (usually sonnet)
+  6) submit
+
+Respond ONLY with the JSON array. No explanation, no prose, no markdown fences.
 """
 
 
@@ -182,7 +194,7 @@ def _build_prompt_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
 
 
 def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
-    from inference import parse_action
+    from inference import parse_actions
     from training.reward_backend import make_backend
 
     backend = make_backend(
@@ -195,8 +207,8 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
         rewards = []
         for completion, scenario in zip(completions, scenarios):
             try:
-                action = parse_action(completion)
-                r, _ = backend.score([action], scenario_name=scenario)
+                actions = parse_actions(completion)
+                r, _ = backend.score(actions, scenario_name=scenario)
                 rewards.append(float(r))
             except Exception:
                 rewards.append(-1.0)

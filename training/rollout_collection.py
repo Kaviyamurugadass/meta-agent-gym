@@ -4,6 +4,7 @@ Used by:
     - Pre-training baseline collection (fills README's Baseline column)
     - Data augmentation for imitation learning
     - Reward calibration sanity checks
+    - Post-training evaluation using a saved LoRA adapter (policy="adapter")
 
 CLI:
     uv run python training/rollout_collection.py \\
@@ -13,9 +14,10 @@ CLI:
 from __future__ import annotations
 
 import argparse
+import json
 import random
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from models import Action, ActionCommand, RewardConfig, RewardMode
 from server.environment import Environment
@@ -25,6 +27,119 @@ from training.trajectory import Trajectory, TrajectoryDataset, TrajectoryStep
 # ---------------------------------------------------------------------------
 # Policies — DOMAIN: extend with domain-aware heuristics on finale day
 # ---------------------------------------------------------------------------
+
+def _action_system_prompt() -> str:
+    cmds = ", ".join(sorted({c.value for c in ActionCommand}))
+    return (
+        "You are an agent interacting with an OpenEnv environment.\n\n"
+        "Each turn you receive an Observation as JSON and must respond with a single Action as JSON.\n\n"
+        "Action schema:\n"
+        '  {"command": "<cmd>", "args": {...}, "justification": "...", "confidence": 0.0-1.0}\n\n'
+        f"Valid <cmd> values are: {cmds}\n\n"
+        "Respond ONLY with the JSON object. No prose, no markdown fences."
+    )
+
+
+def make_adapter_policy(
+    *,
+    adapter_path: str | Path,
+    base_model: str,
+    device: Optional[str] = None,
+    max_new_tokens: int = 256,
+) -> Callable[[dict, random.Random], Action]:
+    """Create a policy that uses a saved LoRA adapter to emit Actions.
+
+    This is intended for evaluation/rollout collection after training. It loads
+    the base model + adapter once (lazy) and then generates one Action per step.
+    """
+
+    adapter_path = Path(adapter_path)
+    system_prompt = _action_system_prompt()
+
+    model = None
+    tokenizer = None
+
+    def _ensure_loaded() -> None:
+        nonlocal model, tokenizer
+        if model is not None and tokenizer is not None:
+            return
+
+        import torch
+        from peft import PeftModel
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        if not (adapter_path / "adapter_config.json").exists():
+            raise FileNotFoundError(
+                f"No LoRA adapter found at {adapter_path}. Expected adapter_config.json."
+            )
+
+        tok = AutoTokenizer.from_pretrained(base_model)
+        if tok.pad_token is None:
+            tok.pad_token = tok.eos_token
+
+        # Prefer GPU if available; fall back to CPU for correctness.
+        if device is None:
+            device_ = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
+            device_ = device
+
+        # Try 4-bit on CUDA if bitsandbytes is available; otherwise use fp16/bf16.
+        load_kwargs: dict = {}
+        if device_ == "cuda":
+            dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+            load_kwargs.update({"torch_dtype": dtype, "device_map": "auto"})
+            try:
+                import bitsandbytes  # noqa: F401
+                load_kwargs["load_in_4bit"] = True
+            except Exception:
+                pass
+        else:
+            load_kwargs.update({"torch_dtype": torch.float32, "device_map": None})
+
+        base = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
+        m = PeftModel.from_pretrained(base, str(adapter_path))
+        m.eval()
+
+        model = m
+        tokenizer = tok
+
+    def policy(observation_dict: dict, rng: random.Random) -> Action:  # noqa: ARG001
+        _ensure_loaded()
+        assert model is not None and tokenizer is not None
+
+        from inference import parse_action
+        import torch
+
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": json.dumps(observation_dict, indent=2)},
+        ]
+
+        # Use chat template when available; otherwise plain concatenation.
+        if getattr(tokenizer, "chat_template", None) is not None:
+            prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        else:
+            prompt = system_prompt + "\n\nObservation:\n" + messages[1]["content"] + "\n\nAction JSON:"
+
+        inputs = tokenizer(prompt, return_tensors="pt")
+        if hasattr(model, "device") and model.device is not None:
+            inputs = {k: v.to(model.device) for k, v in inputs.items()}
+
+        with torch.no_grad():
+            out = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                do_sample=False,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        response = tokenizer.decode(
+            out[0][inputs["input_ids"].shape[1]:],
+            skip_special_tokens=True,
+        ).strip()
+        return parse_action(response)
+
+    return policy
 
 
 def random_policy(
@@ -115,11 +230,18 @@ def run_episode(
     policy_name: str,
     scenario_name: Optional[str] = None,
     rng: Optional[random.Random] = None,
+    adapter_path: Optional[str | Path] = None,
+    base_model: Optional[str] = None,
 ) -> Trajectory:
     """Run one episode to completion, return a Trajectory."""
-    if policy_name not in POLICIES:
-        raise ValueError(f"Unknown policy: {policy_name}. Valid: {list(POLICIES)}")
-    policy = POLICIES[policy_name]
+    if policy_name == "adapter":
+        if adapter_path is None or base_model is None:
+            raise ValueError("policy='adapter' requires adapter_path and base_model")
+        policy = make_adapter_policy(adapter_path=adapter_path, base_model=base_model)
+    else:
+        if policy_name not in POLICIES:
+            raise ValueError(f"Unknown policy: {policy_name}. Valid: {list(POLICIES) + ['adapter']}")
+        policy = POLICIES[policy_name]
     rng = rng or random.Random()
 
     obs = env.reset(scenario_name=scenario_name)
@@ -156,6 +278,8 @@ def collect(
     domain_randomise: bool = True,
     curriculum_phase: Optional[int] = None,
     reward_config: Optional[RewardConfig] = None,
+    adapter_path: Optional[str | Path] = None,
+    base_model: Optional[str] = None,
 ) -> TrajectoryDataset:
     """Collect N episodes, save to output_dir as a TrajectoryDataset."""
     rng = random.Random(seed)
@@ -168,7 +292,14 @@ def collect(
             curriculum_phase=curriculum_phase or 1,
             reward_config=reward_config,
         )
-        traj = run_episode(env, policy, scenario_name=scenario_name, rng=rng)
+        traj = run_episode(
+            env,
+            policy,
+            scenario_name=scenario_name,
+            rng=rng,
+            adapter_path=adapter_path,
+            base_model=base_model,
+        )
         dataset.append(traj)
         print(
             f"[{i+1}/{episodes}] task={traj.task_id} "
@@ -192,7 +323,7 @@ def collect(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Collect rollout trajectories.")
-    parser.add_argument("--policy", choices=list(POLICIES), default="random")
+    parser.add_argument("--policy", choices=list(POLICIES) + ["adapter"], default="random")
     parser.add_argument("--episodes", type=int, default=10)
     parser.add_argument("--output-dir", type=str, required=True)
     parser.add_argument("--scenario-name", type=str, default=None)
@@ -200,6 +331,10 @@ def main() -> None:
     parser.add_argument("--no-randomise", action="store_true")
     parser.add_argument("--curriculum-phase", type=int, default=None,
                         help="Curriculum phase (1-4) for task selection")
+    parser.add_argument("--adapter-path", type=str, default=None,
+                        help="Path to LoRA adapter directory (policy=adapter)")
+    parser.add_argument("--base-model", type=str, default=None,
+                        help="Base HF model id (policy=adapter)")
     parser.add_argument("--reward-mode",
                         choices=[m.value for m in RewardMode],
                         default=None,
@@ -221,6 +356,8 @@ def main() -> None:
         domain_randomise=not args.no_randomise,
         curriculum_phase=args.curriculum_phase,
         reward_config=reward_config,
+        adapter_path=args.adapter_path,
+        base_model=args.base_model,
     )
 
 
