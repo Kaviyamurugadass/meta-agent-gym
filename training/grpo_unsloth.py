@@ -183,10 +183,26 @@ def _build_prompt_dataset(args: argparse.Namespace) -> list[dict[str, Any]]:
         phase = controller.current_phase if controller else 1
         env = Environment(domain_randomise=args.domain_randomise, seed=args.seed + i)
         obs = env.reset(scenario_name=scenario, curriculum_phase=phase)
+        # Keep the training prompt small enough to fit T4 max_seq_length.
+        # The full Observation contains many fields that aren't needed for choosing
+        # an action sequence. Include task context + current spec only.
+        task = env._task  # internal but stable in this codebase
+        compact_obs = {
+            "task_id": obs.task_id,
+            "step": obs.step,
+            "max_steps": obs.max_steps,
+            "domain": getattr(task, "domain", None),
+            "difficulty": getattr(task, "difficulty", None),
+            "problem_statement": getattr(task, "problem_statement", None),
+            "required_skills": getattr(task, "required_skills", None),
+            "recommended_skills": getattr(task, "recommended_skills", None),
+            "available_skills": list(getattr(env, "_task", None).required_skills or []) + list(getattr(env, "_task", None).recommended_skills or []),
+            "current_spec": obs.current_spec,
+        }
         prompts.append({
             "prompt": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": json.dumps(obs.model_dump(exclude_none=True), indent=2)},
+                {"role": "user", "content": json.dumps(compact_obs, indent=2)},
             ],
             "scenario_name": scenario or obs.task_id,
         })
@@ -203,14 +219,30 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
     )
 
     def reward_fn(completions: list[str], **kw: Any) -> list[float]:
-        scenarios = kw.get("scenario_name") or [None] * len(completions)
+        scenarios = kw.get("scenario_name")
+        if scenarios is None:
+            scenarios = [None] * len(completions)
+        elif isinstance(scenarios, str):
+            # TRL sometimes passes a scalar string even when batch size > 1.
+            scenarios = [scenarios] * len(completions)
+        elif isinstance(scenarios, list) and len(scenarios) != len(completions):
+            # Be defensive: pad/trim to match completions length.
+            scenarios = (scenarios + [None] * len(completions))[: len(completions)]
+
         rewards = []
+        printed = 0
         for completion, scenario in zip(completions, scenarios):
             try:
                 actions = parse_actions(completion)
                 r, _ = backend.score(actions, scenario_name=scenario)
                 rewards.append(float(r))
-            except Exception:
+            except Exception as e:
+                # Return -1.0 to penalize unparseable/errored completions,
+                # but print the first few exceptions so debugging is possible
+                # in Colab logs.
+                if printed < 3:
+                    print(f"[reward_fn] error: {type(e).__name__}: {e}", file=sys.stderr)
+                    printed += 1
                 rewards.append(-1.0)
         return rewards
 
