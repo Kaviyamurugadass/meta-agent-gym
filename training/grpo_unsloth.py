@@ -235,7 +235,16 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
         fail_fast = os.getenv("REWARD_FN_FAIL_FAST", "0") == "1"
         for completion, scenario in zip(completions, scenarios):
             try:
-                actions = parse_actions(completion)
+                # TRL/Unsloth can pass completions as:
+                #   - a string
+                #   - a list[str] of token-chunks
+                # Normalize to a single string before parsing.
+                if isinstance(completion, list):
+                    completion_text = "".join(str(x) for x in completion)
+                else:
+                    completion_text = str(completion)
+
+                actions = parse_actions(completion_text)
                 r, _ = backend.score(actions, scenario_name=scenario)
                 rewards.append(float(r))
             except Exception as e:
@@ -243,7 +252,7 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
                 # but print the first few exceptions so debugging is possible
                 # in Colab logs. (stdout is more reliably captured than stderr.)
                 if printed < 3:
-                    head = (completion or "")[:300].replace("\n", "\\n")
+                    head = (completion_text or "")[:300].replace("\n", "\\n")
                     print(f"[reward_fn] error: {type(e).__name__}: {e}")
                     print(f"[reward_fn] scenario={scenario!r} completion_head={head!r}")
                     printed += 1
