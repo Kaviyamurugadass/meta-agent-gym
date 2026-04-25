@@ -36,7 +36,9 @@ def _action_system_prompt() -> str:
         "Action schema:\n"
         '  {"command": "<cmd>", "args": {...}, "justification": "...", "confidence": 0.0-1.0}\n\n'
         f"Valid <cmd> values are: {cmds}\n\n"
-        "Respond ONLY with the JSON object. No prose, no markdown fences."
+        "Respond ONLY with the JSON object. No prose, no markdown fences.\n"
+        "Do NOT think out loud or explain. Output the JSON object directly.\n\n"
+        "/no_think"
     )
 
 
