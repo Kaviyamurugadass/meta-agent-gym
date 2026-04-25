@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -231,6 +232,7 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
 
         rewards = []
         printed = 0
+        fail_fast = os.getenv("REWARD_FN_FAIL_FAST", "0") == "1"
         for completion, scenario in zip(completions, scenarios):
             try:
                 actions = parse_actions(completion)
@@ -239,10 +241,14 @@ def _make_reward_fn(args: argparse.Namespace):  # type: ignore[no-untyped-def]
             except Exception as e:
                 # Return -1.0 to penalize unparseable/errored completions,
                 # but print the first few exceptions so debugging is possible
-                # in Colab logs.
+                # in Colab logs. (stdout is more reliably captured than stderr.)
                 if printed < 3:
-                    print(f"[reward_fn] error: {type(e).__name__}: {e}", file=sys.stderr)
+                    head = (completion or "")[:300].replace("\n", "\\n")
+                    print(f"[reward_fn] error: {type(e).__name__}: {e}")
+                    print(f"[reward_fn] scenario={scenario!r} completion_head={head!r}")
                     printed += 1
+                if fail_fast:
+                    raise
                 rewards.append(-1.0)
         return rewards
 
