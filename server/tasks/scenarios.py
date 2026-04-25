@@ -84,7 +84,7 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
         domain="code",
         difficulty="easy",
         problem_statement=(
-            "Build an agent that reviews code for missing error handling."
+            "Build an agent that reviews a Python function for missing error handling."
         ),
         max_steps=7,
         required_skills=["code-reviewer"],
@@ -99,6 +99,81 @@ PHASE_1_SCENARIOS: list[TaskSpec] = [
         red_herrings=[
             "Don't suggest refactoring working code",
             "Focus only on error handling, not other issues",
+        ],
+    ),
+    TaskSpec(
+        task_id="te_easy_001",
+        domain="code",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that generates pytest cases for a target function. "
+            "Cover the happy path plus 2-3 edge cases (empty input, boundary values, "
+            "type errors). Output should be runnable pytest code."
+        ),
+        max_steps=7,
+        required_skills=["test-generator"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "test_framework": "pytest",
+        },
+        citations=["https://docs.pytest.org/"],
+        expected_findings={
+            "skill_count": 1,
+        },
+        red_herrings=[
+            "Don't add property-based testing unless the task asks for it",
+            "Don't generate tests for code that wasn't specified",
+        ],
+    ),
+    TaskSpec(
+        task_id="db_easy_001",
+        domain="code",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that debugs a failing test. Given a stack trace and the "
+            "associated log lines, identify the most likely root cause and propose "
+            "a single-file fix."
+        ),
+        max_steps=7,
+        required_skills=["log-analyzer", "code-fixer"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "scope": "single_file",
+        },
+        citations=["https://docs.python.org/3/library/logging.html"],
+        expected_findings={
+            "skill_count": 2,
+        },
+        red_herrings=[
+            "Don't propose architectural changes for a localised bug",
+            "Don't speculate beyond what the trace shows",
+        ],
+    ),
+    TaskSpec(
+        task_id="rf_easy_001",
+        domain="code",
+        difficulty="easy",
+        problem_statement=(
+            "Build an agent that refactors a long Python function. Extract logical "
+            "blocks into named helpers, add type hints, preserve observable behaviour. "
+            "Output the refactored module."
+        ),
+        max_steps=7,
+        required_skills=["code-reviewer", "code-fixer"],
+        recommended_skills=[],
+        user_preferences={
+            "language": "python",
+            "preserve_behaviour": True,
+        },
+        citations=["https://peps.python.org/pep-0008/", "https://peps.python.org/pep-0484/"],
+        expected_findings={
+            "skill_count": 2,
+        },
+        red_herrings=[
+            "Don't change function signatures the caller depends on",
+            "Don't introduce new dependencies for stylistic refactors",
         ],
     ),
     TaskSpec(

@@ -365,7 +365,10 @@ const $=id=>document.getElementById(id);
 const TASKS=[
     {id:"ws_easy_001",diff:"easy",domain:"web",desc:"Extract product prices from a single e-commerce page",skills:["web-scraping","html-parser"]},
     {id:"da_easy_001",diff:"easy",domain:"data",desc:"Count rows in a CSV file and report basic statistics",skills:["csv-handler"]},
-    {id:"cr_easy_001",diff:"easy",domain:"code",desc:"Review a Python function for error handling issues",skills:["code-reviewer"]},
+    {id:"cr_easy_001",diff:"easy",domain:"code",desc:"Review a Python function for missing error handling",skills:["code-reviewer"]},
+    {id:"te_easy_001",diff:"easy",domain:"code",desc:"Generate pytest cases for a function (cover edge cases + happy path)",skills:["test-generator"]},
+    {id:"db_easy_001",diff:"easy",domain:"code",desc:"Debug a failing test: inspect logs, identify root cause, propose a fix",skills:["log-analyzer","code-fixer"]},
+    {id:"rf_easy_001",diff:"easy",domain:"code",desc:"Refactor a long function: extract helpers, add type hints, keep behaviour",skills:["code-reviewer","code-fixer"]},
     {id:"fi_easy_001",diff:"easy",domain:"files",desc:"Read a log file and extract lines matching a pattern",skills:["file-reader"]},
     {id:"fi_easy_002",diff:"easy",domain:"files",desc:"Write data to a JSON file with proper formatting",skills:["file-writer","json-parser"]},
     {id:"an_easy_001",diff:"easy",domain:"analysis",desc:"Analyze a log file to count ERROR-level messages",skills:["log-analyzer"]},
@@ -398,7 +401,7 @@ let ws=null,wsOk=false,pending=null,spec={},active=false,step=0,maxStep=7;
         if(!gr[d])return;
         const og=document.createElement("optgroup");
         og.label=d[0].toUpperCase()+d.slice(1)+" ("+gr[d].length+")";
-        gr[d].forEach(t=>{const o=document.createElement("option");o.value=t.id;o.textContent=t.id+" — "+t.desc.slice(0,48)+(t.desc.length>48?"...":"");og.appendChild(o)});
+        gr[d].forEach(t=>{const o=document.createElement("option");o.value=t.id;o.textContent=t.desc;o.title=t.id+" · "+t.domain+" · skills: "+t.skills.join(", ");og.appendChild(o)});
         sel.appendChild(og);
     });
     sel.disabled=false;sel.onchange=showTask;
