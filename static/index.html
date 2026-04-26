@@ -163,6 +163,8 @@ body{overflow:hidden}
 .suggest-list a{color:var(--accent);text-decoration:none;font-size:0.78rem;cursor:pointer;border-bottom:1px dashed transparent;transition:border 0.15s}
 .suggest-list a:hover{border-bottom-color:var(--accent)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flashFill{0%{border-color:var(--accent);background:rgba(96,165,250,0.12)}100%{border-color:var(--border);background:var(--surface2)}}
+.field-filled{animation:flashFill 1s ease forwards}
 /* ─── Judge Score Card ─── */
 .judge-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin-bottom:16px;animation:slideDown 0.35s ease;overflow:hidden}
 .judge-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(96,165,250,0.05),rgba(167,139,250,0.05))}
@@ -704,12 +706,23 @@ function autoFillFromSelected(){
     const id=$("taskSelect").value;
     const t=TASKS.find(x=>x.id===id);if(!t)return;
     const prefix=t.id.split("_")[0];
+    const fields=["cmdName","cmdDesc","cmdPrompt"];
+
     $("cmdName").value=_NAME_MAP[prefix]||t.id.replace(/_\w+_\d+$/,"").replace(/_/g,"-");
     $("cmdDesc").value=t.desc;
     if(t.skills.length)$("cmdSkill").value=t.skills[0];
     $("cmdModel").value=_MODEL_MAP[t.diff]||"sonnet";
     $("cmdPrompt").value=`You are a specialized ${(t.skills[0]||"agent").replace(/-/g," ")} for the task: ${t.desc}.\n\nSteps:\n1. Carefully analyze the input.\n2. Apply ${(t.skills[0]||"your specialist")} capabilities to complete the task.\n3. Validate inputs and handle errors gracefully.\n4. Return a clear, correct, and actionable result.`;
-    // Open all accordions so user can see filled fields
+
+    // Flash each filled field so user notices the auto-fill happened
+    fields.forEach(id=>{
+        const el=$(id);if(!el)return;
+        el.classList.remove("field-filled");
+        void el.offsetWidth; // force reflow to restart animation
+        el.classList.add("field-filled");
+    });
+
+    // Open all accordions so user can see every filled field
     document.querySelectorAll(".acc-body").forEach(b=>b.classList.add("open"));
     document.querySelectorAll(".acc-arrow").forEach(a=>a.classList.add("open"));
 }
