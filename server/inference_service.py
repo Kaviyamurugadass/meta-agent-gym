@@ -28,7 +28,8 @@ from typing import Any, Optional
 
 
 DEFAULT_ADAPTER_PATH = Path(os.getenv("META_ADAPTER_PATH", "training/grpo-unsloth-output"))
-DEFAULT_BASE_MODEL = "Qwen/Qwen2.5-0.5B"
+DEFAULT_ADAPTER_HF_ID = os.getenv("META_ADAPTER_HF_ID", "Kaviya-M/meta-agent-gym-adapter")
+DEFAULT_BASE_MODEL = "unsloth/qwen3-1.7b-unsloth-bnb-4bit"
 DEFAULT_INFERENCE_DTYPE = os.getenv("META_INFERENCE_DTYPE", "auto")
 DEFAULT_ALLOW_HEURISTIC_FALLBACK = os.getenv("META_ALLOW_HEURISTIC_FALLBACK", "1") != "0"
 
@@ -82,7 +83,16 @@ class InferenceService:
     # ------------------------------------------------------------------ status
     @property
     def adapter_available(self) -> bool:
-        return (self.adapter_path / "adapter_config.json").exists()
+        # Local adapter takes priority; fall back to HF Hub ID
+        if (self.adapter_path / "adapter_config.json").exists():
+            return True
+        if DEFAULT_ADAPTER_HF_ID:
+            try:
+                from huggingface_hub import file_exists
+                return file_exists(DEFAULT_ADAPTER_HF_ID, "adapter_config.json")
+            except Exception:
+                return True  # assume available; real error surfaces in _load
+        return False
 
     @property
     def deps_available(self) -> bool:
@@ -126,7 +136,15 @@ class InferenceService:
             torch_dtype=_resolve_torch_dtype(torch, self.inference_dtype),
             low_cpu_mem_usage=True,
         )
-        model = PeftModel.from_pretrained(base, str(self.adapter_path))
+        # Use local adapter if it exists, otherwise load from HF Hub
+        adapter_source = (
+            str(self.adapter_path)
+            if (self.adapter_path / "adapter_config.json").exists()
+            else DEFAULT_ADAPTER_HF_ID
+        )
+        import logging as _log
+        _log.getLogger(__name__).info("Loading adapter from: %s", adapter_source)
+        model = PeftModel.from_pretrained(base, adapter_source)
         model.eval()
 
         self._tokenizer = tokenizer

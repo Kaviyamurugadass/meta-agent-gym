@@ -29,6 +29,7 @@ Within one training run, the model learned to produce structured AGENT.md files 
 | Resource | Link |
 |---|---|
 | 🤗 HF Space (live environment) | https://huggingface.co/spaces/Kaviya-M/meta-agent-gym |
+| 🧠 Trained LoRA adapter | https://huggingface.co/Kaviya-M/meta-agent-gym-adapter |
 | 📓 Colab training notebook | https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb |
 | 💻 GitHub repository | https://github.com/Kaviyamurugadass/meta-agent-gym |
 | 📝 Blog post | [`Blog.md`](Blog.md) |

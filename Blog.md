@@ -7,6 +7,7 @@
 | | |
 |---|---|
 | 🤗 Live demo | [huggingface.co/spaces/Kaviya-M/meta-agent-gym](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym) |
+| 🧠 Trained adapter | [Kaviya-M/meta-agent-gym-adapter](https://huggingface.co/Kaviya-M/meta-agent-gym-adapter) |
 | 💻 Code | [github.com/Kaviyamurugadass/meta-agent-gym](https://github.com/Kaviyamurugadass/meta-agent-gym) |
 | 📓 Colab notebook | [train_colab.ipynb](https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb) |
 
