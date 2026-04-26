@@ -29,6 +29,7 @@ So this project is both a working OpenEnv gym and a case study in why real execu
 | Resource | Link |
 |---|---|
 | 🤗 HF Space (live environment) | https://huggingface.co/spaces/Kaviya-M/meta-agent-gym |
+| 🎥 YouTube Demo Video | https://www.youtube.com/shorts/F3YGDmDQKJk?si=gX2UVq2Z4D_QPl1e |
 | 🧠 Trained LoRA adapter | https://huggingface.co/Kaviya-M/meta-agent-gym-adapter |
 | 📓 Colab training notebook | https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb |
 | 💻 GitHub repository | https://github.com/Kaviyamurugadass/meta-agent-gym |
@@ -331,7 +332,11 @@ The first run made this part less theoretical. Current defenses:
 
 ### Try the live demo
 
-[**huggingface.co/spaces/Kaviya-M/meta-agent-gym**](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
+**[🤖 Try Live Demo](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)**
+
+**[🎥 Watch My YouTube Demo Video](https://www.youtube.com/shorts/F3YGDmDQKJk?si=gX2UVq2Z4D_QPl1e)**
+
+See the complete project explanation in under 60 seconds - from empty prompt to expert agent designer.
 
 Two tabs:
 - **Build Step-by-Step** - pick a scenario, issue commands manually, and watch reward update live

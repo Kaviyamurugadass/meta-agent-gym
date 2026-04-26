@@ -324,4 +324,12 @@ Or open the [live Space](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym) 
 
 ---
 
+## 🎥 Watch My YouTube Demo Video
+
+See the complete project explanation in under 60 seconds - from empty prompt to expert agent designer:
+
+**[🎥 Watch on YouTube](https://www.youtube.com/shorts/F3YGDmDQKJk?si=gX2UVq2Z4D_QPl1e)**
+
+---
+
 *Built for OpenEnv Hackathon 2026 by [@Kaviyamurugadass](https://github.com/Kaviyamurugadass)*
