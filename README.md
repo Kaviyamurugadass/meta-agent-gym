@@ -49,7 +49,7 @@ This OpenEnv environment grades AGENT.md specifications across multiple independ
 
 The hardest design call was the **action space**. Free-form text generation was tempting (it's how humans write `AGENT.md` by hand), but credit assignment for GRPO is brutal on long token sequences.
 
-I went with **12 discrete commands** instead — `set_name`, `set_description`, `add_skill`, `remove_skill`, `set_model`, `write_prompt`, `add_tools`, `set_memory`, `set_max_turns`, `check_score`, `inspect_example`, `submit`. Each command has clean semantics, the reward responds per-step, and the agent can investigate (`check_score`) before committing (`submit`).
+I went with **14 discrete commands** instead — `set_name`, `set_description`, `add_skill`, `remove_skill`, `set_model`, `write_prompt`, `add_tools`, `set_memory`, `set_max_turns`, `check_score`, `inspect_example`, `submit`, `noop`, `inspect`. Each command has clean semantics, the reward responds per-step, and the agent can investigate (`check_score`) before committing (`submit`).
 
 The reward function is multi-component on purpose. **Six judge dimensions** (skill_selection, description_quality, workflow_clarity, model_appropriateness, best_practices, efficiency) plus **five hard verifiers** (yaml_valid, has_required_fields, prompt_length_ok, model_valid, skills_format_ok). Three of those hard verifiers act as **gates** — fail any one and the entire step reward zeroes. Defense in depth, in case the judge components get gamed.
 
@@ -263,7 +263,7 @@ There are two distinct rollout sets in this repo and they describe different thi
 Other things to be straight about:
 
 - **The Goose harness covers 3 Phase 1 (single-skill) tasks.** Expanding to Phase 2-4 multi-skill tasks is future work; the harness API in `evaluation/goose_execution.py` accepts new tasks without changes.
-- **The trained adapter on disk is the pre-fix one** — it was trained when the sign-flip bug was still present, so it learned to emit empty specs. The "Generate" tab in the dashboard reproduces this if you click it; I left it enabled deliberately so you can see the bug live.
+- **The trained adapter on disk is the post-fix Qwen3-1.7B run (2026-04-25)** — 25 dataset episodes, 2 epochs, 2 generations. 8/10 success, mean reward 7.68. The model learned the correct structure but does not yet condition on `required_skills` — it picks `web-scraping` for most tasks regardless of domain. The Qwen2.5-0.5B pre-fix adapter (which exploited the sign-flip bug and emitted empty specs) was the earlier run documented in `data/colab_trained/`.
 - **The "self-improvement" track** (adversarial task generation, curriculum auto-escalation) exists in code (`server/adversarial.py`, `training/curriculum.py`) but hasn't been demonstrated end-to-end. The Colab run was 4 gradient steps — far below what's needed to see curriculum escalate. Specific future-work paths I'd attempt next: VCRL ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1)) and Self-Evolving Curriculum ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970)).
 
 ---
@@ -276,7 +276,7 @@ Other things to be straight about:
 
 The dashboard has two tabs:
 - **🛠 Build Step-by-Step** — pick a scenario, issue commands manually, watch the multi-component reward update live
-- **✨ Generate from Description** — type a task, the trained model emits commands (currently the pre-fix adapter, so output is empty by design — see the bug live)
+- **✨ Generate from Description** — type a task, the Qwen3-1.7B post-fix adapter emits commands (8/10 success rate; if HF CPU cannot load the model, a heuristic fallback runs instead)
 
 ### Run locally
 
@@ -385,8 +385,8 @@ meta-agent-gym/
 | Judge (production) | Claude Sonnet, 6-dimension scoring |
 | Real execution | Goose 1.27 + Claude Code CLI provider |
 | Deployment | Docker on HF Spaces (cpu-basic) |
-| Currently shipped model | Qwen2.5-0.5B (Apache 2.0) |
-| Onsite scale-up target | Qwen3-1.7B (Apache 2.0, dual-mode reasoning, agent-ready) |
+| Currently shipped model | Qwen3-1.7B (Apache 2.0, dual-mode reasoning) |
+| Baseline run | Qwen2.5-0.5B (Apache 2.0, 4 gradient steps, sign-flip bug present) |
 
 ---
 
