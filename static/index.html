@@ -508,6 +508,9 @@ function setGenSuggestion(text){
         sel.appendChild(og);
     });
     sel.disabled=false;sel.onchange=showTask;
+    // Auto-select first easy scenario so fields are pre-filled on load
+    const firstEasy=Array.from(sel.options).find(o=>o.value&&o.value.includes("easy"));
+    if(firstEasy){sel.value=firstEasy.value;showTask();}
     const ss=$("cmdSkill");ss.innerHTML='<option value="">Pick a skill...</option>';
     SKILLS.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;ss.appendChild(o)});
     $("btnStart").disabled=false;
