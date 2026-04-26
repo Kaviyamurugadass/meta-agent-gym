@@ -595,16 +595,52 @@ async function generateWithModel(){
             const src=$("agentPreview");
             previewGen.textContent=(src?src.textContent:"")||"(empty spec)";
         }
-        // Show a compact generation summary
+        // Show generation summary with LLM judge breakdown
         if(summary&&sumBody){
             const elapsed=((Date.now()-t0)/1000).toFixed(1);
             const rb=$("rewardBadge");
-            const score=rb?rb.textContent:"--";
+            const envScore=rb?rb.textContent:"--";
+            const judge=d.judge||{};
+            const jscores=judge.scores||{};
+            const jprovider=judge.provider||"heuristic";
+            const jOverall=jscores.overall!=null?jscores.overall:null;
+            const providerLabel=jprovider.startsWith("groq")?"🤖 LLM Judge (Groq)":"📐 Heuristic Judge";
+            const providerColor=jprovider.startsWith("groq")?"var(--accent2)":"var(--muted)";
+
+            const JL={"skill_selection":"Skill Selection","description_quality":"Description","workflow_clarity":"Workflow Clarity","model_appropriateness":"Model Fit","best_practices":"Best Practices"};
+            let judgeRows="";
+            for(const[k,label] of Object.entries(JL)){
+                const v=jscores[k];
+                if(v==null)continue;
+                const pct=Math.round(v*100);
+                const col=v>=0.7?"var(--green)":(v>=0.4?"var(--yellow)":"var(--red)");
+                judgeRows+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                    <span style="width:110px;font-size:0.7rem;color:var(--muted)">${label}</span>
+                    <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px">
+                        <div style="width:${pct}%;height:100%;background:${col};border-radius:3px"></div>
+                    </div>
+                    <span style="width:32px;text-align:right;font-size:0.7rem;color:${col}">${v.toFixed(2)}</span>
+                </div>`;
+            }
+
+            const overallBadge=jOverall!=null
+                ?`<span style="font-size:1.1rem;font-weight:700;color:${jOverall>=0.7?"var(--green)":(jOverall>=0.4?"var(--yellow)":"var(--red)")}">${jOverall.toFixed(2)}</span>`
+                :"--";
+
             sumBody.innerHTML=
-                '<div>Score: <strong style="color:var(--accent)">'+score+'</strong></div>'+
-                '<div>Generated in <strong>'+elapsed+'s</strong></div>'+
-                '<div>Commands emitted: <strong>'+d.actions.length+'</strong></div>'+
-                '<div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Reward bars + violations live in the Build tab.</div>';
+                `<div style="display:flex;justify-content:space-between;margin-bottom:12px">
+                    <div>Env score: <strong style="color:var(--accent)">${envScore}</strong></div>
+                    <div>Time: <strong>${elapsed}s</strong></div>
+                    <div>Commands: <strong>${d.actions.length}</strong></div>
+                </div>`+
+                `<div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <span style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:${providerColor}">${providerLabel}</span>
+                        <span>Overall: ${overallBadge}</span>
+                    </div>`+
+                    judgeRows+
+                    (judge.reasoning?`<div style="margin-top:6px;font-size:0.7rem;color:var(--muted);font-style:italic">${judge.reasoning}</div>`:"")+
+                `</div>`;
             summary.style.display="block";
         }
     }catch(e){

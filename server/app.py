@@ -257,7 +257,18 @@ async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dic
         loop = asyncio.get_event_loop()
         spec = await loop.run_in_executor(None, svc.generate_spec, task)
         actions = spec_to_actions(spec)
-        return {"status": "ok", "spec": spec, "actions": actions}
+
+        # LLM judge — runs async-safely in thread pool, falls back to
+        # heuristics if GROQ_API_KEY is not set.
+        try:
+            from server.judge import judge_spec
+            judge_result = await loop.run_in_executor(None, judge_spec, task, spec)
+            judge_payload = judge_result.to_dict()
+        except Exception as je:
+            judge_payload = {"scores": {}, "reasoning": "", "provider": "unavailable",
+                             "error": str(je)}
+
+        return {"status": "ok", "spec": spec, "actions": actions, "judge": judge_payload}
     except Exception as e:
         return {"status": "error", "message": f"{type(e).__name__}: {e}"}
 
