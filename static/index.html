@@ -24,15 +24,15 @@ html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Sego
 body{overflow:hidden}
 
 /* ─── Header ─── */
-.header{display:flex;align-items:center;gap:20px;padding:16px 32px;border-bottom:1px solid var(--border);background:var(--surface)}
-.logo{font-size:1.4rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.subtitle{color:var(--muted);font-size:0.82rem}
-.conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:0.78rem;color:var(--muted)}
-.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(52,211,153,0.5)}
-.conn-dot.off{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,0.5)}
+.header{display:flex;align-items:center;gap:16px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);height:46px}
+.logo{font-size:1.15rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
+.subtitle{color:var(--muted);font-size:0.75rem;white-space:nowrap}
+.conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted)}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(52,211,153,0.5)}
+.conn-dot.off{background:var(--red);box-shadow:0 0 6px rgba(248,113,113,0.5)}
 
 /* ─── Layout ─── */
-.layout{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 57px)}
+.layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 46px - 45px)}
 .sidebar,.main{overflow-y:auto;padding:24px}
 .sidebar{border-right:1px solid var(--border);background:var(--bg)}
 .main{background:var(--bg);display:flex;flex-direction:column;gap:20px}
@@ -163,6 +163,23 @@ body{overflow:hidden}
 .suggest-list a{color:var(--accent);text-decoration:none;font-size:0.78rem;cursor:pointer;border-bottom:1px dashed transparent;transition:border 0.15s}
 .suggest-list a:hover{border-bottom-color:var(--accent)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+/* ─── Judge Score Card ─── */
+.judge-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin-bottom:16px;animation:slideDown 0.35s ease;overflow:hidden}
+.judge-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(96,165,250,0.05),rgba(167,139,250,0.05))}
+.judge-overall{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.judge-overall-num{font-size:2rem;font-weight:800;line-height:1;font-family:"JetBrains Mono",monospace}
+.judge-overall-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.judge-body{padding:14px 20px}
+.judge-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.judge-row-label{width:120px;font-size:0.72rem;color:var(--muted);white-space:nowrap}
+.judge-track{flex:1;height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden}
+.judge-fill{height:100%;border-radius:4px;transition:width 0.6s cubic-bezier(0.22,1,0.36,1)}
+.judge-row-val{width:36px;text-align:right;font-size:0.72rem;font-weight:700;font-family:"JetBrains Mono",monospace}
+.judge-meta{display:flex;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--border);background:rgba(0,0,0,0.2);font-size:0.72rem;color:var(--muted)}
+.judge-reasoning{padding:8px 20px 12px;font-size:0.72rem;color:var(--muted);font-style:italic;border-top:1px solid var(--border)}
+/* ─── Auto-fill button ─── */
+.btn-autofill{background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(167,139,250,0.15));color:var(--accent);border:1px solid rgba(96,165,250,0.2);font-size:0.72rem;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:inherit;font-weight:600}
+.btn-autofill:hover{background:linear-gradient(135deg,rgba(96,165,250,0.25),rgba(167,139,250,0.25));border-color:rgba(96,165,250,0.4)}
 </style>
 </head>
 <body>
@@ -201,6 +218,7 @@ body{overflow:hidden}
             <div class="btn-row" style="margin-top:14px">
                 <button class="btn btn-primary" id="btnStart" disabled>Start Episode</button>
                 <button class="btn btn-ghost" id="btnReset" disabled>New Episode</button>
+                <button class="btn-autofill" id="btnAutoFill" onclick="autoFillFromSelected()" style="display:none" title="Fill all fields from this task's required skills and description">⚡ Auto-fill</button>
             </div>
         </div>
 
@@ -384,15 +402,6 @@ body{overflow:hidden}
     <!-- ─── Sidebar (input side) ─── -->
     <div class="sidebar">
 
-        <!-- Generation summary — pinned to top, visible after a successful run -->
-        <div class="card" id="genResultSummary" style="display:none;animation:slideDown 0.3s ease">
-            <div class="card-head" style="border-bottom:2px solid var(--accent)">
-                <span class="card-title" style="color:var(--accent)">✅ Generation Summary</span>
-                <button class="btn btn-sm btn-ghost" onclick="$('genResultSummary').style.display='none'" style="padding:2px 8px;font-size:0.7rem">✕</button>
-            </div>
-            <div id="genResultBody" style="font-size:0.82rem;line-height:1.7"></div>
-        </div>
-
         <!-- Generate panel -->
         <div class="card">
             <div class="card-head">
@@ -422,15 +431,19 @@ body{overflow:hidden}
 
     <!-- ─── Main (output side) ─── -->
     <div class="main">
+
+        <!-- Judge Score — appears at top after generation -->
+        <div class="judge-card" id="genResultSummary" style="display:none"></div>
+
         <div class="card" style="flex:1;display:flex;flex-direction:column">
             <div class="card-head">
                 <span class="card-title">Generated AGENT.md</span>
                 <div class="btn-row" style="margin:0">
-                    <button class="btn btn-sm btn-ghost" onclick="copyAgent()">Copy</button>
-                    <button class="btn btn-sm btn-ghost" onclick="downloadAgent()">Download</button>
+                    <button class="btn btn-sm btn-ghost" onclick="copyAgentGen()">Copy</button>
+                    <button class="btn btn-sm btn-ghost" onclick="downloadAgentGen()">Download</button>
                 </div>
             </div>
-            <div class="preview" id="agentPreviewGen" style="min-height:420px">Type a task description on the left, then click <strong>Generate Agent</strong>.</div>
+            <div class="preview" id="agentPreviewGen" style="min-height:360px;flex:1">Type a task description on the left, then click <strong>✨ Generate Agent</strong>.</div>
         </div>
     </div>
 </div>
@@ -551,7 +564,7 @@ async function generateWithModel(){
     btn.disabled=true;btn.textContent="Generating...";
     const previewGen=$("agentPreviewGen");
     if(previewGen)previewGen.textContent="⏳ Calling trained model...";
-    const summary=$("genResultSummary"),sumBody=$("genResultBody");
+    const summary=$("genResultSummary");
     if(summary)summary.style.display="none";
     const t0=Date.now();
     // Check if model is already loaded — if not, warn user that first call is slow
@@ -616,53 +629,50 @@ async function generateWithModel(){
             const src=$("agentPreview");
             previewGen.textContent=(src?src.textContent:"")||"(empty spec)";
         }
-        // Show generation summary with LLM judge breakdown
-        if(summary&&sumBody){
+        // Show prominent judge score card at top of main column
+        if(summary){
             const elapsed=((Date.now()-t0)/1000).toFixed(1);
             const rb=$("rewardBadge");
             const envScore=rb?rb.textContent:"--";
             const judge=d.judge||{};
             const jscores=judge.scores||{};
             const jprovider=judge.provider||"heuristic";
-            const jOverall=jscores.overall!=null?jscores.overall:null;
-            const providerLabel=jprovider.startsWith("groq")?"🤖 LLM Judge (Groq)":"📐 Heuristic Judge";
-            const providerColor=jprovider.startsWith("groq")?"var(--accent2)":"var(--muted)";
+            const jOverall=typeof jscores.overall==="number"?jscores.overall:null;
+            const isLLM=jprovider.startsWith("groq")||jprovider.startsWith("openai");
+            const providerLabel=isLLM?`🤖 LLM Judge <span style="opacity:.6;font-weight:400">(${jprovider.split("/")[1]||"groq"})</span>`:"📐 Heuristic Judge";
+            const overallColor=jOverall===null?"var(--muted)":(jOverall>=0.7?"var(--green)":(jOverall>=0.4?"var(--yellow)":"var(--red)"));
+            const overallTxt=jOverall!==null?jOverall.toFixed(2):"–";
 
-            const JL={"skill_selection":"Skill Selection","description_quality":"Description","workflow_clarity":"Workflow Clarity","model_appropriateness":"Model Fit","best_practices":"Best Practices"};
-            let judgeRows="";
-            for(const[k,label] of Object.entries(JL)){
-                const v=jscores[k];
-                if(v==null)continue;
+            const JL=[["skill_selection","Skill Selection"],["description_quality","Description"],["workflow_clarity","Workflow Clarity"],["model_appropriateness","Model Fit"],["best_practices","Best Practices"]];
+            let rows="";
+            for(const[k,label] of JL){
+                const v=jscores[k];if(v==null)continue;
                 const pct=Math.round(v*100);
                 const col=v>=0.7?"var(--green)":(v>=0.4?"var(--yellow)":"var(--red)");
-                judgeRows+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                    <span style="width:110px;font-size:0.7rem;color:var(--muted)">${label}</span>
-                    <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:3px">
-                        <div style="width:${pct}%;height:100%;background:${col};border-radius:3px"></div>
-                    </div>
-                    <span style="width:32px;text-align:right;font-size:0.7rem;color:${col}">${v.toFixed(2)}</span>
-                </div>`;
+                rows+=`<div class="judge-row"><span class="judge-row-label">${label}</span><div class="judge-track"><div class="judge-fill" style="width:${pct}%;background:${col}"></div></div><span class="judge-row-val" style="color:${col}">${v.toFixed(2)}</span></div>`;
             }
 
-            const overallBadge=jOverall!=null
-                ?`<span style="font-size:1.1rem;font-weight:700;color:${jOverall>=0.7?"var(--green)":(jOverall>=0.4?"var(--yellow)":"var(--red)")}">${jOverall.toFixed(2)}</span>`
-                :"--";
-
-            sumBody.innerHTML=
-                `<div style="display:flex;justify-content:space-between;margin-bottom:12px">
-                    <div>Env score: <strong style="color:var(--accent)">${envScore}</strong></div>
-                    <div>Time: <strong>${elapsed}s</strong></div>
-                    <div>Commands: <strong>${d.actions.length}</strong></div>
+            summary.innerHTML=
+                `<div class="judge-header">
+                    <div>
+                        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px">${providerLabel}</div>
+                        <div style="font-size:0.72rem;color:var(--muted)">Quality evaluation of the generated spec</div>
+                    </div>
+                    <div class="judge-overall">
+                        <span class="judge-overall-num" style="color:${overallColor}">${overallTxt}</span>
+                        <span class="judge-overall-label">Overall Score</span>
+                    </div>
                 </div>`+
-                `<div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                        <span style="font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:${providerColor}">${providerLabel}</span>
-                        <span>Overall: ${overallBadge}</span>
-                    </div>`+
-                    judgeRows+
-                    (judge.reasoning?`<div style="margin-top:6px;font-size:0.7rem;color:var(--muted);font-style:italic">${judge.reasoning}</div>`:"")+
-                `</div>`;
+                `<div class="judge-body">${rows}</div>`+
+                (judge.reasoning?`<div class="judge-reasoning">"${judge.reasoning}"</div>`:"")+
+                `<div class="judge-meta">
+                    <span>Env reward: <strong style="color:var(--accent)">${envScore}</strong></span>
+                    <span>Generated in <strong>${elapsed}s</strong></span>
+                    <span>Commands: <strong>${d.actions.length}</strong></span>
+                    <button onclick="$('genResultSummary').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.72rem;padding:0">✕ dismiss</button>
+                </div>`;
             summary.style.display="block";
+            summary.scrollIntoView({behavior:"smooth",block:"start"});
         }
     }catch(e){
         const isConn=e.message.includes("Timeout")||e.message.includes("connect")||e.message.includes("WebSocket")||e.message.includes("abort");
@@ -677,12 +687,31 @@ async function generateWithModel(){
 
 function setConn(ok){wsOk=ok;$("connDot").className="conn-dot"+(ok?"":" off");$("connText").textContent=ok?"Connected":"Offline"}
 
+const _NAME_MAP={"ws":"web-scraper","da":"data-analyst","cr":"code-reviewer","te":"test-generator","db":"log-debugger","rf":"refactor-agent","fi":"file-processor","an":"log-analyzer","ou":"report-generator"};
+const _MODEL_MAP={"easy":"haiku","medium":"sonnet","hard":"sonnet","expert":"opus"};
+
 function showTask(){
     const id=$("taskSelect").value,c=$("taskCard");
-    if(!id){c.style.display="none";return}
+    if(!id){c.style.display="none";$("btnAutoFill").style.display="none";return}
     const t=TASKS.find(x=>x.id===id);if(!t){c.style.display="none";return}
     c.style.display="block";
     c.innerHTML=`<div class="task-id">${t.id}</div><div class="task-desc">${t.desc}</div><div class="tag-row"><span class="tag tag-${t.diff}">${t.diff}</span><span class="tag tag-domain">${t.domain}</span>${t.skills.map(s=>'<span class="tag tag-skill">'+s+'</span>').join("")}</div>`;
+    $("btnAutoFill").style.display="inline-flex";
+    autoFillFromSelected();
+}
+
+function autoFillFromSelected(){
+    const id=$("taskSelect").value;
+    const t=TASKS.find(x=>x.id===id);if(!t)return;
+    const prefix=t.id.split("_")[0];
+    $("cmdName").value=_NAME_MAP[prefix]||t.id.replace(/_\w+_\d+$/,"").replace(/_/g,"-");
+    $("cmdDesc").value=t.desc;
+    if(t.skills.length)$("cmdSkill").value=t.skills[0];
+    $("cmdModel").value=_MODEL_MAP[t.diff]||"sonnet";
+    $("cmdPrompt").value=`You are a specialized ${(t.skills[0]||"agent").replace(/-/g," ")} for the task: ${t.desc}.\n\nSteps:\n1. Carefully analyze the input.\n2. Apply ${(t.skills[0]||"your specialist")} capabilities to complete the task.\n3. Validate inputs and handle errors gracefully.\n4. Return a clear, correct, and actionable result.`;
+    // Open all accordions so user can see filled fields
+    document.querySelectorAll(".acc-body").forEach(b=>b.classList.add("open"));
+    document.querySelectorAll(".acc-arrow").forEach(a=>a.classList.add("open"));
 }
 
 function toggleAcc(h){
@@ -801,8 +830,10 @@ function showBanner(rw,sc){
     const s=sc||rw||0,ok=s>3;
     $("bannerSlot").innerHTML='<div class="banner '+(ok?"banner-ok":"banner-fail")+'">'+(ok?"Episode Complete — Agent Accepted":"Episode Complete — Agent Rejected")+' ('+s.toFixed(2)+')</div>';
 }
-function copyAgent(){navigator.clipboard.writeText($("agentPreview").textContent).then(()=>alert("Copied"))}
+function copyAgent(){navigator.clipboard.writeText($("agentPreview").textContent).then(()=>alert("Copied!"))}
 function downloadAgent(){const b=new Blob([$("agentPreview").textContent],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="AGENT.md";a.click()}
+function copyAgentGen(){navigator.clipboard.writeText($("agentPreviewGen").textContent).then(()=>alert("Copied!"))}
+function downloadAgentGen(){const b=new Blob([$("agentPreviewGen").textContent],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="AGENT.md";a.click()}
 </script>
 </body>
 </html>
