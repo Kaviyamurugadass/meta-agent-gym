@@ -163,11 +163,23 @@ class InferenceService:
 
         messages = [
             {"role": "system", "content": _SYSTEM_PROMPT},
-            {"role": "user", "content": f"Task: {task_description}"},
+            # /no_think disables Qwen3 extended-thinking mode so the model
+            # outputs JSON directly without a <think>...</think> preamble.
+            {"role": "user", "content": f"/no_think\nTask: {task_description}"},
         ]
-        prompt = self._tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-        )
+        # Try enable_thinking=False (supported by Qwen3 tokenizer templates).
+        # Fall back to the plain call for older tokenizer versions.
+        try:
+            prompt = self._tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=False,
+            )
+        except TypeError:
+            prompt = self._tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True,
+            )
         inputs = self._tokenizer(prompt, return_tensors="pt")
         with torch.no_grad():
             out = self._model.generate(
@@ -356,9 +368,22 @@ def spec_to_actions(spec: dict[str, Any]) -> list[dict[str, Any]]:
     return actions
 
 
+def _strip_thinking_blocks(text: str) -> str:
+    """Remove Qwen3 <think>...</think> reasoning blocks before parsing."""
+    import re as _re
+    # Remove complete <think>...</think> blocks (greedy-safe with DOTALL)
+    text = _re.sub(r"<think>.*?</think>", "", text, flags=_re.DOTALL)
+    # Also strip a dangling <think> block with no closing tag
+    # (model was cut off mid-think by max_new_tokens)
+    think_start = text.find("<think>")
+    if think_start >= 0:
+        text = text[:think_start]
+    return text.strip()
+
+
 def _extract_spec(raw: str) -> dict[str, Any]:
     """Parse JSON from a model response, tolerant of surrounding prose/fences."""
-    s = raw.strip()
+    s = _strip_thinking_blocks(raw).strip()
     # Strip common markdown fences
     if s.startswith("```"):
         s = s.split("```", 2)[1] if "```" in s[3:] else s[3:]

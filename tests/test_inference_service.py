@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import json
 
-from server.inference_service import InferenceService, fallback_spec, is_memory_load_error
+from server.inference_service import (
+    InferenceService,
+    _extract_spec,
+    _strip_thinking_blocks,
+    fallback_spec,
+    is_memory_load_error,
+)
 
 
 def test_inference_service_uses_training_summary_base_model(tmp_path, monkeypatch):
@@ -46,6 +52,27 @@ def test_memory_load_error_detection():
     exc = OSError("The paging file is too small for this operation to complete. (os error 1455)")
 
     assert is_memory_load_error(exc)
+
+
+def test_strip_thinking_blocks_complete():
+    raw = "<think>\nsome reasoning here\n</think>\n{\"name\": \"foo\"}"
+    assert _strip_thinking_blocks(raw) == '{"name": "foo"}'
+
+
+def test_strip_thinking_blocks_dangling():
+    raw = "<think>\ncut off by max_new_tokens"
+    assert _strip_thinking_blocks(raw) == ""
+
+
+def test_extract_spec_ignores_think_preamble():
+    raw = (
+        "<think>\nLet me design an agent.\n</think>\n"
+        '{"name":"pr-reviewer","description":"Reviews PRs",'
+        '"skills":["code-reviewer"],"model":"sonnet","system_prompt":"You review PRs."}'
+    )
+    spec = _extract_spec(raw)
+    assert spec["name"] == "pr-reviewer"
+    assert spec["skills"] == ["code-reviewer"]
 
 
 def test_fallback_spec_produces_replayable_fields():
