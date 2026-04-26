@@ -184,7 +184,7 @@ class InferenceService:
         with torch.no_grad():
             out = self._model.generate(
                 **inputs,
-                max_new_tokens=400,
+                max_new_tokens=1024,  # needs room to finish <think> block + JSON
                 do_sample=False,
                 pad_token_id=self._tokenizer.eos_token_id,
             )
@@ -192,7 +192,17 @@ class InferenceService:
             out[0][inputs.input_ids.shape[1]:],
             skip_special_tokens=True,
         ).strip()
-        return _extract_spec(response)
+        try:
+            return _extract_spec(response)
+        except ValueError:
+            # Model finished thinking but produced no parseable JSON — use
+            # a deterministic heuristic spec so the UI never gets an error.
+            import logging
+            logging.getLogger(__name__).warning(
+                "JSON parse failed; using heuristic fallback. response[:200]=%r",
+                response[:200],
+            )
+            return _fallback_spec(task_description)
 
 
 # Module-level singleton (lazy)

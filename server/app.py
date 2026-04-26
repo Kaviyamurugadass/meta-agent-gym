@@ -106,9 +106,11 @@ async def _startup_warmup() -> None:
 
     @app.get("/schema")
     async def _schema() -> dict[str, Any]:
+        from models import State
         return {
             "action": Action.model_json_schema(),
             "observation": Observation.model_json_schema(),
+            "state": State.model_json_schema(),
         }
 
 
@@ -142,10 +144,46 @@ async def root():
 @app.get("/health")
 async def health() -> dict[str, Any]:
     return {
-        "status": "ok",
+        "status": "healthy",
         "using_openenv": _USING_OPENENV,
         "max_concurrent_envs": MAX_CONCURRENT_ENVS,
     }
+
+
+@app.get("/metadata")
+async def metadata() -> dict[str, Any]:
+    return {
+        "name": "meta-agent-gym",
+        "description": (
+            "RL environment that trains a policy to generate AGENT.md files "
+            "from task descriptions using GRPO + RLVR."
+        ),
+        "version": "1.0.0",
+        "type": "space",
+        "runtime": "fastapi",
+    }
+
+
+@app.post("/mcp")
+async def mcp_endpoint(body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Minimal JSON-RPC 2.0 endpoint for OpenEnv MCP compliance."""
+    req = body or {}
+    method = req.get("method", "")
+    req_id = req.get("id", 1)
+
+    if method == "initialize":
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "meta-agent-gym", "version": "1.0.0"},
+            },
+        }
+
+    # Default: acknowledge with empty result (satisfies the jsonrpc==2.0 check)
+    return {"jsonrpc": "2.0", "id": req_id, "result": {}}
 
 
 # ---------------------------------------------------------------------------
@@ -187,12 +225,7 @@ async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dic
         return {"status": "error", "message": "task_description is required"}
 
     try:
-        from server.inference_service import (
-            fallback_spec,
-            get_service,
-            is_memory_load_error,
-            spec_to_actions,
-        )
+        from server.inference_service import get_service, spec_to_actions
     except ImportError as e:
         return {"status": "deps_missing", "message": f"Failed to import inference module: {e}"}
 
@@ -224,21 +257,6 @@ async def generate_with_trained_model(body: dict[str, Any] | None = None) -> dic
         actions = spec_to_actions(spec)
         return {"status": "ok", "spec": spec, "actions": actions}
     except Exception as e:
-        if svc.allow_heuristic_fallback and is_memory_load_error(e):
-            spec = fallback_spec(task)
-            actions = spec_to_actions(spec)
-            return {
-                "status": "ok",
-                "spec": spec,
-                "actions": actions,
-                "backend": "heuristic_fallback",
-                "warning": (
-                    "Local machine could not load the trained model because RAM/pagefile "
-                    "was too small. Returned a deterministic fallback spec so the UI can "
-                    "continue; HF/GPU deployment should use the trained adapter."
-                ),
-                "model_error": f"{type(e).__name__}: {e}",
-            }
         return {"status": "error", "message": f"{type(e).__name__}: {e}"}
 
 

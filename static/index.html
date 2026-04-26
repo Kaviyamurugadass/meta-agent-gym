@@ -508,13 +508,18 @@ async function checkGenerateStatus(){
         const r=await fetch("/generate/status");
         const d=await r.json();
         if(d.available&&d.adapter_available&&d.deps_available){
-            badge.textContent=d.loaded?"Model ready":"Adapter found";
-            badge.title="Adapter: "+(d.adapter_path||"training/grpo-unsloth-output/")+" · Base: "+(d.base_model||"auto");
-            badge.style.background=d.loaded?"rgba(52,211,153,0.12)":"rgba(96,165,250,0.12)";
-            badge.style.color=d.loaded?"var(--green)":"var(--accent)";
+            // Adapter loads, but the currently-shipped one is the pre-sign-flip-fix
+            // Colab adapter that learned to emit noop->submit (empty specs).
+            // Be honest: amber badge, not green; keep the button enabled so the
+            // empty-spec output can be demoed as a teaching moment for the
+            // RLVR / Goose case study.
+            badge.textContent="Pre-fix adapter loaded";
+            badge.title="The loaded adapter is the pre-sign-flip-fix Colab run that collapsed to noop->submit (see RLVR case study in README). Onsite Qwen3-1.7B retrain replaces it.";
+            badge.style.background="rgba(251,191,36,0.12)";
+            badge.style.color="#fbbf24";
             btn.disabled=false;
             msg.style.display="block";
-            msg.textContent="Ready to generate with "+(d.base_model||"the trained base model")+". First local call may take a minute while the model loads.";
+            msg.textContent="⚠ Loaded adapter is the pre-fix Colab run (empty-spec collapse, see Goose case study). Onsite Qwen3-1.7B retrain will replace it. Click Generate to see the bug live.";
         }else{
             badge.textContent="Not Deployed";
             badge.title="Inference is unavailable in this deployment.";
@@ -599,7 +604,6 @@ async function generateWithModel(){
                 '<div>Score: <strong style="color:var(--accent)">'+score+'</strong></div>'+
                 '<div>Generated in <strong>'+elapsed+'s</strong></div>'+
                 '<div>Commands emitted: <strong>'+d.actions.length+'</strong></div>'+
-                (d.warning?'<div style="margin-top:8px;color:var(--yellow)">'+d.warning+'</div>':'')+
                 '<div style="margin-top:8px;font-size:0.72rem;color:var(--muted)">Reward bars + violations live in the Build tab.</div>';
             summary.style.display="block";
         }
