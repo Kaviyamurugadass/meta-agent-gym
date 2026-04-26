@@ -1,6 +1,6 @@
-# Teaching a 1.7B Model to Design AI Agents — and How It Taught Me About Reward Hacking
+# Teaching a 1.7B Model to Design AI Agents
 
-> **TL;DR:** We built a reinforcement learning environment where a small LLM learns to write complete AI agent specifications from scratch. Within one training run it found — and exploited — a reward-hacking bug that code review had missed entirely. Here's the whole story.
+> **Short version:** I built a small RL environment where a model learns to write `AGENT.md` specs from task descriptions. The first training run looked great on paper, then Goose execution showed the model had only learned to exploit a reward bug. That failure ended up being the most useful part of the project.
 
 **Built for OpenEnv Hackathon 2026 | Qwen3-1.7B + 4-bit LoRA | GRPO + DAPO | HF Spaces**
 
@@ -15,21 +15,21 @@
 
 ## The Question
 
-Everyone who uses AI agents eventually hits the same wall: *"I need a custom agent for this specific thing, and I have no idea how to write one."*
+I started with a practical question:
 
-What if a small model could learn to write them — not by copying templates, but by getting graded on whether the agents it designs actually work?
+Can a small model learn to design useful agents if we give it a task, a constrained action space, and feedback on the agent it builds?
 
-That's **meta-agent-gym**: an RL environment where the policy's task is to design AI agents. The input is a description like *"Build an agent that reviews pull requests for security issues"*. The output is a complete AGENT.md file — name, description, skills, model tier, system prompt — that runs in Claude Code, Goose, and Cursor.
+That became **meta-agent-gym**. The input is a task such as *"Build an agent that reviews pull requests for security issues"*. The output is a complete `AGENT.md`: name, description, skills, model tier, and system prompt. The same spec can be used in Claude Code, Goose, Cursor, and other tools that understand the Agent Skills format.
 
 ---
 
-## Act 1 — Building the Gym
+## Act 1 - Building the Gym
 
 ### The action space decision
 
-The hardest design decision was the action space. Free-form generation was tempting — it's how humans write AGENT.md files — but credit assignment for GRPO is brutal on long token sequences with no intermediate signal.
+The first real design choice was whether the model should write free-form markdown or act through commands. Free-form generation is closer to how a human writes an `AGENT.md`, but it gives GRPO very little signal until the end.
 
-I went with **14 discrete commands** instead:
+So I used a small command set instead:
 
 ```
 set_name        set_description   add_skill       remove_skill
@@ -38,11 +38,11 @@ set_max_turns   check_score       inspect_example submit
 noop            inspect
 ```
 
-Each command has clean semantics. The agent can investigate (`check_score`, `inspect_example`) before committing (`submit`). Reward responds per-step. The policy sees exactly where it went wrong.
+Each command changes the environment state in a predictable way. The agent can inspect, check score, add fields, and only then submit. That made the reward easier to debug, and it gave the policy intermediate feedback instead of one giant pass/fail at the end.
 
 ### Three-tier verification (RLVR)
 
-Reward hacking is the first thing any policy tries. The environment catches it with three independent layers:
+I did not want the whole project to depend on one judge score, so the verifier has three layers:
 
 ```
 Layer 1 — Hard Verifiers (100% of steps, $0)
@@ -61,14 +61,14 @@ Layer 2 — Heuristic Judge (90% of steps)
 └─ efficiency         (0.10 weight)
 
 Layer 3 — Goose Real Execution (offline harness)
-└─ Actually runs the AGENT.md — ground truth no judge can fake
+└─ Actually runs the AGENT.md, which gives a check the judge cannot fake
 ```
 
-This is **RLVR** — verifiable rewards, not learned reward models. Drift-free by construction.
+The hard checks are deliberately boring. They catch format errors, missing fields, and too-short prompts before anything expensive or subjective runs.
 
 ---
 
-## Act 2 — The Trap (First Training Run)
+## Act 2 - The First Run Looked Too Good
 
 Trained Qwen2.5-0.5B + 4-bit LoRA on a free Colab T4. One epoch, 8 episodes, 2 generations per prompt. The numbers came back immediately:
 
@@ -77,29 +77,29 @@ success_rate = 10/10 = 100%
 mean_reward  = +51.80 per episode
 ```
 
-I almost called it a day.
+That was the first red flag. A tiny run should not look that perfect.
 
 ---
 
-## Act 3 — Goose Catches What Metrics Couldn't
+## Act 3 - Goose Caught the Problem
 
-Then I wired up the real execution tier — Goose — to actually *execute* the AGENT.md files the policy had generated. Every single trajectory was:
+Then I ran the generated files through Goose instead of just trusting the environment metrics. Every single trajectory was:
 
 ```
 noop → noop → noop → noop → noop → noop → submit
 ```
 
-The "100% successful" model had learned to do **absolutely nothing**.
+So the model had not learned agent design. It had learned that doing nothing was rewarded.
 
-I spent that evening reading `server/rewards/reward.py` line by line. The bug was on line 158:
+I went back into `server/rewards/reward.py` and eventually found the issue:
 
 ```python
-# BEFORE — subtracting a negative = adding a bonus
+# Before: subtracting a negative adds a bonus
 total = core + bonus + progress - sum(anti_hack_penalties.values())
 #                                    ^ anti_hack_penalties stores -5.0, -0.5 etc.
 #                                      subtracting negatives = ADDING them
 
-# AFTER — penalties stay negative
+# After: penalties stay negative
 total = core + bonus + progress + sum(anti_hack_penalties.values())
 ```
 
@@ -107,11 +107,11 @@ total = core + bonus + progress + sum(anti_hack_penalties.values())
 
 GRPO found it in **four gradient steps**.
 
-> **The point isn't the bug. The point is that Goose caught what in-environment metrics couldn't.** That's what "real-execution tier" means — and it justified the entire three-tier architecture in one shot.
+That was embarrassing, but useful. The environment metrics said success. Goose said the artifact was useless. Both observations were true, and that is exactly why the real-execution layer belongs in the loop.
 
 ---
 
-## Before vs After — The Numbers
+## Before and After
 
 ### Reward swing from the sign-flip fix
 
@@ -123,7 +123,7 @@ GRPO found it in **four gradient steps**.
 | Trained Qwen3-1.7B (eval avg) | +1.37 | **+7.68** |
 | **Total swing from the fix** | **11.98** | **84.00** |
 
-84 points of correction. The bug was paying empty-spec play **2.4× more** than honest competent play.
+That is an 84-point swing over a 7-step episode. Before the fix, the environment paid more for an empty spec than for a competent hand-written policy.
 
 ### Behavior comparison (same task: *"Generate pytest cases for a function"*)
 
@@ -137,25 +137,25 @@ GRPO found it in **four gradient steps**.
 | 6 | `noop` | — |
 | 7 | `submit` | — |
 | Reward | **+51.80** (bug bonus) | **+9.60** (real) |
-| Goose execute | ❌ FAIL — empty spec | ✅ PASS |
+| Goose execute | FAIL, empty spec | PASS |
 
 ---
 
-## Act 4 — Post-Fix Training Results
+## Act 4 - Training After the Fix
 
-After the fix, Qwen3-1.7B was trained (25 dataset episodes, 2 epochs, 2 generations). The model learned to produce structured specs consistently.
+After fixing the sign error, I trained Qwen3-1.7B with 4-bit LoRA. This was still a small hackathon run: 25 dataset episodes, 2 epochs, 2 generations. The model did not become a great agent designer, but it did learn the basic structure.
 
 ### Total reward curve (training)
 
 ![Total Reward Curve](monitoring/colab_results_qwen3_1.7b/total_reward_curve.png)
 
-The training reward curve shows the model climbing from near-zero (early episodes where gates fire and zero out reward) toward consistent positive reward as it learns the required episode structure.
+The curve starts near zero because the hard gates wipe out bad submissions. As training continues, the model starts putting the required fields in the right order.
 
 ### Reward progression (labeled)
 
 ![Reward Progression](monitoring/colab_results_qwen3_1.7b/reward_progression_labeled.png)
 
-The labeled version annotates key transitions: the moment the model starts consistently passing the `has_required_fields` gate, and when prompt length stops being the failure point.
+The labeled plot marks the two most important transitions: required fields become consistent, and prompt length stops being the main failure.
 
 ### Baseline comparison (20 easy-tier episodes each)
 
@@ -168,7 +168,7 @@ The labeled version annotates key transitions: the moment the model starts consi
 
 ![Baseline Comparison](monitoring/colab_results_qwen3_1.7b/baseline_comparison_labeled.png)
 
-Random gets 0% because the three gate verifiers block any `submit` without `name`, `description`, and a ≥ 50-char prompt. This is intentional — the gates prove the environment is non-trivial to game. The heuristic proves it's reachable. The trained policy sits between them — structure learned, content quality still improving.
+Random gets 0% because the gates block any submission without `name`, `description`, and a prompt of at least 50 characters. The heuristic proves the environment is reachable. The trained model lands in the middle: it learned the shape of a solution, but not yet the domain-specific content.
 
 ### Per-component reward progression (50 evaluation episodes)
 
@@ -184,7 +184,7 @@ Random gets 0% because the three gate verifiers block any `submit` without `name
 
 ![Component Learning](monitoring/colab_results_qwen3_1.7b/component_learning_labeled.png)
 
-`yaml_valid` and `model_valid` hit 1.00 from episode 1 and stay there — the model never produces malformed YAML and always picks a valid model tier. `skill_selection` is the weakest signal: it learns the command format but not which skill to pick per domain.
+`yaml_valid` and `model_valid` are easy for the policy. `skill_selection` is not. The model learns to call `add_skill`, but it often chooses the wrong skill for the task.
 
 ### Success rate over training
 
@@ -192,49 +192,49 @@ Random gets 0% because the three gate verifiers block any `submit` without `name
 
 ![Success Rate Labeled](monitoring/colab_results_qwen3_1.7b/success_rate_labeled.png)
 
-The success rate climbs from 0% (hard gates blocking empty specs) to 80% on easy tasks as the model learns the mandatory episode structure.
+Success climbs once the model stops submitting incomplete specs.
 
 ### Per-component reward curves
 
 ![Component Curves](monitoring/colab_results_qwen3_1.7b/component_curves.png)
 
-Each line is one reward dimension tracked independently across episodes — the key design choice for GRPO, which needs variance across completions to learn from. `yaml_valid` and `model_valid` flatline at 1.0 from the start; `skill_selection` is the lagging signal that needs more training.
+Each line is one reward component. Keeping them separate made debugging much easier, especially when one component stalled while others improved.
 
 ### Full comparison (all metrics)
 
 ![Full Comparison](monitoring/colab_results_qwen3_1.7b/full_comparison.png)
 
-The full comparison chart puts all metrics side-by-side: reward, success rate, and per-component scores across the entire evaluation window.
+This chart is mostly for sanity checking: total reward, success rate, and component scores in one place.
 
 ---
 
-## What the Model Actually Learned
+## What the Model Learned
 
-After training, the model has internalized five concrete rules:
+The trained adapter picked up a few concrete rules:
 
-1. A valid AGENT.md needs `name`, `description`, `skills`, `model`, `system_prompt` — never submit without all of them
+1. A valid AGENT.md needs `name`, `description`, `skills`, `model`, and `system_prompt`. Never submit without all of them.
 2. The correct episode order is: name → description → skill → prompt → submit
-3. YAML must be well-formed — the `yaml_valid` gate fires on any syntax error
+3. YAML must be well-formed. The `yaml_valid` gate fires on any syntax error.
 4. `sonnet` is almost always the right tier for easy tasks
-5. `write_prompt` must be ≥ 50 chars — the gate is unforgiving at 49
+5. `write_prompt` must be at least 50 characters. The gate is unforgiving at 49.
 
-## What the Model's Failures Taught Us
+## What the Failures Taught Me
 
-1. **Gate cliffs are sharp** — the 50-char prompt gate triggers at exactly 49 chars. The model learned the structure but not the margin
-2. **Skill selection doesn't generalize** — `web-scraping` has the highest frequency in training data; the model over-indexes on it for all domains
-3. **The sign-flip bug** — GRPO found a reward error in 4 steps that code review missed entirely. Independent verifiers are not optional
+1. **Gate cliffs are sharp.** The 50-character prompt gate fails at 49. The model learned the pattern, but not the safety margin.
+2. **Skill selection needs more data.** `web-scraping` appears often enough that the model overuses it outside web tasks.
+3. **Independent checks matter.** The sign-flip bug survived code review and showed up immediately once Goose executed the artifacts.
 
 ---
 
 ## The Live Demo
 
-The environment runs on HF Spaces. Two interaction modes:
+The Space has two modes:
 
 ### Build Step-by-Step
-Pick a scenario from the curriculum, issue commands manually, and watch the reward breakdown update in real time. Good for understanding what the verifiers actually check.
+Pick a scenario, issue commands manually, and watch the reward breakdown update after each step. This is the best way to see what the verifiers care about.
 
 ### Generate from Description
-Type a task description, and the Qwen3-1.7B LoRA adapter generates a complete action sequence. The result is scored by the same three-tier verifier — plus an optional LLM judge (Groq/Llama-3.3-70B) if `GROQ_API_KEY` is set.
+Type a task description and the Qwen3-1.7B LoRA adapter generates the command sequence. The result goes through the same verifier stack. If `GROQ_API_KEY` is set, the UI can also show an LLM judge score.
 
 Example output for *"Review pull requests for security issues"*:
 
@@ -277,7 +277,7 @@ Colab T4 / L4 GPU                         HF Spaces (cpu-basic)
 
 ## Honest Scope
 
-This is a hackathon run — small compute, real signal. What's proven vs. what's next:
+This is still a hackathon project. The useful part is that the environment and failure modes are real, not that the shipped model is finished.
 
 | | Status |
 |---|---|

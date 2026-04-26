@@ -16,13 +16,13 @@ tags:
 
 # meta-agent-gym
 
-### Can a 1.7B model learn to design AI agents — by getting graded on the ones it builds?
+### Can a small model learn to design AI agents by getting feedback on the agents it builds?
 
-We gave a tiny language model a task description, a 14-command action space, and a three-tier verifier that doesn't lie. No few-shot examples. No chain-of-thought scaffolding. Just `set_name`, `add_skill`, `write_prompt`, `submit` — and a reward signal that zeroes out if the spec can't pass a YAML parser.
+This repo is an RL environment for training a model to write `AGENT.md` files. The model gets a task description, acts through a small command set (`set_name`, `add_skill`, `write_prompt`, `submit`, etc.), and receives reward from a verifier stack.
 
-Within one training run, the model learned to produce structured AGENT.md files that run in Claude Code, Goose, and Cursor. Along the way, it found a reward-hacking bug we hadn't caught in code review — by exploiting it perfectly within four gradient steps.
+The most interesting part was not the happy path. The first training run looked successful, then Goose execution showed the model had learned to exploit a sign bug in the reward function. After fixing that, the Qwen3-1.7B adapter learned the basic structure of an agent spec, but still struggles with task-specific skill selection.
 
-**This is meta-agent-gym** — a reinforcement learning environment where a policy learns to design AI agents, graded by a three-tier verifier: hard checks, an LLM judge, and Goose real execution.
+So this project is both a working OpenEnv gym and a case study in why real execution belongs next to reward metrics.
 
 > Built for OpenEnv Hackathon 2026 | Trained: Qwen3-1.7B + 4-bit LoRA | GRPO + DAPO loss | Deployed on HF Spaces
 
@@ -36,13 +36,13 @@ Within one training run, the model learned to produce structured AGENT.md files 
 
 ---
 
-## The Story: From Reward-Hacking to Real Execution
+## What Happened
 
-### Act 1 — Building the Gym
+### 1. Building the gym
 
-The hardest design decision was the **action space**. Free-form AGENT.md generation was tempting — it's how humans write them by hand — but credit assignment for GRPO is brutal on long token sequences with no intermediate signal.
+The first big choice was the action space. I considered letting the model generate free-form markdown, but that makes GRPO credit assignment painful: the model writes a long sequence and only learns at the end whether it worked.
 
-I went with **14 discrete commands** instead:
+I used 14 discrete commands instead:
 
 ```
 set_name        set_description   add_skill      remove_skill
@@ -51,54 +51,54 @@ set_max_turns   check_score       inspect_example  submit
 noop            inspect
 ```
 
-Each command has clean semantics. The agent investigates (`check_score`, `inspect_example`) before committing (`submit`). Reward responds per-step. The policy sees exactly where it went wrong.
+Each command has a clear effect on the current spec. The policy can inspect, check score, add fields, and then submit. That gives the environment a chance to reward progress before the final artifact exists.
 
-The reward function uses **six judge dimensions + five hard verifiers**. Three of those verifiers act as gates — fail any one and the entire step reward zeroes. Defense in depth, in case the judge gets gamed.
+The verifier has five hard checks and six judge dimensions. Three hard checks are gates: if YAML is invalid, required fields are missing, or the prompt is too short, the step reward goes to zero.
 
-### Act 2 — The First Training Run (The Trap)
+### 2. The first run looked suspiciously good
 
-Trained Qwen2.5-0.5B + 4-bit LoRA on Colab T4. One epoch, 8 episodes, 2 generations per prompt. The numbers came back:
+I first trained Qwen2.5-0.5B + 4-bit LoRA on a Colab T4. One epoch, 8 episodes, 2 generations per prompt. The numbers came back:
 
 ```
 success_rate = 10/10 = 100%
 mean_reward  = +51.80 per episode
 ```
 
-I almost called it a day.
+That was too clean for such a small run, so I checked the generated artifacts.
 
-### Act 3 — Goose Catches What Metrics Couldn't
+### 3. Goose caught the real failure
 
-Then I wired up the third verification tier — Goose — to actually *execute* the AGENT.md files. Every single trajectory was:
+When I ran the generated `AGENT.md` files through Goose, every trajectory looked like this:
 
 ```
 noop → noop → noop → noop → noop → noop → submit
 ```
 
-The "100% successful" model had learned to do absolutely nothing.
+The model had not learned agent design. It had learned that doing nothing paid well.
 
-I spent that evening reading `server/rewards/reward.py` line by line. The bug was on line 158:
+The bug was in the reward aggregation:
 
 ```python
-# Before — subtracting a negative = adding a bonus
+# Before: subtracting a negative adds a bonus
 total = core + bonus + progress - penalty - regression - sum(anti_hack_penalties.values())
 
-# After — penalties stay negative
+# After: penalties stay negative
 total = core + bonus + progress - penalty - regression + sum(anti_hack_penalties.values())
 ```
 
-`anti_hack_penalties` stores values as **negative** numbers (e.g., `empty_spec = -5.0`). Subtracting a negative flipped the sign. An empty spec was worth **+7.4 per step**. GRPO found it in four gradient steps.
+`anti_hack_penalties` stores values as negative numbers, for example `empty_spec = -5.0`. Subtracting those values turned penalties into bonuses. An empty spec was worth **+7.4 per step**. GRPO found that in four gradient steps.
 
-**The point isn't the bug. The point is that Goose caught what the in-environment metrics couldn't.** That's what "real-execution tier" means — and it justified the entire three-tier architecture in one shot.
+That failure is why the Goose layer is in the project. The environment metric said success; execution said the artifact was useless.
 
-### Act 4 — Post-Fix: Structure Learned, Conditioning Partial
+### 4. After the fix
 
-After the fix, Qwen3-1.7B was trained (25 dataset episodes, 2 epochs, 2 generations). The model learned to produce structured specs:
+After the fix, I trained Qwen3-1.7B with 4-bit LoRA. This was still small-scale: 25 dataset episodes, 2 epochs, 2 generations. It learned the basic command pattern:
 
 ```
 set_name → set_description → add_skill → write_prompt → submit
 ```
 
-**8/10 evaluation episodes succeeded (mean reward 7.68).** The two failures wrote 49-char prompts — one char below the 50-char gate — and the model still defaults to `web-scraping` regardless of domain. Structure learned; content-conditioning on the task is the next training target.
+**8/10 evaluation episodes succeeded with mean reward 7.68.** The two failures wrote 49-character prompts, one character below the gate. The model also overuses `web-scraping` across domains. So the current adapter has learned structure, but the next target is task-conditioned skill selection.
 
 ---
 
@@ -130,7 +130,7 @@ set_name → set_description → add_skill → write_prompt → submit
 │  │  └─ best_practices (0.10)   └─ efficiency (0.10)                  │ │
 │  │                                                                    │ │
 │  │  Layer 3 — Goose Real Execution (offline harness)                  │ │
-│  │  └─ Runs the AGENT.md — ground truth no judge can fake             │ │
+│  │  └─ Runs the AGENT.md as an execution check                        │ │
 │  └─────────────────────────────────────────────────────────────────┬──┘ │
 │                                                                     │    │
 │                          reward signal                              │    │
@@ -184,7 +184,7 @@ Colab T4 / L4 GPU                         HF Spaces (cpu-basic)
 | Step 6 | `noop` | — |
 | Step 7 | `submit` | — |
 | Reward | **+51.80** (bug) | **+9.60** (real) |
-| Goose execute | FAIL — empty spec | PASS |
+| Goose execute | FAIL, empty spec | PASS |
 
 ### Reward before vs after the sign-flip fix
 
@@ -196,7 +196,7 @@ Colab T4 / L4 GPU                         HF Spaces (cpu-basic)
 | Trained Qwen3-1.7B (eval avg) | +1.37 | **+7.68** |
 | **Swing from the fix** | **11.98** | **84.00** |
 
-84 points of correction. The bug was paying empty-spec play **2.4× more** than honest competent play.
+That is an 84-point swing over one 7-step episode. Before the fix, an empty spec was rewarded **2.4x more** than the competent heuristic policy.
 
 ![Reward Progression](monitoring/colab_results_qwen3_1.7b/reward_progression_labeled.png)
 
@@ -204,7 +204,7 @@ Colab T4 / L4 GPU                         HF Spaces (cpu-basic)
 
 ## Training Runs
 
-### Run 1: Qwen2.5-0.5B — The Trap (pre-fix)
+### Run 1: Qwen2.5-0.5B, pre-fix
 
 4 gradient steps, 8 episodes, Colab T4.
 
@@ -212,11 +212,11 @@ Colab T4 / L4 GPU                         HF Spaces (cpu-basic)
 |---|---|---:|---|
 | 1–8 | noop × 6 → submit | +51.80 | Empty-spec exploit discovered in ep 1 |
 
-**Mean: +51.80 | Success: 10/10 (all empty specs)**
+**Mean: +51.80 | Success: 10/10, but all empty specs**
 
-The training sentinel (`training_summary.json`) records `real_training: true` — so the run happened. The model just learned the wrong thing.
+The run was real. The training sentinel (`training_summary.json`) records `real_training: true`. The reward was wrong.
 
-### Run 2: Qwen3-1.7B — Post-Fix (shipped)
+### Run 2: Qwen3-1.7B, post-fix
 
 25 dataset episodes, 2 epochs, 2 generations, Colab T4. Evaluation over 10 rollouts:
 
@@ -235,7 +235,7 @@ The training sentinel (`training_summary.json`) records `real_training: true` �
 
 **Mean reward: 7.68 | Success: 8/10**
 
-The two failures share one root cause: 49-char prompts, one character below the 50-char gate. The model also picks `web-scraping` for most tasks regardless of domain — structure is learned, task-conditional skill selection is not yet.
+The two failures share one root cause: 49-character prompts, one character below the gate. The model also picks `web-scraping` for too many tasks. Structure is learned; task-conditional skill selection is not.
 
 ![Component Learning](monitoring/colab_results_qwen3_1.7b/component_learning_labeled.png)
 
@@ -252,7 +252,7 @@ The two failures share one root cause: 49-char prompts, one character below the 
 | Expert benchmark (mixed difficulty) | 95% | 16.79 | 19.57 |
 | **Trained Qwen3-1.7B** | **80%** | **7.68** | **9.60** |
 
-Random gets 0% because the gate blocks any `submit` without `name`, `description`, and a ≥ 50-char prompt. Heuristic proves the environment is reachable. The trained policy sits between random and heuristic — structure learned, content quality still improving.
+Random gets 0% because the gate blocks any `submit` without `name`, `description`, and a prompt of at least 50 characters. The heuristic proves the environment is reachable. The trained policy sits between them: it learned the workflow, but content quality still needs more training.
 
 ![Baseline Comparison](monitoring/colab_results_qwen3_1.7b/baseline_comparison_labeled.png)
 
@@ -268,7 +268,7 @@ Random gets 0% because the gate blocks any `submit` without `name`, `description
 | `model_valid` | 1.00 | 1.00 | 0 (always) |
 | `skill_selection` | 0.01 | 0.00 | stalled |
 
-`yaml_valid` and `model_valid` are 1.00 from the start — the model never produces malformed YAML and always picks a valid model tier. `skill_selection` is the weakest signal: it learns the format (`add_skill` issues the right command) but not the content (which skill to pick).
+`yaml_valid` and `model_valid` are easy for the model. `skill_selection` is the weak point: it learns to issue `add_skill`, but not always which skill to add.
 
 ![Component Curves](monitoring/colab_results_qwen3_1.7b/component_curves.png)
 
@@ -276,18 +276,18 @@ Random gets 0% because the gate blocks any `submit` without `name`, `description
 
 ## What the Model Learned
 
-1. A valid AGENT.md always needs `name`, `description`, `skills`, `model`, `system_prompt` — never submit without them
+1. A valid AGENT.md always needs `name`, `description`, `skills`, `model`, and `system_prompt`. Never submit without them.
 2. The correct episode structure is: name → description → skills → prompt → submit
-3. YAML must be well-formed — `yaml_valid` gate fires immediately on any syntax error
+3. YAML must be well-formed. The `yaml_valid` gate fires immediately on any syntax error.
 4. `sonnet` is almost always the right model tier for easy tasks
-5. `write_prompt` must be ≥ 50 chars — the gate is unforgiving
+5. `write_prompt` must be at least 50 characters. The gate is unforgiving.
 
-## What We Discovered (from the model's failures)
+## What the Failures Exposed
 
-1. **The sign-flip bug** — storing penalty values as negatives and then subtracting them inverts their effect. GRPO found this in 4 gradient steps; code review missed it entirely
-2. **Gate cliffs are sharp** — the 50-char prompt gate triggers at exactly 49 chars. The model learned the structure but not the margin
-3. **Skill selection doesn't generalize** — `web-scraping` has the highest frequency in training data; the model over-indexes on it for all domains
-4. **Real execution is non-negotiable** — the in-environment metrics showed 100% success; Goose showed 0% usefulness. Both numbers were true
+1. **The sign-flip bug.** Storing penalties as negatives and then subtracting them inverts the effect. GRPO found this in 4 gradient steps.
+2. **Gate cliffs are sharp.** The 50-character prompt gate fails at 49. The model learned the pattern, but not the margin.
+3. **Skill selection needs more coverage.** `web-scraping` appears often enough that the model overuses it.
+4. **Real execution matters.** The in-environment metric showed 100% success; Goose showed 0% usefulness. Both were accurate views of different things.
 
 ---
 
@@ -295,7 +295,7 @@ Random gets 0% because the gate blocks any `submit` without `name`, `description
 
 ### Primary: Theme #5 — Wild Card
 
-Meta-agent design doesn't fit the other themes cleanly. It's not multi-agent (one agent), not long-horizon (7-step episodes), and not direct tool-use. Wild Card for what it is: a new RL target nobody is currently training, with verifiable rewards and real-artifact output.
+Meta-agent design does not fit the other themes cleanly. It is not multi-agent, not long-horizon, and not direct tool-use. I placed it under Wild Card because the RL target is unusual: generate a real agent specification and grade the artifact.
 
 - **Underexplored RL target:** AGENT.md generation framed as a multi-step decision problem with hard-verifiable rewards
 - **Real artifact output:** generated specs run in Claude Code, Goose, Copilot, and anything following the [Agent Skills Open Standard](https://skills.sh)
@@ -303,19 +303,19 @@ Meta-agent design doesn't fit the other themes cleanly. It's not multi-agent (on
 
 ### Secondary: Theme #3 — World Modeling
 
-- **POMDP structure:** hidden state = "what makes a good spec for this task?" — observable only through per-component reward + violations
+- **POMDP structure:** hidden state = "what makes a good spec for this task?", observable through per-component reward and violations
 - **Investigation tools:** `check_score` and `inspect_example` let the agent gather information before committing
 - **Persistent state:** each command updates the spec dict; the agent must reason about what is already there
 
 ### Architectural: Theme #4 — Self-Improvement (built, partially demonstrated)
 
-The closed-loop design (adversarial task generator + adaptive curriculum) is wired in code — [`server/adversarial.py`](server/adversarial.py), [`training/curriculum.py`](training/curriculum.py) — but the Colab run was 4 gradient steps, far below what is needed to show curriculum escalation. One genuine form of self-improvement did occur: the agent found the reward hack; I fixed the reward function. Agent/environment co-evolution, not the recursive skill amplification Theme #4 describes, but real nonetheless.
+The closed-loop pieces are in code: adversarial task generation in [`server/adversarial.py`](server/adversarial.py), curriculum tracking in [`training/curriculum.py`](training/curriculum.py). The Colab run was too small to demonstrate full curriculum escalation. The concrete self-improvement loop here is simpler: the policy found a reward bug, I fixed the environment, and the next run learned the intended structure.
 
 ---
 
 ## Anti-Hack Defense
 
-The policy will try to game the reward. Current defenses:
+The first run made this part less theoretical. Current defenses:
 
 | Hack | Defense |
 |---|---|
@@ -334,8 +334,8 @@ The policy will try to game the reward. Current defenses:
 [**huggingface.co/spaces/Kaviya-M/meta-agent-gym**](https://huggingface.co/spaces/Kaviya-M/meta-agent-gym)
 
 Two tabs:
-- **🛠 Build Step-by-Step** — pick a scenario, issue commands manually, watch reward update live
-- **✨ Generate from Description** — type a task, the Qwen3-1.7B adapter emits commands; heuristic fallback runs if HF CPU cannot load the model
+- **Build Step-by-Step** - pick a scenario, issue commands manually, and watch reward update live
+- **Generate from Description** - type a task and let the Qwen3-1.7B adapter emit commands. If HF CPU cannot load the model, the app falls back to a heuristic path
 
 ### Run locally
 
@@ -361,10 +361,10 @@ python -m evaluation.goose_execution --smoke
 ### Train
 
 ```bash
-# Colab T4 (free tier) — the path that produced the shipped run
+# Colab T4 (free tier), the path that produced the shipped run
 python training/grpo_unsloth.py --model-id Qwen/Qwen2.5-0.5B
 
-# L4 / A100 — onsite scale-up target
+# L4 / A100, onsite scale-up target
 python training/grpo_unsloth.py \
     --model-id Qwen/Qwen3-1.7B \
     --per-device-train-batch-size 2 \
@@ -409,7 +409,7 @@ meta-agent-gym/
 │   ├── rules/engine.py              # rule validation engine
 │   ├── adversarial.py               # adversarial task generator
 │   ├── tasks/scenarios.py           # 24 curriculum scenarios (4 phases)
-│   └── inference_service.py         # /generate endpoint — Qwen3 LoRA adapter
+│   └── inference_service.py         # /generate endpoint for the Qwen3 LoRA adapter
 │
 ├── evaluation/
 │   ├── goose_execution.py           # Goose harness (offline real-execution tier)
@@ -479,10 +479,10 @@ meta-agent-gym/
 
 ## Honest Scope
 
-- **The Goose harness covers 3 Phase 1 (single-skill) tasks.** Expanding to Phase 2-4 multi-skill tasks is future work; the harness API accepts new tasks without interface changes.
-- **Skill selection doesn't generalize yet.** The Qwen3 adapter picks `web-scraping` for most tasks regardless of domain. More training episodes with diverse task types are the clear next step.
-- **The self-improvement track** (adversarial task generation, curriculum auto-escalation) is wired in code but not demonstrated end-to-end. The Colab run was 4 gradient steps — far below what is needed to see curriculum escalate. Specific future-work paths: VCRL ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1)) and Self-Evolving Curriculum ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970)).
-- **The `monitoring/colab_results/` 50-episode plots** use the heuristic policy as a training-distribution proxy. The Qwen3 adapter inference plots are in `monitoring/colab_results_qwen3_1.7b/`.
+- **The Goose harness covers 3 Phase 1 tasks.** Expanding it to Phase 2-4 multi-skill tasks is future work. The harness API already accepts more tasks.
+- **Skill selection does not generalize yet.** The Qwen3 adapter often picks `web-scraping` regardless of domain. More varied training data is the obvious next step.
+- **The self-improvement pieces are wired, not fully demonstrated.** Adversarial tasks and curriculum escalation exist in code, but the Colab run was too small to show the curriculum moving through phases. Useful next references: VCRL ([arxiv 2509.19803](https://arxiv.org/html/2509.19803v1)) and Self-Evolving Curriculum ([arxiv 2505.14970](https://arxiv.org/pdf/2505.14970)).
+- **The `monitoring/colab_results/` plots use the heuristic policy as a proxy.** The Qwen3 adapter plots are in `monitoring/colab_results_qwen3_1.7b/`.
 
 ---
 
