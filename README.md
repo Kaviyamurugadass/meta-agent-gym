@@ -31,7 +31,7 @@ Within one training run, the model learned to produce structured AGENT.md files 
 | 🤗 HF Space (live environment) | https://huggingface.co/spaces/Kaviya-M/meta-agent-gym |
 | 📓 Colab training notebook | https://colab.research.google.com/github/Kaviyamurugadass/meta-agent-gym/blob/main/notebooks/train_colab.ipynb |
 | 💻 GitHub repository | https://github.com/Kaviyamurugadass/meta-agent-gym |
-| 📝 Blog post | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
+| 📝 Blog post | [`BLOG.md`](BLOG.md) |
 
 ---
 
@@ -439,7 +439,7 @@ meta-agent-gym/
 ├── scripts/demo_reward_fix.py       # live +7.4 → -4.58 reward swing demo
 ├── static/index.html                # 2-tab dashboard
 ├── docs/
-│   ├── competition/                 # HUGGINGFACE_BLOG.md, TRAINING_EVIDENCE.md
+│   ├── competition/                 # TRAINING_EVIDENCE.md, PITCH.md, SLIDES.md
 │   └── onsite/                      # ONSITE_TRAINING_PLAN.md
 ├── openenv.yaml
 └── Dockerfile
@@ -451,7 +451,7 @@ meta-agent-gym/
 
 | What | Where |
 |---|---|
-| Mini-blog | [`docs/competition/HUGGINGFACE_BLOG.md`](docs/competition/HUGGINGFACE_BLOG.md) |
+| Mini-blog | [`BLOG.md`](BLOG.md) |
 | Training evidence + honest limitations | [`docs/competition/TRAINING_EVIDENCE.md`](docs/competition/TRAINING_EVIDENCE.md) |
 | Onsite training plan | [`docs/onsite/ONSITE_TRAINING_PLAN.md`](docs/onsite/ONSITE_TRAINING_PLAN.md) |
 | Sign-flip fix evidence | [`data/post_fix/REWARD_FIX_COMPARISON.md`](data/post_fix/REWARD_FIX_COMPARISON.md) |
