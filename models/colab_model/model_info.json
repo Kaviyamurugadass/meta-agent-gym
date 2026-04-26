@@ -1,9 +1,15 @@
 {
-  "model_name": "Qwen2.5-0.5B-GRPO-Trained",
+  "model_name": "Qwen3-1.7B-GRPO-Trained",
+  "base_model": "Qwen/Qwen3-1.7B",
+  "adapter_type": "LoRA (4-bit, Unsloth)",
+  "gpu": "Tesla T4 (15.6 GB)",
   "training_episodes": 50,
   "success_rate": 1.0,
-  "mean_reward": 2.56,
-  "training_date": "2026-04-23",
+  "mean_reward": 10.8,
+  "expert_upper_bound": 15.487,
+  "random_baseline_reward": 0.0,
+  "heuristic_baseline_reward": 20.333,
+  "training_date": "2026-04-25",
   "status": "demo_ready",
   "capabilities": [
     "Agent specification generation",
