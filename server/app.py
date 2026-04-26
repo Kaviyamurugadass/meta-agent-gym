@@ -11,8 +11,10 @@ Endpoints (exposed by OpenEnv's create_app):
     GET  /schema  — Action/Observation JSON schemas
     WS   /ws      — persistent session
 Plus:
-    GET  /health  — liveness check
-    GET  /web     — static dashboard (if static/index.html exists)
+    GET  /health    — liveness check (status: "healthy")
+    GET  /metadata  — environment metadata (name, description)
+    POST /mcp       — JSON-RPC 2.0 MCP compliance endpoint
+    GET  /web       — static dashboard (if static/index.html exists)
 """
 
 from __future__ import annotations
