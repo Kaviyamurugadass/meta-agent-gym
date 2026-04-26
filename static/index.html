@@ -508,15 +508,19 @@ function setGenSuggestion(text){
         sel.appendChild(og);
     });
     sel.disabled=false;sel.onchange=showTask;
-    // Auto-select first easy scenario so fields are pre-filled on load
-    const firstEasy=Array.from(sel.options).find(o=>o.value&&o.value.includes("easy"));
-    if(firstEasy){sel.value=firstEasy.value;showTask();}
     const ss=$("cmdSkill");ss.innerHTML='<option value="">Pick a skill...</option>';
     SKILLS.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;ss.appendChild(o)});
+    // Enable buttons FIRST — always, unconditionally
     $("btnStart").disabled=false;
     $("btnStart").onclick=startEp;
     $("btnReset").onclick=resetEp;
     $("btnGenerate").onclick=generateWithModel;
+    // Auto-select first easy scenario AFTER buttons are wired — wrapped in try/catch
+    // so any error here can never prevent buttons from working
+    try{
+        const firstEasy=Array.from(sel.options).find(o=>o.value&&o.value.includes("easy"));
+        if(firstEasy){sel.value=firstEasy.value;showTask();}
+    }catch(e){console.warn("Auto-fill on load failed:",e);}
     fetch("/health").then(r=>{setConn(r.ok)}).catch(()=>setConn(false));
     checkGenerateStatus();
     // Deep-link to Tab 2 via #generate
@@ -543,14 +547,15 @@ async function checkGenerateStatus(){
             msg.style.display="block";
             msg.textContent="⚠ Loaded adapter is the pre-fix Colab run (empty-spec collapse, see Goose case study). Onsite Qwen3-1.7B retrain will replace it. Click Generate to see the bug live.";
         }else{
-            badge.textContent="Not Deployed";
-            badge.title="Inference is unavailable in this deployment.";
-            badge.style.background="rgba(248,113,113,0.1)";
-            badge.style.color="var(--red)";
-            btn.disabled=true;
-            const reason=!d.deps_available?"inference deps missing":"no adapter uploaded";
+            // Still enable the button — server will try HF Hub fallback
+            const reason=!d.deps_available?"deps missing locally":"loading from HF Hub";
+            badge.textContent="Loading from Hub";
+            badge.title="Adapter not found locally — will download from Kaviya-M/meta-agent-gym-adapter on first call.";
+            badge.style.background="rgba(251,191,36,0.1)";
+            badge.style.color="var(--yellow)";
+            btn.disabled=false;
             msg.style.display="block";
-            msg.textContent="Available once trained onsite ("+reason+"). Adapter path: "+(d.adapter_path||"training/grpo-unsloth-output/");
+            msg.textContent="⏳ First call will download the adapter from HuggingFace Hub (~30-60s). Subsequent calls are fast.";
         }
     }catch(e){
         badge.textContent="Error";
