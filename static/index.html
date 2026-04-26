@@ -4,207 +4,450 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>meta-agent-gym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg: #090e1a;
-    --surface: #111827;
-    --surface2: #1a2236;
-    --fg: #e2e8f0;
-    --muted: #64748b;
-    --accent: #60a5fa;
-    --accent2: #a78bfa;
-    --green: #34d399;
-    --yellow: #fbbf24;
-    --red: #f87171;
-    --border: rgba(255,255,255,0.06);
-    --radius: 12px;
+    --bg:          #07090f;
+    --bg2:         #0b0e18;
+    --surface:     #0f1623;
+    --surface2:    #141c2d;
+    --surface3:    #1a2438;
+    --fg:          #dde5f4;
+    --fg2:         #7a8aa8;
+    --accent:      #00d4a8;
+    --accent-dim:  rgba(0,212,168,.11);
+    --accent-glow: rgba(0,212,168,.22);
+    --violet:      #7c3aed;
+    --violet-dim:  rgba(124,58,237,.12);
+    --amber:       #f59e0b;
+    --amber-dim:   rgba(245,158,11,.1);
+    --red:         #ef4444;
+    --red-dim:     rgba(239,68,68,.1);
+    --green:       #10b981;
+    --border:      rgba(255,255,255,.055);
+    --border-hi:   rgba(0,212,168,.2);
+    --radius:      10px;
+    --font:        'Syne', system-ui, sans-serif;
+    --mono:        'JetBrains Mono', 'SF Mono', Menlo, monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--fg);font-size:14px;-webkit-font-smoothing:antialiased}
-body{overflow:hidden}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--fg);font-size:14px;-webkit-font-smoothing:antialiased;line-height:1.6}
+body{overflow:hidden;position:relative}
 
-/* ─── Header ─── */
-.header{display:flex;align-items:center;gap:16px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);height:46px}
-.logo{font-size:1.15rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap}
-.subtitle{color:var(--muted);font-size:0.75rem;white-space:nowrap}
-.conn{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--muted)}
-.conn-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(52,211,153,0.5)}
-.conn-dot.off{background:var(--red);box-shadow:0 0 6px rgba(248,113,113,0.5)}
+/* Grid texture */
+body::before{
+    content:'';position:fixed;inset:0;
+    background-image:
+        linear-gradient(rgba(0,212,168,.018) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,212,168,.018) 1px,transparent 1px);
+    background-size:48px 48px;
+    pointer-events:none;z-index:0}
 
-/* ─── Layout ─── */
-.layout{display:grid;grid-template-columns:360px 1fr;height:calc(100vh - 46px - 45px)}
-.sidebar,.main{overflow-y:auto;padding:24px}
-.sidebar{border-right:1px solid var(--border);background:var(--bg)}
-.main{background:var(--bg);display:flex;flex-direction:column;gap:20px}
-.sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:4px}
-.sidebar::-webkit-scrollbar-thumb,.main::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* Radial glow behind header */
+body::after{
+    content:'';position:fixed;top:-120px;left:50%;transform:translateX(-50%);
+    width:700px;height:300px;
+    background:radial-gradient(ellipse,rgba(0,212,168,.06) 0%,transparent 70%);
+    pointer-events:none;z-index:0}
 
-/* ─── Cards ─── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
-.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.card-title{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent)}
-.badge{font-size:0.68rem;padding:3px 8px;border-radius:6px;background:rgba(96,165,250,0.1);color:var(--accent);font-weight:500}
+/* ── Header ── */
+.header{
+    display:flex;align-items:center;gap:16px;
+    padding:0 22px;height:50px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(11,14,24,.98),rgba(11,14,24,.94));
+    backdrop-filter:blur(12px);
+    position:relative;z-index:10}
+.header::after{
+    content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent 0%,var(--accent-glow) 40%,var(--accent-glow) 60%,transparent 100%)}
 
-/* ─── Form ─── */
-.form-group{margin-bottom:16px}
-.form-label{display:block;font-size:0.75rem;color:var(--muted);margin-bottom:6px;font-weight:500}
-.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);font-size:0.85rem;outline:none;transition:border 0.2s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
-.form-select option{background:var(--surface2)}
-.form-textarea{resize:vertical;min-height:80px;font-family:"JetBrains Mono","SF Mono",Menlo,monospace;font-size:0.8rem;line-height:1.6}
-.form-row{display:flex;gap:8px}
-.form-row .form-input,.form-row .form-select{flex:1}
+.logo{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo-mark{
+    width:30px;height:30px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent),#4fa8ff);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;
+    box-shadow:0 0 18px rgba(0,212,168,.35),0 2px 8px rgba(0,0,0,.5)}
+.logo-name{
+    font-size:.95rem;font-weight:800;letter-spacing:-.02em;
+    background:linear-gradient(135deg,var(--accent) 20%,#60d4ff 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
 
-/* ─── Buttons ─── */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:500;font-size:0.82rem;transition:all 0.15s;font-family:inherit}
-.btn:disabled{opacity:0.35;cursor:not-allowed}
-.btn-primary{background:var(--accent);color:#0a0f1a}
-.btn-primary:hover:not(:disabled){background:#7db8fc}
-.btn-ghost{background:var(--surface2);color:var(--fg);border:1px solid var(--border)}
-.btn-ghost:hover:not(:disabled){border-color:rgba(255,255,255,0.15)}
-.btn-danger{background:rgba(248,113,113,0.1);color:var(--red)}
-.btn-sm{padding:6px 10px;font-size:0.75rem;border-radius:6px}
-.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.subtitle{
+    color:var(--fg2);font-size:.72rem;font-weight:500;
+    letter-spacing:.02em;white-space:nowrap;
+    border-left:1px solid var(--border);padding-left:14px}
 
-/* ─── Accordion ─── */
-.accordion{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
-.acc-header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);cursor:pointer;font-size:0.82rem;font-weight:500;transition:background 0.15s;user-select:none}
-.acc-header:hover{background:var(--surface2)}
-.acc-arrow{transition:transform 0.2s;font-size:0.7rem;color:var(--muted)}
-.acc-arrow.open{transform:rotate(90deg)}
-.acc-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;background:rgba(96,165,250,0.08)}
-.acc-body{padding:16px;display:none;border-top:1px solid var(--border);background:var(--bg)}
-.acc-body.open{display:block}
+.conn{
+    margin-left:auto;display:flex;align-items:center;gap:7px;
+    font-size:.71rem;font-weight:600;font-family:var(--mono);color:var(--fg2);
+    background:var(--surface);border:1px solid var(--border);
+    padding:5px 10px;border-radius:20px}
+.conn-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green),0 0 14px rgba(16,185,129,.3);
+    animation:blink 2.4s ease-in-out infinite}
+.conn-dot.off{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
 
-/* ─── Task Card ─── */
-.task-info{background:var(--surface2);border-radius:8px;padding:14px;margin-top:12px}
-.task-id{font-family:"JetBrains Mono",monospace;font-size:0.78rem;color:var(--accent)}
-.task-desc{font-size:0.88rem;margin:10px 0;line-height:1.6;color:var(--fg)}
-.tag-row{display:flex;gap:6px;flex-wrap:wrap}
-.tag{padding:3px 9px;border-radius:5px;font-size:0.68rem;font-weight:600}
-.tag-easy{background:rgba(52,211,153,0.12);color:var(--green)}
-.tag-medium{background:rgba(96,165,250,0.12);color:var(--accent)}
-.tag-hard{background:rgba(251,191,36,0.12);color:var(--yellow)}
-.tag-expert{background:rgba(248,113,113,0.12);color:var(--red)}
-.tag-skill{background:rgba(167,139,250,0.1);color:var(--accent2)}
-.tag-domain{background:rgba(96,165,250,0.08);color:var(--accent)}
-
-/* ─── Skill Pills ─── */
-.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:0.75rem;background:rgba(167,139,250,0.1);color:var(--accent2);font-weight:500}
-.pill .x{cursor:pointer;color:var(--red);font-size:0.8rem;line-height:1;padding:0 2px}
-.pill .x:hover{color:#fca5a5}
-
-/* ─── Step Timeline ─── */
-.timeline{list-style:none}
-.tl-item{display:flex;gap:12px;padding:10px 0;position:relative}
-.tl-item:not(:last-child){border-bottom:1px solid var(--border)}
-.tl-num{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;background:rgba(96,165,250,0.12);color:var(--accent);flex-shrink:0}
-.tl-cmd{font-family:"JetBrains Mono",monospace;font-size:0.8rem;color:var(--accent2);margin-bottom:2px}
-.tl-reward{font-size:0.72rem;font-weight:600}
-.tl-reward.pos{color:var(--green)}
-.tl-reward.neg{color:var(--red)}
-.tl-reward.zero{color:var(--muted)}
-
-/* ─── Reward Bars ─── */
-.rw{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.rw-label{width:110px;font-size:0.75rem;color:var(--muted);font-family:"JetBrains Mono",monospace;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rw-track{flex:1;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden}
-.rw-fill{height:100%;border-radius:5px;transition:width 0.5s cubic-bezier(0.22,1,0.36,1)}
-.rw-fill.high{background:linear-gradient(90deg,#22c55e,#34d399)}
-.rw-fill.mid{background:linear-gradient(90deg,#eab308,#fbbf24)}
-.rw-fill.low{background:linear-gradient(90deg,#ef4444,#f87171)}
-.rw-val{width:42px;font-size:0.78rem;font-weight:600;font-family:"JetBrains Mono",monospace;text-align:right}
-.rw-total{display:flex;align-items:center;justify-content:space-between;padding-top:14px;margin-top:14px;border-top:1px solid var(--border)}
-.rw-total-label{font-size:0.82rem;color:var(--muted)}
-.rw-total-val{font-size:1.3rem;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-
-/* ─── Violations ─── */
-.violation{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:0.72rem;margin:3px;font-weight:500}
-.violation-hard{background:rgba(248,113,113,0.1);color:var(--red)}
-.violation-soft{background:rgba(251,191,36,0.08);color:var(--yellow)}
-
-/* ─── Agent Preview ─── */
-.preview{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:"JetBrains Mono",monospace;font-size:0.78rem;line-height:1.7;white-space:pre-wrap;color:var(--muted);max-height:360px;overflow-y:auto;flex:1;min-height:120px}
-.preview .k{color:var(--accent)}
-.preview .v{color:var(--fg)}
-.preview .s{color:var(--accent2)}
-
-/* ─── Feedback ─── */
-.fb-item{display:flex;gap:8px;padding:8px 0;font-size:0.82rem;line-height:1.5}
-.fb-item:not(:last-child){border-bottom:1px solid var(--border)}
-.fb-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0}
-.fb-info{background:var(--accent)}
-.fb-good{background:var(--green)}
-.fb-bad{background:var(--red)}
-.fb-warn{background:var(--yellow)}
-
-/* ─── Banner ─── */
-.banner{padding:14px 18px;border-radius:10px;font-size:0.85rem;font-weight:600;display:flex;align-items:center;gap:10px}
-.banner-ok{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);color:var(--green)}
-.banner-fail{background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.15);color:var(--red)}
-
-/* ─── Empty ─── */
-.empty{color:var(--muted);text-align:center;padding:28px 16px;font-size:0.82rem;line-height:1.7}
-
-/* ─── Responsive ─── */
-@media(max-width:900px){.layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}.sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:50vh}}
-
-/* ─── Tabs ─── */
-.tab-strip{display:flex;gap:0;padding:0 24px;border-bottom:1px solid var(--border);background:var(--bg-card)}
-.tab-btn{padding:14px 22px;background:transparent;border:none;color:var(--muted);font-size:0.9rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;font-family:inherit}
-.tab-btn:hover{color:var(--text)}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* ── Tab Strip ── */
+.tab-strip{
+    display:flex;padding:0;gap:0;
+    background:var(--bg2);border-bottom:1px solid var(--border);
+    position:relative;z-index:9}
+.tab-btn{
+    flex:1;padding:0 20px;height:44px;background:transparent;border:none;
+    color:var(--fg2);font-size:.88rem;font-weight:700;
+    font-family:var(--font);cursor:pointer;letter-spacing:.02em;
+    border-bottom:2px solid transparent;transition:all .18s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    border-right:1px solid var(--border)}
+.tab-btn:last-child{border-right:none}
+.tab-btn:hover{color:var(--fg);background:rgba(255,255,255,.02)}
+.tab-btn.active{
+    color:var(--accent);border-bottom-color:var(--accent);
+    background:rgba(0,212,168,.04)}
+.tab-btn .tab-icon{font-size:1rem;opacity:.85}
 .tab-content{display:none}
 .tab-content.active{display:block}
-.tab-subtitle{padding:14px 24px 4px;color:var(--muted);font-size:0.78rem;line-height:1.5;background:var(--bg-page)}
-.suggest-list{margin:8px 0 0 0;padding:0;list-style:none}
-.suggest-list li{padding:6px 0}
-.suggest-list a{color:var(--accent);text-decoration:none;font-size:0.78rem;cursor:pointer;border-bottom:1px dashed transparent;transition:border 0.15s}
-.suggest-list a:hover{border-bottom-color:var(--accent)}
-@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-@keyframes flashFill{0%{border-color:var(--accent);background:rgba(96,165,250,0.12)}100%{border-color:var(--border);background:var(--surface2)}}
-.field-filled{animation:flashFill 1s ease forwards}
-/* ─── Judge Score Card ─── */
-.judge-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0;margin-bottom:16px;animation:slideDown 0.35s ease;overflow:hidden}
-.judge-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,rgba(96,165,250,0.05),rgba(167,139,250,0.05))}
+
+/* ── Tab subtitle ── */
+.tab-subtitle{
+    padding:9px 22px;background:var(--bg);
+    border-bottom:1px solid var(--border);
+    font-size:.8rem;color:var(--fg2);line-height:1.6;
+    position:relative;z-index:1}
+.tab-subtitle strong{color:var(--accent);font-weight:700}
+
+/* ── Layout ── */
+.layout{
+    display:grid;grid-template-columns:344px 1fr;
+    height:calc(100vh - 50px - 44px - 38px);
+    position:relative;z-index:1}
+.sidebar,.main{overflow-y:auto;padding:14px 14px 20px}
+.sidebar{
+    border-right:1px solid var(--border);background:var(--bg2);
+    scrollbar-width:thin;scrollbar-color:var(--surface3) transparent}
+.main{
+    background:var(--bg);display:flex;flex-direction:column;gap:12px;
+    scrollbar-width:thin;scrollbar-color:var(--surface3) transparent}
+.sidebar::-webkit-scrollbar,.main::-webkit-scrollbar{width:3px}
+.sidebar::-webkit-scrollbar-thumb,.main::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+
+/* ── Cards ── */
+.card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:15px;margin-bottom:10px;
+    position:relative;transition:border-color .2s}
+.card:hover{border-color:rgba(255,255,255,.08)}
+
+.card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:13px}
+.card-title{
+    font-size:.72rem;font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;color:var(--accent);
+    display:flex;align-items:center;gap:7px}
+.card-title::before{
+    content:'';width:3px;height:11px;background:var(--accent);
+    border-radius:2px;box-shadow:0 0 8px var(--accent-glow);flex-shrink:0}
+
+.badge{
+    font-size:.64rem;font-family:var(--mono);padding:3px 8px;
+    border-radius:5px;background:var(--accent-dim);color:var(--accent);
+    font-weight:700;border:1px solid rgba(0,212,168,.14)}
+
+/* ── Forms ── */
+.form-group{margin-bottom:13px}
+.form-label{
+    display:block;font-size:.74rem;color:var(--fg2);margin-bottom:5px;
+    font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.form-input,.form-select,.form-textarea{
+    width:100%;padding:9px 11px;border-radius:7px;
+    border:1px solid var(--border);background:var(--surface2);
+    color:var(--fg);font-size:.85rem;font-family:var(--font);
+    outline:none;transition:border-color .18s,box-shadow .18s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,168,.07)}
+.form-select option{background:var(--surface2)}
+.form-textarea{
+    resize:vertical;min-height:80px;
+    font-family:var(--mono);font-size:.82rem;line-height:1.7}
+.form-row{display:flex;gap:6px}
+.form-row .form-input,.form-row .form-select{flex:1;min-width:0}
+
+/* ── Buttons ── */
+.btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:9px 16px;border-radius:7px;border:none;cursor:pointer;
+    font-weight:700;font-size:.82rem;font-family:var(--font);
+    transition:all .15s;white-space:nowrap;letter-spacing:.015em}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{
+    background:var(--accent);color:#04140f;
+    box-shadow:0 0 14px rgba(0,212,168,.28),0 2px 6px rgba(0,0,0,.3)}
+.btn-primary:hover:not(:disabled){
+    background:#00ebbf;
+    box-shadow:0 0 22px rgba(0,212,168,.45),0 2px 8px rgba(0,0,0,.3);
+    transform:translateY(-1px)}
+.btn-ghost{
+    background:var(--surface2);color:var(--fg2);
+    border:1px solid var(--border)}
+.btn-ghost:hover:not(:disabled){
+    color:var(--fg);border-color:rgba(255,255,255,.11);background:var(--surface3)}
+.btn-danger{
+    background:var(--red-dim);color:var(--red);
+    border:1px solid rgba(239,68,68,.15)}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,.17)}
+.btn-sm{padding:5px 9px;font-size:.7rem;border-radius:6px}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+
+/* ── Accordion ── */
+.accordion{
+    border:1px solid var(--border);border-radius:8px;
+    overflow:hidden;margin-bottom:8px;transition:border-color .2s}
+.accordion:has(.acc-body.open){border-color:rgba(0,212,168,.12)}
+.acc-header{
+    display:flex;align-items:center;gap:9px;padding:10px 13px;
+    background:var(--surface);cursor:pointer;font-size:.84rem;font-weight:600;
+    transition:background .15s;user-select:none;color:var(--fg2)}
+.acc-header:hover{background:var(--surface2);color:var(--fg)}
+.acc-arrow{
+    transition:transform .2s;font-size:.55rem;
+    color:var(--fg2);margin-left:auto;flex-shrink:0}
+.acc-arrow.open{transform:rotate(90deg);color:var(--accent)}
+.acc-icon{
+    width:25px;height:25px;border-radius:6px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:.82rem;
+    background:var(--accent-dim);border:1px solid rgba(0,212,168,.1)}
+.acc-body{padding:13px;display:none;border-top:1px solid var(--border);background:var(--bg2)}
+.acc-body.open{display:block}
+
+/* ── Task Card ── */
+.task-info{
+    background:var(--surface2);border:1px solid var(--border);
+    border-radius:8px;padding:11px 13px;margin-top:11px}
+.task-id{
+    font-family:var(--mono);font-size:.7rem;color:var(--accent);margin-bottom:5px}
+.task-desc{font-size:.88rem;margin:7px 0;line-height:1.65;color:var(--fg);font-weight:500}
+.tag-row{display:flex;gap:5px;flex-wrap:wrap}
+.tag{
+    padding:2px 7px;border-radius:4px;font-size:.62rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.tag-easy{background:rgba(16,185,129,.11);color:#10b981}
+.tag-medium{background:rgba(0,212,168,.09);color:var(--accent)}
+.tag-hard{background:rgba(245,158,11,.11);color:var(--amber)}
+.tag-expert{background:rgba(239,68,68,.1);color:var(--red)}
+.tag-skill{background:rgba(124,58,237,.11);color:#a78bfa}
+.tag-domain{background:rgba(0,212,168,.07);color:var(--accent)}
+
+/* ── Skill Pills ── */
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.pill{
+    display:inline-flex;align-items:center;gap:5px;padding:4px 9px;
+    border-radius:5px;font-size:.68rem;font-weight:600;
+    background:rgba(124,58,237,.1);color:#a78bfa;
+    border:1px solid rgba(124,58,237,.15);font-family:var(--mono)}
+.pill .x{cursor:pointer;color:var(--red);font-size:.72rem;line-height:1;opacity:.65}
+.pill .x:hover{opacity:1}
+
+/* ── Step Timeline ── */
+.timeline{list-style:none}
+.tl-item{
+    display:flex;gap:11px;padding:8px 0;
+    align-items:flex-start;position:relative}
+.tl-item:not(:last-child){border-bottom:1px solid var(--border)}
+.tl-num{
+    width:23px;height:23px;border-radius:6px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.62rem;font-weight:700;font-family:var(--mono);
+    background:var(--accent-dim);color:var(--accent);
+    border:1px solid rgba(0,212,168,.14)}
+.tl-cmd{font-family:var(--mono);font-size:.8rem;color:#a78bfa;margin-bottom:2px}
+.tl-reward{font-size:.75rem;font-weight:700;font-family:var(--mono)}
+.tl-reward.pos{color:var(--green)}
+.tl-reward.neg{color:var(--red)}
+.tl-reward.zero{color:var(--fg2)}
+
+/* ── Reward Bars ── */
+.rw{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rw-label{
+    width:114px;font-size:.73rem;color:var(--fg2);
+    font-family:var(--mono);text-align:right;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw-track{
+    flex:1;height:7px;background:var(--surface2);
+    border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.rw-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.rw-fill.high{background:linear-gradient(90deg,#059669,#10b981);box-shadow:0 0 6px rgba(16,185,129,.35)}
+.rw-fill.mid{background:linear-gradient(90deg,#d97706,#f59e0b)}
+.rw-fill.low{background:linear-gradient(90deg,#dc2626,#ef4444)}
+.rw-val{
+    width:38px;font-size:.76rem;font-weight:700;
+    font-family:var(--mono);text-align:right}
+.rw-total{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:12px;margin-top:12px;border-top:1px solid var(--border)}
+.rw-total-label{font-size:.77rem;color:var(--fg2);font-weight:600}
+.rw-total-val{
+    font-size:1.45rem;font-weight:800;font-family:var(--mono);
+    background:linear-gradient(135deg,var(--accent),#60d4ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ── Violations ── */
+.violation{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:5px;font-size:.67rem;
+    margin:3px;font-weight:600;font-family:var(--mono)}
+.violation-hard{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.14)}
+.violation-soft{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.14)}
+
+/* ── Agent Preview ── */
+.preview{
+    background:var(--bg);border:1px solid var(--border);
+    border-radius:8px;padding:14px;font-family:var(--mono);
+    font-size:.8rem;line-height:1.85;white-space:pre-wrap;
+    color:var(--fg2);max-height:360px;overflow-y:auto;
+    flex:1;min-height:120px;
+    scrollbar-width:thin;scrollbar-color:var(--surface3) transparent}
+.preview .k{color:var(--accent);font-weight:600}
+.preview .v{color:var(--fg)}
+.preview .s{color:#7c3aed}
+
+/* ── Feedback ── */
+.fb-item{
+    display:flex;gap:10px;padding:7px 0;
+    font-size:.84rem;line-height:1.6}
+.fb-item:not(:last-child){border-bottom:1px solid var(--border)}
+.fb-dot{width:6px;height:6px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.fb-info{background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+.fb-good{background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.4)}
+.fb-bad{background:var(--red);box-shadow:0 0 5px rgba(239,68,68,.4)}
+.fb-warn{background:var(--amber)}
+
+/* ── Banner ── */
+.banner{
+    padding:11px 16px;border-radius:8px;font-size:.8rem;font-weight:700;
+    display:flex;align-items:center;gap:9px;letter-spacing:.01em}
+.banner-ok{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);color:var(--green)}
+.banner-fail{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.14);color:var(--red)}
+
+/* ── Empty ── */
+.empty{
+    color:var(--fg2);text-align:center;padding:22px 14px;
+    font-size:.76rem;line-height:1.7;opacity:.65}
+
+/* ── Suggest list ── */
+.suggest-list{margin:8px 0 0;padding:0;list-style:none}
+.suggest-list li{padding:4px 0}
+.suggest-list a{
+    color:var(--accent);text-decoration:none;
+    font-size:.75rem;cursor:pointer;opacity:.75;
+    transition:opacity .15s;display:flex;align-items:center;gap:6px}
+.suggest-list a::before{content:'→';font-size:.65rem;opacity:.55}
+.suggest-list a:hover{opacity:1}
+
+/* ── Judge Score Card ── */
+.judge-card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);padding:0;margin-bottom:12px;
+    animation:slideDown .35s ease;overflow:hidden}
+.judge-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:13px 18px;border-bottom:1px solid var(--border);
+    background:linear-gradient(90deg,rgba(0,212,168,.04),rgba(124,58,237,.04))}
 .judge-overall{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.judge-overall-num{font-size:2rem;font-weight:800;line-height:1;font-family:"JetBrains Mono",monospace}
-.judge-overall-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
-.judge-body{padding:14px 20px}
+.judge-overall-num{font-size:2rem;font-weight:800;line-height:1;font-family:var(--mono)}
+.judge-overall-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--fg2)}
+.judge-body{padding:12px 18px}
 .judge-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.judge-row-label{width:120px;font-size:0.72rem;color:var(--muted);white-space:nowrap}
-.judge-track{flex:1;height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden}
-.judge-fill{height:100%;border-radius:4px;transition:width 0.6s cubic-bezier(0.22,1,0.36,1)}
-.judge-row-val{width:36px;text-align:right;font-size:0.72rem;font-weight:700;font-family:"JetBrains Mono",monospace}
-.judge-meta{display:flex;justify-content:space-between;padding:10px 20px;border-top:1px solid var(--border);background:rgba(0,0,0,0.2);font-size:0.72rem;color:var(--muted)}
-.judge-reasoning{padding:8px 20px 12px;font-size:0.72rem;color:var(--muted);font-style:italic;border-top:1px solid var(--border)}
-/* ─── Auto-fill button ─── */
-.btn-autofill{background:linear-gradient(135deg,rgba(96,165,250,0.15),rgba(167,139,250,0.15));color:var(--accent);border:1px solid rgba(96,165,250,0.2);font-size:0.72rem;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s;font-family:inherit;font-weight:600}
-.btn-autofill:hover{background:linear-gradient(135deg,rgba(96,165,250,0.25),rgba(167,139,250,0.25));border-color:rgba(96,165,250,0.4)}
+.judge-row-label{width:120px;font-size:.7rem;color:var(--fg2);white-space:nowrap}
+.judge-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.judge-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.22,1,.36,1)}
+.judge-row-val{width:36px;text-align:right;font-size:.7rem;font-weight:700;font-family:var(--mono)}
+.judge-meta{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 18px;border-top:1px solid var(--border);
+    background:rgba(0,0,0,.2);font-size:.67rem;color:var(--fg2)}
+.judge-reasoning{
+    padding:8px 18px 12px;font-size:.7rem;color:var(--fg2);
+    font-style:italic;border-top:1px solid var(--border);line-height:1.6}
+
+/* ── Auto-fill button ── */
+.btn-autofill{
+    background:linear-gradient(135deg,rgba(0,212,168,.1),rgba(124,58,237,.1));
+    color:var(--accent);border:1px solid rgba(0,212,168,.18);
+    font-size:.68rem;padding:5px 10px;border-radius:6px;cursor:pointer;
+    transition:all .15s;font-family:var(--font);font-weight:700;letter-spacing:.02em}
+.btn-autofill:hover{
+    background:linear-gradient(135deg,rgba(0,212,168,.18),rgba(124,58,237,.18));
+    border-color:rgba(0,212,168,.32);box-shadow:0 0 12px var(--accent-glow)}
+
+/* ── Verifier note ── */
+.verifier-note{
+    font-size:.68rem;color:var(--fg2);margin-bottom:10px;
+    padding:7px 10px;background:rgba(239,68,68,.04);
+    border:1px solid rgba(239,68,68,.1);border-radius:6px;line-height:1.5}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+    display:inline-block;width:12px;height:12px;flex-shrink:0;
+    border:2px solid currentColor;border-top-color:transparent;
+    border-radius:50%;animation:spin .65s linear infinite;vertical-align:middle}
+.btn-loading{opacity:.85;pointer-events:none}
+
+/* ── Animations ── */
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes flashFill{
+    0%{border-color:var(--accent);background:rgba(0,212,168,.09);box-shadow:0 0 0 2px rgba(0,212,168,.08)}
+    100%{border-color:var(--border);background:var(--surface2);box-shadow:none}}
+.field-filled{animation:flashFill .85s ease forwards}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+    .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+    .sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:50vh}}
 </style>
 </head>
 <body>
 
+<!-- ── Header ── -->
 <div class="header">
-    <span class="logo">meta-agent-gym</span>
+    <div class="logo">
+        <div class="logo-mark">⚗</div>
+        <span class="logo-name">meta-agent-gym</span>
+    </div>
     <span class="subtitle">RL Environment for Agent Design</span>
-    <div class="conn"><span class="conn-dot" id="connDot"></span><span id="connText">Checking...</span></div>
+    <div class="conn">
+        <span class="conn-dot" id="connDot"></span>
+        <span id="connText">Checking...</span>
+    </div>
 </div>
 
+<!-- ── Tab Strip ── -->
 <div class="tab-strip">
-    <button class="tab-btn active" data-tab="build" onclick="switchTab('build')">🛠 Build Step-by-Step</button>
-    <button class="tab-btn" data-tab="generate" onclick="switchTab('generate')">✨ Generate from Description</button>
+    <button class="tab-btn active" data-tab="build" onclick="switchTab('build')">
+        <span class="tab-icon">⬡</span> Build Step-by-Step
+    </button>
+    <button class="tab-btn" data-tab="generate" onclick="switchTab('generate')">
+        <span class="tab-icon">✦</span> Generate from Description
+    </button>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- TAB 1 — Build Step-by-Step (training/eval surface)                       -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- ════════════════════════════════════════════════════════════════
+     TAB 1 — Build Step-by-Step
+     ════════════════════════════════════════════════════════════════ -->
 <div id="tab-build" class="tab-content active">
 <div class="tab-subtitle">Watch the multi-component reward signal in real time. Pick a task, issue commands, see the score evolve. <strong>This is what GRPO has to learn.</strong></div>
 
 <div class="layout">
-    <!-- ─── Sidebar ─── -->
+
+    <!-- ── Sidebar ── -->
     <div class="sidebar">
 
         <!-- Task Selection -->
@@ -217,43 +460,43 @@ body{overflow:hidden}
                 <select class="form-select" id="taskSelect" disabled><option>Loading...</option></select>
             </div>
             <div id="taskCard" class="task-info" style="display:none"></div>
-            <div class="btn-row" style="margin-top:14px">
-                <button class="btn btn-primary" id="btnStart" disabled>Start Episode</button>
-                <button class="btn btn-ghost" id="btnReset" disabled>New Episode</button>
+            <div class="btn-row" style="margin-top:12px">
+                <button class="btn btn-primary" id="btnStart" disabled>▶ Start Episode</button>
+                <button class="btn btn-ghost" id="btnReset" disabled>↺ Reset</button>
                 <button class="btn-autofill" id="btnAutoFill" onclick="autoFillFromSelected()" style="display:none" title="Fill all fields from this task's required skills and description">⚡ Auto-fill</button>
             </div>
         </div>
 
         <!-- Agent Builder (Accordion) -->
         <div class="card" style="padding:12px">
-            <div class="card-head" style="margin-bottom:8px;padding:0 8px">
+            <div class="card-head" style="margin-bottom:8px;padding:0 4px">
                 <span class="card-title">Agent Builder</span>
                 <span class="badge" id="stepBadge">0 / 7</span>
             </div>
-            <div style="font-size:0.7rem;color:var(--muted);margin:0 8px 8px;line-height:1.4">
-                Fields marked <span style="color:#f87171;font-weight:700">*</span> are required by the hard-verifier gate. Without all three, total reward is 0.
+            <div class="verifier-note">
+                Fields marked <span style="color:var(--red);font-weight:700">*</span> are required by the hard-verifier gate. They are <strong style="color:var(--accent)">auto-submitted</strong> when you start an episode.
             </div>
 
             <!-- Identity -->
             <div class="accordion">
                 <div class="acc-header" onclick="toggleAcc(this)">
-                    <span class="acc-arrow">&#9654;</span>
-                    <span class="acc-icon">&#9998;</span>
+                    <span class="acc-icon">✏</span>
                     Identity
+                    <span class="acc-arrow">▶</span>
                 </div>
                 <div class="acc-body open">
                     <div class="form-group">
-                        <label class="form-label">set_name <span style="color:#f87171" title="Required by hard-verifier gate">*</span></label>
+                        <label class="form-label">set_name <span style="color:var(--red)" title="Required by hard-verifier gate">*</span></label>
                         <div class="form-row">
                             <input class="form-input" id="cmdName" placeholder="price-scraper">
-                            <button class="btn btn-sm btn-ghost" onclick="exec('set_name',{name:$('cmdName').value})">Set</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('set_name',{name:$('cmdName').value},this)">Set</button>
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label">set_description <span style="color:#f87171" title="Required by hard-verifier gate">*</span></label>
+                        <label class="form-label">set_description <span style="color:var(--red)" title="Required by hard-verifier gate">*</span></label>
                         <div class="form-row">
                             <input class="form-input" id="cmdDesc" placeholder="What this agent does and when to use it">
-                            <button class="btn btn-sm btn-ghost" onclick="exec('set_description',{description:$('cmdDesc').value})">Set</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('set_description',{description:$('cmdDesc').value},this)">Set</button>
                         </div>
                     </div>
                 </div>
@@ -262,35 +505,39 @@ body{overflow:hidden}
             <!-- Skills -->
             <div class="accordion">
                 <div class="acc-header" onclick="toggleAcc(this)">
-                    <span class="acc-arrow">&#9654;</span>
-                    <span class="acc-icon">&#9881;</span>
+                    <span class="acc-icon">⚙</span>
                     Skills
+                    <span class="acc-arrow">▶</span>
                 </div>
                 <div class="acc-body">
                     <div class="form-group">
                         <label class="form-label">Select skill</label>
                         <div class="form-row">
                             <select class="form-select" id="cmdSkill"><option value="">Pick a skill...</option></select>
-                            <button class="btn btn-sm btn-ghost" onclick="exec('add_skill',{skill:$('cmdSkill').value})">Add</button>
-                            <button class="btn btn-sm btn-danger" onclick="exec('remove_skill',{skill:$('cmdSkill').value})">Remove</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('add_skill',{skill:$('cmdSkill').value},this)">Add</button>
+                            <button class="btn btn-sm btn-danger" onclick="exec('remove_skill',{skill:$('cmdSkill').value},this)">Remove</button>
                         </div>
                     </div>
                     <div class="pills" id="skillPills"></div>
                 </div>
             </div>
 
-            <!-- Prompt -->
+            <!-- System Prompt -->
             <div class="accordion">
                 <div class="acc-header" onclick="toggleAcc(this)">
-                    <span class="acc-arrow">&#9654;</span>
-                    <span class="acc-icon">&#9997;</span>
+                    <span class="acc-icon">✍</span>
                     System Prompt
+                    <span class="acc-arrow">▶</span>
                 </div>
                 <div class="acc-body">
                     <div class="form-group" style="margin-bottom:0">
-                        <label class="form-label">write_prompt <span style="color:#f87171" title="Required by hard-verifier gate; must be at least 50 characters">*</span> <span style="color:var(--muted);font-size:0.7rem">(≥50 chars)</span></label>
+                        <label class="form-label">
+                            write_prompt
+                            <span style="color:var(--red)" title="Required by hard-verifier gate; must be at least 50 characters">*</span>
+                            <span style="color:var(--fg2);font-weight:400;text-transform:none;letter-spacing:0;font-size:.65rem">(≥50 chars)</span>
+                        </label>
                         <textarea class="form-textarea" id="cmdPrompt" rows="4" placeholder="You are a specialist agent that..."></textarea>
-                        <button class="btn btn-sm btn-ghost" style="margin-top:8px;width:100%" onclick="exec('write_prompt',{prompt:$('cmdPrompt').value})">Write Prompt</button>
+                        <button class="btn btn-sm btn-ghost" style="margin-top:8px;width:100%" onclick="exec('write_prompt',{prompt:$('cmdPrompt').value},this)">Write Prompt</button>
                     </div>
                 </div>
             </div>
@@ -298,9 +545,9 @@ body{overflow:hidden}
             <!-- Config -->
             <div class="accordion">
                 <div class="acc-header" onclick="toggleAcc(this)">
-                    <span class="acc-arrow">&#9654;</span>
-                    <span class="acc-icon">&#9881;</span>
+                    <span class="acc-icon">⚙</span>
                     Config
+                    <span class="acc-arrow">▶</span>
                 </div>
                 <div class="acc-body">
                     <div class="form-group">
@@ -312,7 +559,7 @@ body{overflow:hidden}
                                 <option value="opus">opus</option>
                                 <option value="inherit">inherit</option>
                             </select>
-                            <button class="btn btn-sm btn-ghost" onclick="exec('set_model',{model:$('cmdModel').value})">Set</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('set_model',{model:$('cmdModel').value},this)">Set</button>
                         </div>
                     </div>
                     <div class="form-group">
@@ -323,24 +570,24 @@ body{overflow:hidden}
                                 <option value="user">user</option>
                                 <option value="local">local</option>
                             </select>
-                            <button class="btn btn-sm btn-ghost" onclick="exec('set_memory',{scope:$('cmdMemory').value})">Set</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('set_memory',{scope:$('cmdMemory').value},this)">Set</button>
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
                         <label class="form-label">set_max_turns</label>
                         <div class="form-row">
                             <input class="form-input" type="number" id="cmdMaxTurns" value="10" min="1" max="50">
-                            <button class="btn btn-sm btn-ghost" onclick="exec('set_max_turns',{max_turns:parseInt($('cmdMaxTurns').value)})">Set</button>
+                            <button class="btn btn-sm btn-ghost" onclick="exec('set_max_turns',{max_turns:parseInt($('cmdMaxTurns').value)},this)">Set</button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="btn-row" style="padding:8px">
-                <button class="btn btn-ghost btn-sm" onclick="exec('check_score',{})">Check Score</button>
-                <button class="btn btn-ghost btn-sm" onclick="exec('inspect_example',{})">See Example</button>
-                <button class="btn btn-primary" id="btnSubmit" disabled onclick="exec('submit',{})">Submit Agent</button>
+            <!-- Actions Row -->
+            <div class="btn-row" style="padding:8px 4px 4px">
+                <button class="btn btn-ghost btn-sm" onclick="exec('check_score',{},this)">Check Score</button>
+                <button class="btn btn-ghost btn-sm" onclick="exec('inspect_example',{},this)">See Example</button>
+                <button class="btn btn-primary btn-sm" id="btnSubmit" disabled onclick="exec('submit',{},this)">Submit Agent</button>
             </div>
         </div>
 
@@ -357,9 +604,10 @@ body{overflow:hidden}
             <div class="card-head"><span class="card-title">Feedback</span></div>
             <div id="feedbackList"><div class="empty">Feedback appears here</div></div>
         </div>
-    </div>
 
-    <!-- ─── Main ─── -->
+    </div><!-- /sidebar -->
+
+    <!-- ── Main ── -->
     <div class="main">
         <div id="bannerSlot"></div>
 
@@ -389,38 +637,38 @@ body{overflow:hidden}
             </div>
             <div class="preview" id="agentPreview">---</div>
         </div>
-    </div>
-</div>
+    </div><!-- /main -->
 
+</div><!-- /layout -->
 </div><!-- /#tab-build -->
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
-<!-- TAB 2 — Generate from Description (end-user surface)                    -->
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     TAB 2 — Generate from Description
+     ════════════════════════════════════════════════════════════════ -->
 <div id="tab-generate" class="tab-content">
 <div class="tab-subtitle">Describe what kind of agent you need. The trained model emits the commands; you don't touch the builder. <strong>This is what end-users see post-training.</strong></div>
 
 <div class="layout">
-    <!-- ─── Sidebar (input side) ─── -->
-    <div class="sidebar">
 
-        <!-- Generate panel -->
+    <!-- ── Sidebar (input) ── -->
+    <div class="sidebar">
         <div class="card">
             <div class="card-head">
                 <span class="card-title">Describe what you need</span>
-                <span class="badge" id="genStatusBadge" style="background:rgba(251,191,36,0.1);color:var(--yellow)">Checking...</span>
+                <span class="badge" id="genStatusBadge" style="background:rgba(245,158,11,.09);color:var(--amber)">Checking...</span>
             </div>
             <div class="form-group">
                 <label class="form-label">Task description</label>
                 <textarea class="form-textarea" id="genTaskDesc" rows="6" placeholder="Build an agent that reviews pull requests for security issues like SQL injection, XSS, and hard-coded secrets."></textarea>
             </div>
             <div class="btn-row" style="margin-top:4px">
-                <button class="btn btn-primary" id="btnGenerate" disabled style="width:100%">✨ Generate Agent</button>
+                <button class="btn btn-primary" id="btnGenerate" disabled style="width:100%">✦ Generate Agent</button>
             </div>
-            <div id="genStatusMsg" style="margin-top:10px;font-size:0.75rem;color:var(--muted);display:none"></div>
+            <div id="genStatusMsg" style="margin-top:10px;font-size:.72rem;color:var(--fg2);display:none"></div>
 
-            <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
-                <div style="font-size:0.78rem;color:var(--muted);font-weight:600;margin-bottom:4px">💡 Try one of these</div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+                <div style="font-size:.67rem;color:var(--fg2);font-weight:700;margin-bottom:9px;text-transform:uppercase;letter-spacing:.09em">Try one of these</div>
                 <ul class="suggest-list">
                     <li><a onclick="setGenSuggestion('Build an agent that reviews pull requests for security issues like SQL injection, XSS, and hard-coded secrets.')">Review PRs for security</a></li>
                     <li><a onclick="setGenSuggestion('Build an agent that generates pytest cases for a function, covering happy path and edge cases.')">Generate pytest cases</a></li>
@@ -429,12 +677,12 @@ body{overflow:hidden}
                 </ul>
             </div>
         </div>
-    </div>
+    </div><!-- /sidebar -->
 
-    <!-- ─── Main (output side) ─── -->
+    <!-- ── Main (output) ── -->
     <div class="main">
 
-        <!-- Judge Score — appears at top after generation -->
+        <!-- Judge Score — appears after generation -->
         <div class="judge-card" id="genResultSummary" style="display:none"></div>
 
         <div class="card" style="flex:1;display:flex;flex-direction:column">
@@ -445,15 +693,28 @@ body{overflow:hidden}
                     <button class="btn btn-sm btn-ghost" onclick="downloadAgentGen()">Download</button>
                 </div>
             </div>
-            <div class="preview" id="agentPreviewGen" style="min-height:360px;flex:1">Type a task description on the left, then click <strong>✨ Generate Agent</strong>.</div>
+            <div class="preview" id="agentPreviewGen" style="min-height:360px;flex:1">Type a task description on the left, then click <strong>✦ Generate Agent</strong>.</div>
         </div>
-    </div>
-</div>
+    </div><!-- /main -->
 
+</div><!-- /layout -->
 </div><!-- /#tab-generate -->
+
 
 <script>
 const $=id=>document.getElementById(id);
+
+// ─── Loading helpers ───
+function btnLoad(el, label){
+    el._origHTML=el.innerHTML;
+    el.disabled=true;el.classList.add('btn-loading');
+    el.innerHTML='<span class="spinner"></span>'+(label?' '+label:'');
+}
+function btnDone(el){
+    el.disabled=false;el.classList.remove('btn-loading');
+    if(el._origHTML!==undefined){el.innerHTML=el._origHTML;delete el._origHTML;}
+}
+
 const TASKS=[
     {id:"ws_easy_001",diff:"easy",domain:"web",desc:"Extract product prices from a single e-commerce page",skills:["web-scraping","html-parser"]},
     {id:"da_easy_001",diff:"easy",domain:"data",desc:"Count rows in a CSV file and report basic statistics",skills:["csv-handler"]},
@@ -534,25 +795,19 @@ async function checkGenerateStatus(){
         const r=await fetch("/generate/status");
         const d=await r.json();
         if(d.available&&d.adapter_available&&d.deps_available){
-            // Adapter loads, but the currently-shipped one is the pre-sign-flip-fix
-            // Colab adapter that learned to emit noop->submit (empty specs).
-            // Be honest: amber badge, not green; keep the button enabled so the
-            // empty-spec output can be demoed as a teaching moment for the
-            // RLVR / Goose case study.
             badge.textContent="Pre-fix adapter loaded";
             badge.title="The loaded adapter is the pre-sign-flip-fix Colab run that collapsed to noop->submit (see RLVR case study in README). Onsite Qwen3-1.7B retrain replaces it.";
-            badge.style.background="rgba(251,191,36,0.12)";
-            badge.style.color="#fbbf24";
+            badge.style.background="rgba(245,158,11,.12)";
+            badge.style.color="#f59e0b";
             btn.disabled=false;
             msg.style.display="block";
             msg.textContent="⚠ Loaded adapter is the pre-fix Colab run (empty-spec collapse, see Goose case study). Onsite Qwen3-1.7B retrain will replace it. Click Generate to see the bug live.";
         }else{
-            // Still enable the button — server will try HF Hub fallback
             const reason=!d.deps_available?"deps missing locally":"loading from HF Hub";
             badge.textContent="Loading from Hub";
             badge.title="Adapter not found locally — will download from Kaviya-M/meta-agent-gym-adapter on first call.";
-            badge.style.background="rgba(251,191,36,0.1)";
-            badge.style.color="var(--yellow)";
+            badge.style.background="rgba(245,158,11,.1)";
+            badge.style.color="var(--amber)";
             btn.disabled=false;
             msg.style.display="block";
             msg.textContent="⏳ First call will download the adapter from HuggingFace Hub (~30-60s). Subsequent calls are fast.";
@@ -560,30 +815,31 @@ async function checkGenerateStatus(){
     }catch(e){
         badge.textContent="Error";
         badge.title=String(e);
-        badge.style.background="rgba(248,113,113,0.1)";
+        badge.style.background="rgba(239,68,68,.1)";
         badge.style.color="var(--red)";
         btn.disabled=true;
     }
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+function _genBtnSet(btn,label){
+    btn.innerHTML='<span class="spinner"></span> '+label;
+    btn.disabled=true;btn.classList.add('btn-loading');
+}
 async function generateWithModel(){
     const task=$("genTaskDesc").value.trim();
     if(!task){alert("Enter a task description first");return}
     const btn=$("btnGenerate");
-    const orig=btn.textContent;
-    btn.disabled=true;btn.textContent="Generating...";
+    const origHTML=btn.innerHTML;
+    _genBtnSet(btn,'Generating…');
     const previewGen=$("agentPreviewGen");
     if(previewGen)previewGen.textContent="⏳ Calling trained model...";
     const summary=$("genResultSummary");
     if(summary)summary.style.display="none";
     const t0=Date.now();
-    // Check if model is already loaded — if not, warn user that first call is slow
     try{const st=await fetch("/generate/status");const sd=await st.json();
-        if(sd.available&&!sd.loaded){btn.textContent="⏳ Warming up model (30-60s first time)…";}
+        if(sd.available&&!sd.loaded){_genBtnSet(btn,'Warming up model…');}
     }catch(_){}
     try{
-        // Auto-start episode if not active. In Tab 2 the dropdown may be empty;
-        // pick a sensible default so the user doesn't have to switch tabs.
         if(!active){
             const sel=$("taskSelect");
             if(!sel.value){
@@ -595,8 +851,7 @@ async function generateWithModel(){
                 }
                 showTask();
             }
-            btn.textContent="⏳ Connecting to environment…";
-            // Retry episode start up to 3 times — server may still be booting
+            _genBtnSet(btn,'Connecting…');
             let started=false;
             for(let attempt=1;attempt<=3;attempt++){
                 try{
@@ -604,7 +859,7 @@ async function generateWithModel(){
                     if(active){started=true;break;}
                 }catch(connErr){
                     if(attempt<3){
-                        btn.textContent=`⏳ Connecting… (attempt ${attempt+1}/3)`;
+                        _genBtnSet(btn,`Connecting… (${attempt+1}/3)`);
                         await sleep(3000);
                     }
                 }
@@ -615,8 +870,7 @@ async function generateWithModel(){
                 return;
             }
         }
-        // Call the trained model — first call may be slow (model cold-start)
-        btn.textContent="⏳ Generating… (may take 30-60s on first call)";
+        _genBtnSet(btn,'Generating… (may take 30-60s)');
         const ctrl=new AbortController();const tid2=setTimeout(()=>ctrl.abort(),180000);
         const r=await fetch("/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_description:task}),signal:ctrl.signal});
         clearTimeout(tid2);
@@ -627,19 +881,16 @@ async function generateWithModel(){
             alert(msg);
             return;
         }
-        // Replay actions via existing /step pipeline so reward scoring works the same
-        btn.textContent="Replaying "+d.actions.length+" actions...";
+        _genBtnSet(btn,'Replaying '+d.actions.length+' actions…');
         for(const a of d.actions){
-            if(!active)break; // stop if episode ended early
+            if(!active)break;
             await exec(a.command,a.args);
             await sleep(300);
         }
-        // Mirror the final AGENT.md into Tab 2's preview pane
         if(previewGen){
             const src=$("agentPreview");
             previewGen.textContent=(src?src.textContent:"")||"(empty spec)";
         }
-        // Show prominent judge score card at top of main column
         if(summary){
             const elapsed=((Date.now()-t0)/1000).toFixed(1);
             const rb=$("rewardBadge");
@@ -650,7 +901,7 @@ async function generateWithModel(){
             const jOverall=typeof jscores.overall==="number"?jscores.overall:null;
             const isLLM=jprovider.startsWith("groq")||jprovider.startsWith("openai");
             const providerLabel=isLLM?`🤖 LLM Judge <span style="opacity:.6;font-weight:400">(${jprovider.split("/")[1]||"groq"})</span>`:"📐 Heuristic Judge";
-            const overallColor=jOverall===null?"var(--muted)":(jOverall>=0.7?"var(--green)":(jOverall>=0.4?"var(--yellow)":"var(--red)"));
+            const overallColor=jOverall===null?"var(--fg2)":(jOverall>=0.7?"var(--green)":(jOverall>=0.4?"var(--amber)":"var(--red)"));
             const overallTxt=jOverall!==null?jOverall.toFixed(2):"–";
 
             const JL=[["skill_selection","Skill Selection"],["description_quality","Description"],["workflow_clarity","Workflow Clarity"],["model_appropriateness","Model Fit"],["best_practices","Best Practices"]];
@@ -658,15 +909,15 @@ async function generateWithModel(){
             for(const[k,label] of JL){
                 const v=jscores[k];if(v==null)continue;
                 const pct=Math.round(v*100);
-                const col=v>=0.7?"var(--green)":(v>=0.4?"var(--yellow)":"var(--red)");
+                const col=v>=0.7?"var(--green)":(v>=0.4?"var(--amber)":"var(--red)");
                 rows+=`<div class="judge-row"><span class="judge-row-label">${label}</span><div class="judge-track"><div class="judge-fill" style="width:${pct}%;background:${col}"></div></div><span class="judge-row-val" style="color:${col}">${v.toFixed(2)}</span></div>`;
             }
 
             summary.innerHTML=
                 `<div class="judge-header">
                     <div>
-                        <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px">${providerLabel}</div>
-                        <div style="font-size:0.72rem;color:var(--muted)">Quality evaluation of the generated spec</div>
+                        <div style="font-size:.67rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:4px">${providerLabel}</div>
+                        <div style="font-size:.71rem;color:var(--fg2)">Quality evaluation of the generated spec</div>
                     </div>
                     <div class="judge-overall">
                         <span class="judge-overall-num" style="color:${overallColor}">${overallTxt}</span>
@@ -679,7 +930,7 @@ async function generateWithModel(){
                     <span>Env reward: <strong style="color:var(--accent)">${envScore}</strong></span>
                     <span>Generated in <strong>${elapsed}s</strong></span>
                     <span>Commands: <strong>${d.actions.length}</strong></span>
-                    <button onclick="$('genResultSummary').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.72rem;padding:0">✕ dismiss</button>
+                    <button onclick="$('genResultSummary').style.display='none'" style="background:none;border:none;color:var(--fg2);cursor:pointer;font-size:.67rem;padding:0">✕ dismiss</button>
                 </div>`;
             summary.style.display="block";
             summary.scrollIntoView({behavior:"smooth",block:"start"});
@@ -692,7 +943,7 @@ async function generateWithModel(){
         if(previewGen)previewGen.textContent="❌ "+userMsg;
         alert(userMsg+(isConn?"\n\nTip: The first generate after a server restart can take up to 60s.":""));
     }
-    finally{btn.disabled=false;btn.textContent=orig||"✨ Generate Agent"}
+    finally{btn.disabled=false;btn.classList.remove('btn-loading');btn.innerHTML=origHTML||"✦ Generate Agent"}
 }
 
 function setConn(ok){wsOk=ok;$("connDot").className="conn-dot"+(ok?"":" off");$("connText").textContent=ok?"Connected":"Offline"}
@@ -722,15 +973,13 @@ function autoFillFromSelected(){
     $("cmdModel").value=_MODEL_MAP[t.diff]||"sonnet";
     $("cmdPrompt").value=`You are a specialized ${(t.skills[0]||"agent").replace(/-/g," ")} for the task: ${t.desc}.\n\nSteps:\n1. Carefully analyze the input.\n2. Apply ${(t.skills[0]||"your specialist")} capabilities to complete the task.\n3. Validate inputs and handle errors gracefully.\n4. Return a clear, correct, and actionable result.`;
 
-    // Flash each filled field so user notices the auto-fill happened
     fields.forEach(id=>{
         const el=$(id);if(!el)return;
         el.classList.remove("field-filled");
-        void el.offsetWidth; // force reflow to restart animation
+        void el.offsetWidth;
         el.classList.add("field-filled");
     });
 
-    // Open all accordions so user can see every filled field
     document.querySelectorAll(".acc-body").forEach(b=>b.classList.add("open"));
     document.querySelectorAll(".acc-arrow").forEach(a=>a.classList.add("open"));
 }
@@ -748,7 +997,8 @@ function wsSend(type,data){return new Promise((res,rej)=>{if(!ws||ws.readyState!
 // ─── Episode ───
 async function startEp(){
     const tid=$("taskSelect").value;if(!tid)return;
-    const btn=$("btnStart");btn.disabled=true;btn.textContent="Starting...";
+    const btn=$("btnStart");
+    btnLoad(btn,'Starting…');
     try{
         if(!wsOk)await connectWS();
         const data=await wsSend("reset",{scenario_name:tid});
@@ -760,8 +1010,46 @@ async function startEp(){
         if(obs.reward_breakdown)updRewards(obs.reward_breakdown);
         if(obs.feedback)updFeedback(obs.feedback);
         if(obs.rule_violations)updViolations(obs.rule_violations);
+        // Auto-submit mandatory fields if they're filled
+        await autoSubmitMandatory();
     }catch(e){alert("Failed: "+e.message);setConn(false)}
-    btn.textContent="Start Episode";btn.disabled=false;
+    finally{btnDone(btn);}
+}
+
+async function autoSubmitMandatory(){
+    const name=$("cmdName").value.trim();
+    const desc=$("cmdDesc").value.trim();
+    const prompt=$("cmdPrompt").value.trim();
+    const skill=$("cmdSkill").value.trim();
+    const model=$("cmdModel").value.trim();
+
+    // Flash each mandatory field briefly to show it's being submitted
+    ["cmdName","cmdDesc","cmdPrompt"].forEach(id=>{
+        const el=$(id);if(!el)return;
+        el.classList.remove("field-filled");void el.offsetWidth;el.classList.add("field-filled");
+    });
+
+    if(name)  await execSilent("set_name",{name});
+    if(desc)  await execSilent("set_description",{description:desc});
+    if(skill) await execSilent("add_skill",{skill});
+    if(model) await execSilent("set_model",{model});
+    if(prompt&&prompt.length>=50) await execSilent("write_prompt",{prompt});
+}
+
+// Like exec() but no loading indicator (used for auto-submit on episode start)
+async function execSilent(cmd,args){
+    if(!active)return;
+    try{
+        const data=await wsSend("step",{command:cmd,args});
+        if(data.error)return;
+        const obs=data.observation||{},reward=data.reward||0;
+        step=obs.step||step+1;if(obs.max_steps)maxStep=obs.max_steps;if(obs.current_spec)spec=obs.current_spec;
+        updStep();addStep(cmd,reward);updPills();updPreview();
+        if(obs.reward_breakdown)updRewards(obs.reward_breakdown);
+        if(obs.score!==undefined)$("rewardBadge").textContent=obs.score.toFixed(2);
+        if(obs.feedback)updFeedback(obs.feedback);
+        if(obs.rule_violations)updViolations(obs.rule_violations);
+    }catch(_){}
 }
 
 function resetEp(){
@@ -776,9 +1064,12 @@ function resetEp(){
     $("rewardBadge").textContent="0.00";updStep();updPills();
 }
 
-async function exec(cmd,args){
+async function exec(cmd,args,triggerBtn){
     if(!active){alert("Start an episode first");return}
     if(Object.values(args).every(v=>!v&&v!==0)&&cmd!=="check_score"&&cmd!=="inspect_example"&&cmd!=="submit")return;
+    const loadBtn=triggerBtn||(cmd==='submit'?$('btnSubmit'):null);
+    if(loadBtn)btnLoad(loadBtn);
+    let episodeEnded=false;
     try{
         const data=await wsSend("step",{command:cmd,args});
         if(data.error)throw new Error(data.error.message||JSON.stringify(data.error));
@@ -790,8 +1081,17 @@ async function exec(cmd,args){
         if(obs.feedback)updFeedback(obs.feedback);
         if(obs.rule_violations)updViolations(obs.rule_violations);
         if(obs.investigation_result&&obs.investigation_result.breakdown)updRewards(obs.investigation_result.breakdown);
-        if(done){active=false;$("btnSubmit").disabled=true;showBanner(reward,obs.score)}
+        if(done){active=false;episodeEnded=true;showBanner(reward,obs.score)}
     }catch(e){alert("Failed: "+e.message)}
+    finally{
+        if(loadBtn){
+            // Restore innerHTML and remove spinner class
+            loadBtn.classList.remove('btn-loading');
+            if(loadBtn._origHTML!==undefined){loadBtn.innerHTML=loadBtn._origHTML;delete loadBtn._origHTML;}
+            // Submit stays disabled after episode ends; all other buttons re-enable
+            loadBtn.disabled=(cmd==='submit'&&episodeEnded);
+        }
+    }
 }
 
 // ─── UI Updates ───
@@ -849,7 +1149,7 @@ function updPreview(){
 }
 function showBanner(rw,sc){
     const s=sc||rw||0,ok=s>3;
-    $("bannerSlot").innerHTML='<div class="banner '+(ok?"banner-ok":"banner-fail")+'">'+(ok?"Episode Complete — Agent Accepted":"Episode Complete — Agent Rejected")+' ('+s.toFixed(2)+')</div>';
+    $("bannerSlot").innerHTML='<div class="banner '+(ok?"banner-ok":"banner-fail")+'">'+(ok?"✓ Episode Complete — Agent Accepted":"✗ Episode Complete — Agent Rejected")+' ('+s.toFixed(2)+')</div>';
 }
 function copyAgent(){navigator.clipboard.writeText($("agentPreview").textContent).then(()=>alert("Copied!"))}
 function downloadAgent(){const b=new Blob([$("agentPreview").textContent],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="AGENT.md";a.click()}
